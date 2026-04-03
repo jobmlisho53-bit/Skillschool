@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Test</title>
+</head>
+<body>
+    <h1>API Test Page</h1>
+    <div id="result"></div>
+    <script>
+        fetch('/api/modules')
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('result').innerHTML = 
+                    `<pre>Found ${data.length} courses:\n${JSON.stringify(data, null, 2)}</pre>`;
+            })
+            .catch(err => {
+                document.getElementById('result').innerHTML = `Error: ${err.message}`;
+            });
+    </script>
+</body>
+</html>

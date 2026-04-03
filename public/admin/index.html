@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Income School</title>
+    <link rel="stylesheet" href="/css/admin.css">
+    <style>
+        .content-type-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .type-btn {
+            padding: 10px 20px;
+            border: 2px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s;
+            font-size: 1rem;
+        }
+        .type-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        .upload-section, .link-section {
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .hidden {
+            display: none;
+        }
+        .youtube-preview {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+        .youtube-preview iframe {
+            max-width: 100%;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>🔧 Admin Dashboard</h1>
+            <p>Manage Courses and Content</p>
+        </div>
+    </header>
+
+    <nav class="admin-nav">
+        <div class="container">
+            <button onclick="showSection('create-module')">➕ Create Module</button>
+            <button onclick="showSection('upload-content')">📤 Add Content</button>
+            <button onclick="showSection('view-modules')">📚 View All Modules</button>
+        </div>
+    </nav>
+
+    <main class="container">
+        <!-- Create Module Section -->
+        <section id="create-module-section" class="content-section">
+            <h2>Create New Module</h2>
+            <form id="module-form">
+                <div class="form-group">
+                    <label>Module ID (unique identifier):</label>
+                    <input type="text" name="moduleId" required placeholder="e.g., video-editing-101">
+                </div>
+                <div class="form-group">
+                    <label>Module Title:</label>
+                    <input type="text" name="title" required placeholder="e.g., Video Editing Basics">
+                </div>
+                <div class="form-group">
+                    <label>Description:</label>
+                    <textarea name="description" rows="3" placeholder="What will students learn?"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Estimated Time:</label>
+                    <input type="text" name="estimatedTime" placeholder="e.g., 4 weeks">
+                </div>
+                <button type="submit">Create Module</button>
+            </form>
+            <div id="create-message"></div>
+        </section>
+
+        <!-- Upload Content Section -->
+        <section id="upload-content-section" class="content-section" style="display: none;">
+            <h2>Add Content to Module</h2>
+            
+            <form id="upload-form">
+                <div class="form-group">
+                    <label>Select Module:</label>
+                    <select id="uploadModuleId" required>
+                        <option value="">Loading modules...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Lesson Title:</label>
+                    <input type="text" id="lessonTitle" required placeholder="e.g., Introduction to Video Editing">
+                </div>
+                
+                <!-- Content Type Selection -->
+                <div class="form-group">
+                    <label>Content Type:</label>
+                    <div class="content-type-selector">
+                        <button type="button" id="typeFileBtn" class="type-btn active">📁 Upload File</button>
+                        <button type="button" id="typeYoutubeBtn" class="type-btn">▶️ YouTube Link</button>
+                    </div>
+                </div>
+                
+                <!-- File Upload Section -->
+                <div id="fileSection">
+                    <div class="form-group">
+                        <label>Content Type Category:</label>
+                        <select id="contentType">
+                            <option value="video">Video (MP4)</option>
+                            <option value="pdf">PDF Document</option>
+                            <option value="image">Image</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Upload File:</label>
+                        <input type="file" id="file" accept="video/mp4,application/pdf,image/*">
+                        <small>Supported: MP4, PDF, JPEG, PNG (Max 100MB)</small>
+                    </div>
+                </div>
+                
+                <!-- YouTube Link Section -->
+                <div id="youtubeSection" style="display: none;">
+                    <div class="form-group">
+                        <label>YouTube Video URL:</label>
+                        <input type="url" id="youtubeUrl" placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/...">
+                        <small>Paste any YouTube video URL - no file upload needed!</small>
+                    </div>
+                    <div id="youtubePreview" style="display: none; margin-top: 20px; padding: 15px; background: #f9f9f9; border-radius: 8px;"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Duration (optional):</label>
+                    <input type="text" id="duration" placeholder="e.g., 10 minutes">
+                </div>
+                <div class="form-group">
+                    <label>Order:</label>
+                    <input type="number" id="order" value="1">
+                </div>
+                <button type="submit">Add Content</button>
+            </form>
+            <div id="upload-message"></div>
+        </section>
+
+        <!-- View Modules Section -->
+        <section id="view-modules-section" class="content-section" style="display: none;">
+            <h2>All Modules</h2>
+            <div id="modules-list"></div>
+        </section>
+    </main>
+
+    <script src="/js/admin.js"></script>
+    <script>
+        // Content type switching
+        const typeFileBtn = document.getElementById('typeFileBtn');
+        const typeYoutubeBtn = document.getElementById('typeYoutubeBtn');
+        const fileSection = document.getElementById('fileSection');
+        const youtubeSection = document.getElementById('youtubeSection');
+        const fileInput = document.getElementById('file');
+        const youtubeUrlInput = document.getElementById('youtubeUrl');
+        
+        // Switch to File Upload
+        typeFileBtn.addEventListener('click', function() {
+            typeFileBtn.classList.add('active');
+            typeYoutubeBtn.classList.remove('active');
+            fileSection.style.display = 'block';
+            youtubeSection.style.display = 'none';
+            fileInput.required = true;
+            youtubeUrlInput.required = false;
+            document.getElementById('youtubePreview').style.display = 'none';
+        });
+        
+        // Switch to YouTube Link
+        typeYoutubeBtn.addEventListener('click', function() {
+            typeYoutubeBtn.classList.add('active');
+            typeFileBtn.classList.remove('active');
+            fileSection.style.display = 'none';
+            youtubeSection.style.display = 'block';
+            fileInput.required = false;
+            youtubeUrlInput.required = true;
+        });
+        
+        // YouTube URL preview
+        youtubeUrlInput.addEventListener('input', function() {
+            const url = this.value;
+            const previewDiv = document.getElementById('youtubePreview');
+            
+            if (url) {
+                const videoId = extractYouTubeId(url);
+                if (videoId) {
+                    previewDiv.style.display = 'block';
+                    previewDiv.innerHTML = `
+                        <p>✅ Video Preview:</p>
+                        <iframe width="100%" height="315" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>
+                        <small>YouTube video will play directly in your course</small>
+                    `;
+                } else {
+                    previewDiv.style.display = 'block';
+                    previewDiv.innerHTML = `<p style="color: red;">❌ Invalid YouTube URL. Please check the link.</p>`;
+                }
+            } else {
+                previewDiv.style.display = 'none';
+            }
+        });
+        
+        function extractYouTubeId(url) {
+            const patterns = [
+                /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?/]+)/,
+                /youtube\.com\/embed\/([^/?]+)/,
+                /youtube\.com\/v\/([^/?]+)/
+            ];
+            for (const pattern of patterns) {
+                const match = url.match(pattern);
+                if (match) return match[1];
+            }
+            return null;
+        }
+    </script>
+</body>
+</html>

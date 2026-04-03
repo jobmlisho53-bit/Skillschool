@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Income School - Learn Skills That Pay</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 0;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+            padding: 40px 0;
+        }
+        
+        .skill-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .skill-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 25px rgba(0,0,0,0.15);
+        }
+        
+        .skill-card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+        }
+        
+        .back-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 20px 0;
+            font-size: 1rem;
+        }
+        
+        .back-button:hover {
+            background: #5a67d8;
+        }
+        
+        .lesson-item {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+            border-left: 4px solid #667eea;
+        }
+        
+        .lesson-item:hover {
+            background: #f9f9f9;
+        }
+        
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+        }
+        
+        footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 20px 0;
+            margin-top: 40px;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>🎓 Income School</h1>
+            <p>Learn skills that help you earn $1000+/month within 6 months</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Courses Section -->
+        <section id="courses-section">
+            <h2>Choose Your Path to Financial Freedom</h2>
+            <div id="courses-container" class="skills-grid">
+                <div class="loading">Loading courses...</div>
+            </div>
+        </section>
+
+        <!-- Lessons Section -->
+        <section id="lessons-section" class="hidden">
+            <button id="back-to-courses" class="back-button">← Back to Courses</button>
+            <h2 id="course-title"></h2>
+            <div id="course-description"></div>
+            <h3>Course Lessons</h3>
+            <div id="lessons-list"></div>
+        </section>
+
+        <!-- Lesson Player Section -->
+        <section id="player-section" class="hidden">
+            <button id="back-to-lessons" class="back-button">← Back to Lessons</button>
+            <h2 id="lesson-title"></h2>
+            <div id="lesson-player"></div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>© 2024 Income School - Free Education Platform</p>
+        </div>
+    </footer>
+
+    <script>
+        let currentCourse = null;
+        let currentLesson = null;
+        
+        // Load courses on page load
+        async function loadCourses() {
+            try {
+                const response = await fetch('/api/modules');
+                const courses = await response.json();
+                
+                const container = document.getElementById('courses-container');
+                
+                if (courses.length === 0) {
+                    container.innerHTML = '<div class="loading">No courses available yet. Check back soon!</div>';
+                    return;
+                }
+                
+                container.innerHTML = '';
+                
+                courses.forEach(course => {
+                    const card = document.createElement('div');
+                    card.className = 'skill-card';
+                    card.onclick = () => showCourse(course);
+                    
+                    let emoji = '📚';
+                    if (course.title.includes('Web')) emoji = '💻';
+                    else if (course.title.includes('AI')) emoji = '🤖';
+                    else if (course.title.includes('Crypto')) emoji = '💰';
+                    else if (course.title.includes('Copywriting')) emoji = '✍️';
+                    else if (course.title.includes('YouTube')) emoji = '🎥';
+                    else if (course.title.includes('Business')) emoji = '🏢';
+                    else if (course.title.includes('Trading')) emoji = '📈';
+                    else if (course.title.includes('Editing')) emoji = '🎬';
+                    
+                    card.innerHTML = `
+                        <div style="font-size: 3rem; margin-bottom: 10px;">${emoji}</div>
+                        <h3>${escapeHtml(course.title)}</h3>
+                        <p style="color: #666; margin: 10px 0;">${escapeHtml(course.description || 'Learn this valuable skill')}</p>
+                        <div style="display: flex; justify-content: space-between; margin-top: 15px;">
+                            <small style="color: #999;">⏱️ ${escapeHtml(course.estimatedTime || 'Self-paced')}</small>
+                            <small style="color: #48bb78;">▶️ Start Learning</small>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+                
+                console.log(`Loaded ${courses.length} courses`);
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('courses-container').innerHTML = 
+                    '<div class="loading" style="color: red;">Error loading courses. Make sure server is running.</div>';
+            }
+        }
+        
+        // Show course lessons
+        async function showCourse(course) {
+            currentCourse = course;
+            
+            document.getElementById('course-title').textContent = course.title;
+            document.getElementById('course-description').innerHTML = `
+                <div style="background: #f0f0f0; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <p>${escapeHtml(course.description || 'No description available')}</p>
+                    <p><strong>⏱️ Estimated time:</strong> ${escapeHtml(course.estimatedTime || 'Self-paced')}</p>
+                </div>
+            `;
+            
+            try {
+                const response = await fetch(`/api/modules/${course.moduleId}/lessons`);
+                const lessons = await response.json();
+                
+                const lessonsList = document.getElementById('lessons-list');
+                lessonsList.innerHTML = '';
+                
+                if (lessons.length === 0) {
+                    lessonsList.innerHTML = '<div class="loading">No lessons yet. Content coming soon!</div>';
+                } else {
+                    lessons.sort((a, b) => (a.order || 0) - (b.order || 0));
+                    lessons.forEach(lesson => {
+                        const lessonItem = document.createElement('div');
+                        lessonItem.className = 'lesson-item';
+                        const icon = lesson.contentType === 'youtube' ? '▶️' : (lesson.contentType === 'video' ? '🎥' : '📄');
+                        lessonItem.innerHTML = `
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <strong>${lesson.order || 1}. ${escapeHtml(lesson.title)}</strong>
+                                    <br>
+                                    <small>${icon} ${lesson.contentType === 'youtube' ? 'YouTube Video' : lesson.contentType} | ⏱️ ${lesson.duration || 'N/A'}</small>
+                                </div>
+                                <div style="color: #667eea;">▶️</div>
+                            </div>
+                        `;
+                        lessonItem.onclick = () => playLesson(lesson);
+                        lessonsList.appendChild(lessonItem);
+                    });
+                }
+                
+                // Switch views
+                document.getElementById('courses-section').classList.add('hidden');
+                document.getElementById('lessons-section').classList.remove('hidden');
+                document.getElementById('player-section').classList.add('hidden');
+                
+            } catch (error) {
+                console.error('Error loading lessons:', error);
+            }
+        }
+        
+        // Play lesson (supports YouTube and file videos)
+        function playLesson(lesson) {
+            currentLesson = lesson;
+            
+            document.getElementById('lesson-title').textContent = lesson.title;
+            const playerDiv = document.getElementById('lesson-player');
+            
+            if (lesson.contentType === 'youtube') {
+                // YouTube video
+                playerDiv.innerHTML = `
+                    <div class="video-container">
+                        <iframe src="https://www.youtube.com/embed/${lesson.youtubeId}" 
+                                frameborder="0" 
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                allowfullscreen>
+                        </iframe>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <p><strong>Lesson:</strong> ${escapeHtml(lesson.title)}</p>
+                        <p><strong>Duration:</strong> ${lesson.duration || 'N/A'}</p>
+                        <p><a href="${lesson.youtubeUrl}" target="_blank" style="color: #667eea;">Open on YouTube ↗</a></p>
+                    </div>
+                `;
+            } else if (lesson.contentType === 'video' && lesson.fileUrl) {
+                // Uploaded video file
+                playerDiv.innerHTML = `
+                    <video controls style="width: 100%; max-width: 800px; margin: 20px auto; display: block;">
+                        <source src="${lesson.fileUrl}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                    <div style="margin-top: 20px;">
+                        <p><strong>Lesson:</strong> ${escapeHtml(lesson.title)}</p>
+                        <p><strong>Duration:</strong> ${lesson.duration || 'N/A'}</p>
+                    </div>
+                `;
+            } else {
+                playerDiv.innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <p>Content type: ${lesson.contentType}</p>
+                        ${lesson.fileUrl ? `<a href="${lesson.fileUrl}" target="_blank" style="display: inline-block; padding: 10px 20px; background: #667eea; color: white; text-decoration: none; border-radius: 5px;">View Content</a>` : ''}
+                    </div>
+                `;
+            }
+            
+            // Switch views
+            document.getElementById('courses-section').classList.add('hidden');
+            document.getElementById('lessons-section').classList.add('hidden');
+            document.getElementById('player-section').classList.remove('hidden');
+        }
+        
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Setup navigation
+        document.getElementById('back-to-courses')?.addEventListener('click', () => {
+            document.getElementById('courses-section').classList.remove('hidden');
+            document.getElementById('lessons-section').classList.add('hidden');
+            document.getElementById('player-section').classList.add('hidden');
+        });
+        
+        document.getElementById('back-to-lessons')?.addEventListener('click', () => {
+            if (currentCourse) {
+                showCourse(currentCourse);
+            }
+        });
+        
+        // Load everything
+        loadCourses();
+    </script>
+</body>
+</html>
