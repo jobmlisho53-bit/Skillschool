@@ -235,7 +235,7 @@
             `;
             
             try {
-                const response = await fetch(`/api/modules/${course.moduleId}/lessons`);
+                const response = await fetch(`/api/modules/${course.module_id}/lessons`);
                 const lessons = await response.json();
                 
                 const lessonsList = document.getElementById('lessons-list');
