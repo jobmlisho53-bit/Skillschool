@@ -16,12 +16,17 @@ async function loadModulesDropdown() {
         
         modules.forEach(module => {
             const option = document.createElement('option');
-            option.value = module.moduleId;
-            option.textContent = `${module.title} (${module.moduleId})`;
+            // Use moduleId (from transformed data) or module_id
+            option.value = module.moduleId || module.module_id;
+            option.textContent = `${module.title} (${option.value})`;
             select.appendChild(option);
         });
     } catch (error) {
         console.error('Error loading modules:', error);
+        const select = document.getElementById('uploadModuleId');
+        if (select) {
+            select.innerHTML = '<option value="">Error loading modules</option>';
+        }
     }
 }
 
@@ -52,23 +57,25 @@ async function loadAllModules() {
             
             card.innerHTML = `
                 <h3 style="color: #667eea; margin-bottom: 10px;">📚 ${module.title}</h3>
-                <p><strong>ID:</strong> ${module.moduleId}</p>
+                <p><strong>ID:</strong> ${module.moduleId || module.module_id}</p>
                 <p><strong>Description:</strong> ${module.description || 'No description'}</p>
-                <p><strong>Estimated Time:</strong> ${module.estimatedTime || 'TBD'}</p>
+                <p><strong>Estimated Time:</strong> ${module.estimatedTime || module.estimated_time || 'TBD'}</p>
                 <hr style="margin: 15px 0;">
                 <h4>📖 Lessons:</h4>
-                <div id="lessons-${module.moduleId}" style="margin-top: 10px;">
+                <div id="lessons-${module.moduleId || module.module_id}" style="margin-top: 10px;">
                     <em>Loading lessons...</em>
                 </div>
             `;
             container.appendChild(card);
             
+            const moduleId = module.moduleId || module.module_id;
+            
             // Load lessons for this module
             try {
-                const lessonsResponse = await fetch(`/api/modules/${module.moduleId}/lessons`);
+                const lessonsResponse = await fetch(`/api/modules/${moduleId}/lessons`);
                 const lessons = await lessonsResponse.json();
                 
-                const lessonsDiv = document.getElementById(`lessons-${module.moduleId}`);
+                const lessonsDiv = document.getElementById(`lessons-${moduleId}`);
                 if (!lessonsDiv) continue;
                 
                 if (lessons.length === 0) {
@@ -98,7 +105,11 @@ async function loadAllModules() {
                     });
                 }
             } catch (err) {
-                console.error(`Error loading lessons for ${module.moduleId}:`, err);
+                console.error(`Error loading lessons for ${moduleId}:`, err);
+                const lessonsDiv = document.getElementById(`lessons-${moduleId}`);
+                if (lessonsDiv) {
+                    lessonsDiv.innerHTML = '<p style="color: red;">Error loading lessons</p>';
+                }
             }
         }
     } catch (error) {
@@ -167,13 +178,14 @@ if (moduleForm) {
     });
 }
 
-// Handle content upload (file or YouTube)
+// Handle content upload
 const uploadForm = document.getElementById('upload-form');
 if (uploadForm) {
     uploadForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        const moduleId = document.getElementById('uploadModuleId').value;
+        const moduleSelect = document.getElementById('uploadModuleId');
+        const moduleId = moduleSelect.value;
         const lessonTitle = document.getElementById('lessonTitle').value;
         const duration = document.getElementById('duration').value;
         const order = document.getElementById('order').value;
@@ -183,7 +195,7 @@ if (uploadForm) {
             return;
         }
         
-        // Check which type is active (File or YouTube)
+        // Check if YouTube tab is active
         const isYoutubeActive = document.getElementById('typeYoutubeBtn').classList.contains('active');
         
         if (isYoutubeActive) {
