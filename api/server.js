@@ -37,6 +37,28 @@ app.use(protectAdmin);
 app.use(express.static('public'));
 app.use('/uploads', express.static('uploads'));
 
+// Helper function to clean YouTube URL
+function cleanYouTubeUrl(url) {
+    if (!url) return null;
+    // Remove tracking parameters
+    const cleanUrl = url.split('?')[0];
+    return cleanUrl;
+}
+
+function extractYouTubeId(url) {
+    if (!url) return null;
+    const cleanUrl = cleanYouTubeUrl(url);
+    const patterns = [
+        /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?/]+)/,
+        /youtube\.com\/embed\/([^/?]+)/
+    ];
+    for (const pattern of patterns) {
+        const match = cleanUrl.match(pattern);
+        if (match) return match[1];
+    }
+    return null;
+}
+
 // API Routes
 app.get('/api/modules', async (req, res) => {
     try {
@@ -72,35 +94,30 @@ app.post('/api/admin/youtube-lesson', async (req, res) => {
     try {
         const { moduleId, lessonTitle, youtubeUrl, duration, order } = req.body;
         
-        function extractYouTubeId(url) {
-            const patterns = [
-                /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?/]+)/,
-                /youtube\.com\/embed\/([^/?]+)/
-            ];
-            for (const pattern of patterns) {
-                const match = url.match(pattern);
-                if (match) return match[1];
-            }
-            return null;
-        }
+        console.log('Received request:', { moduleId, lessonTitle, youtubeUrl });
         
-        const videoId = extractYouTubeId(youtubeUrl);
+        // Clean the URL first
+        const cleanUrl = cleanYouTubeUrl(youtubeUrl);
+        const videoId = extractYouTubeId(cleanUrl);
+        
         if (!videoId) {
-            return res.status(400).json({ error: 'Invalid YouTube URL' });
+            return res.status(400).json({ error: 'Invalid YouTube URL. Please check the link.' });
         }
         
         const lesson = await supabaseDB.addLesson(moduleId, {
             title: lessonTitle,
             contentType: 'youtube',
-            youtubeUrl: youtubeUrl,
+            youtubeUrl: `https://youtu.be/${videoId}`, // Store clean URL
             youtubeId: videoId,
             fileUrl: `https://www.youtube.com/embed/${videoId}`,
             duration: duration,
             order: order
         });
         
+        console.log('Lesson added successfully:', lesson);
         res.status(201).json(lesson);
     } catch (error) {
+        console.error('Error adding YouTube lesson:', error.message);
         res.status(400).json({ error: error.message });
     }
 });
