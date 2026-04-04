@@ -1,8 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const multer = require('multer');
-const fs = require('fs');
 const supabaseDB = require('../utils/database');
 require('dotenv').config();
 
@@ -13,36 +11,66 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Admin authentication
-const auth = require('basic-auth');
+// Admin credentials from environment variables
 const ADMIN_USER = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_PASS = process.env.ADMIN_PASSWORD || 'changeme123';
 
+// FIXED: Vercel-compatible authentication middleware
 function protectAdmin(req, res, next) {
-    if (req.path.startsWith('/admin') || req.path.startsWith('/api/admin')) {
-        const user = auth(req);
-        if (!user || user.name !== ADMIN_USER || user.pass !== ADMIN_PASS) {
+    // Check if this is an admin route
+    const isAdminRoute = req.path.startsWith('/admin') || req.path.startsWith('/api/admin');
+    
+    if (isAdminRoute) {
+        const authHeader = req.headers.authorization;
+        
+        // No auth header provided
+        if (!authHeader || !authHeader.startsWith('Basic ')) {
             res.statusCode = 401;
-            res.setHeader('WWW-Authenticate', 'Basic realm="Admin Access"');
-            res.send('Access denied');
-            return;
+            res.setHeader('WWW-Authenticate', 'Basic realm="Income School Admin"');
+            res.setHeader('Content-Type', 'text/html');
+            return res.send(`
+                <!DOCTYPE html>
+                <html>
+                <head><title>Admin Login</title></head>
+                <body style="font-family: Arial; text-align: center; padding: 50px;">
+                    <h1>🔐 Admin Access Required</h1>
+                    <p>This area is protected. Please enter your credentials.</p>
+                </body>
+                </html>
+            `);
+        }
+        
+        // Decode credentials
+        try {
+            const base64Credentials = authHeader.split(' ')[1];
+            const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
+            const [username, password] = credentials.split(':');
+            
+            if (username !== ADMIN_USER || password !== ADMIN_PASS) {
+                // Wrong credentials
+                res.statusCode = 401;
+                res.setHeader('WWW-Authenticate', 'Basic realm="Income School Admin"');
+                return res.send('Invalid credentials. Access denied.');
+            }
+        } catch (err) {
+            res.statusCode = 401;
+            return res.send('Authentication error.');
         }
     }
     next();
 }
 
+// Apply admin protection
 app.use(protectAdmin);
 
 // Serve static files
 app.use(express.static('public'));
 app.use('/uploads', express.static('uploads'));
 
-// Helper function to clean YouTube URL
+// Helper function for YouTube URL
 function cleanYouTubeUrl(url) {
     if (!url) return null;
-    // Remove tracking parameters
-    const cleanUrl = url.split('?')[0];
-    return cleanUrl;
+    return url.split('?')[0];
 }
 
 function extractYouTubeId(url) {
@@ -94,30 +122,25 @@ app.post('/api/admin/youtube-lesson', async (req, res) => {
     try {
         const { moduleId, lessonTitle, youtubeUrl, duration, order } = req.body;
         
-        console.log('Received request:', { moduleId, lessonTitle, youtubeUrl });
-        
-        // Clean the URL first
         const cleanUrl = cleanYouTubeUrl(youtubeUrl);
         const videoId = extractYouTubeId(cleanUrl);
         
         if (!videoId) {
-            return res.status(400).json({ error: 'Invalid YouTube URL. Please check the link.' });
+            return res.status(400).json({ error: 'Invalid YouTube URL' });
         }
         
         const lesson = await supabaseDB.addLesson(moduleId, {
             title: lessonTitle,
             contentType: 'youtube',
-            youtubeUrl: `https://youtu.be/${videoId}`, // Store clean URL
+            youtubeUrl: `https://youtu.be/${videoId}`,
             youtubeId: videoId,
             fileUrl: `https://www.youtube.com/embed/${videoId}`,
             duration: duration,
             order: order
         });
         
-        console.log('Lesson added successfully:', lesson);
         res.status(201).json(lesson);
     } catch (error) {
-        console.error('Error adding YouTube lesson:', error.message);
         res.status(400).json({ error: error.message });
     }
 });
@@ -146,5 +169,4 @@ app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, '../public/admin/index.html'));
 });
 
-// Export for Vercel
 module.exports = app;
