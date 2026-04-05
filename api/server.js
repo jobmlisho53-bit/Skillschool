@@ -9,7 +9,6 @@ const app = express();
 
 // ============ SECURITY MIDDLEWARE ============
 
-// Strict CORS policy
 const allowedOrigins = [
     'https://skillschool-dbc1.vercel.app',
     'http://localhost:5000',
@@ -27,7 +26,6 @@ app.use(cors({
     credentials: true
 }));
 
-// Rate limiting
 const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
@@ -42,8 +40,6 @@ const adminLimiter = rateLimit({
 
 app.use('/api/', apiLimiter);
 app.use('/api/admin/', adminLimiter);
-
-// Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -81,8 +77,6 @@ function protectAdmin(req, res, next) {
 }
 
 app.use(protectAdmin);
-
-// ============ STATIC FILES ============
 app.use(express.static('public'));
 app.use('/uploads', express.static('uploads'));
 
@@ -113,13 +107,8 @@ function extractYouTubeId(url) {
 
 // ============ API ROUTES ============
 
-// Health check endpoint
 app.get('/api/health', (req, res) => {
-    res.json({ 
-        status: 'healthy', 
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime()
-    });
+    res.json({ status: 'healthy', timestamp: new Date().toISOString(), uptime: process.uptime() });
 });
 
 app.get('/api/modules', async (req, res) => {
@@ -127,7 +116,6 @@ app.get('/api/modules', async (req, res) => {
         const modules = await supabaseDB.getAllModules();
         res.json(modules);
     } catch (error) {
-        console.error('Error fetching modules:', error);
         res.status(500).json({ error: 'Failed to fetch modules' });
     }
 });
@@ -137,7 +125,6 @@ app.get('/api/modules/:moduleId/lessons', async (req, res) => {
         const lessons = await supabaseDB.getLessonsByModule(req.params.moduleId);
         res.json(lessons);
     } catch (error) {
-        console.error('Error fetching lessons:', error);
         res.status(500).json({ error: 'Failed to fetch lessons' });
     }
 });
@@ -145,25 +132,18 @@ app.get('/api/modules/:moduleId/lessons', async (req, res) => {
 app.post('/api/admin/modules', async (req, res) => {
     try {
         const { moduleId, title, description, estimatedTime, category } = req.body;
-        
         if (!moduleId || !title) {
             return res.status(400).json({ error: 'Module ID and Title are required' });
         }
-        
-        const sanitizedTitle = sanitizeInput(title);
-        const sanitizedDescription = sanitizeInput(description);
-        
         const newModule = await supabaseDB.createModule({
             moduleId: sanitizeInput(moduleId),
-            title: sanitizedTitle,
-            description: sanitizedDescription,
+            title: sanitizeInput(title),
+            description: sanitizeInput(description),
             estimatedTime: sanitizeInput(estimatedTime),
             category: sanitizeInput(category)
         });
-        
         res.status(201).json(newModule);
     } catch (error) {
-        console.error('Error creating module:', error);
         res.status(400).json({ error: error.message || 'Failed to create module' });
     }
 });
@@ -171,34 +151,24 @@ app.post('/api/admin/modules', async (req, res) => {
 app.post('/api/admin/youtube-lesson', async (req, res) => {
     try {
         const { moduleId, lessonTitle, youtubeUrl, duration, order } = req.body;
-        
         if (!moduleId || !lessonTitle || !youtubeUrl) {
             return res.status(400).json({ error: 'Module ID, Lesson Title, and YouTube URL are required' });
         }
-        
-        const cleanUrl = cleanYouTubeUrl(youtubeUrl);
-        const videoId = extractYouTubeId(cleanUrl);
-        
+        const videoId = extractYouTubeId(cleanYouTubeUrl(youtubeUrl));
         if (!videoId) {
             return res.status(400).json({ error: 'Invalid YouTube URL' });
         }
-        
-        const sanitizedTitle = sanitizeInput(lessonTitle);
-        const sanitizedDuration = sanitizeInput(duration);
-        
         const lesson = await supabaseDB.addLesson(moduleId, {
-            title: sanitizedTitle,
+            title: sanitizeInput(lessonTitle),
             contentType: 'youtube',
             youtubeUrl: `https://youtu.be/${videoId}`,
             youtubeId: videoId,
             fileUrl: `https://www.youtube.com/embed/${videoId}`,
-            duration: sanitizedDuration || 'N/A',
+            duration: sanitizeInput(duration) || 'N/A',
             order: order || 1
         });
-        
         res.status(201).json(lesson);
     } catch (error) {
-        console.error('Error adding YouTube lesson:', error);
         res.status(400).json({ error: error.message || 'Failed to add lesson' });
     }
 });
@@ -214,60 +184,37 @@ app.get('/api/skills', async (req, res) => {
         }));
         res.json(skills);
     } catch (error) {
-        console.error('Error fetching skills:', error);
         res.status(500).json({ error: 'Failed to fetch skills' });
     }
 });
 
-// Contact form endpoint - stores messages in Supabase
 app.post('/api/contact', async (req, res) => {
     try {
         const { name, email, subject, message, timestamp } = req.body;
-        
         if (!name || !email || !subject || !message) {
             return res.status(400).json({ error: 'All fields are required' });
         }
-        
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             return res.status(400).json({ error: 'Invalid email address' });
         }
-        
         const supabase = require('../lib/supabase');
-        
-        const { data, error } = await supabase
-            .from('contacts')
-            .insert([{
-                name: name,
-                email: email,
-                subject: subject,
-                message: message,
-                created_at: timestamp || new Date().toISOString(),
-                status: 'unread'
-            }])
-            .select();
-        
+        const { error } = await supabase.from('contacts').insert([{
+            name, email, subject, message,
+            created_at: timestamp || new Date().toISOString(),
+            status: 'unread'
+        }]);
         if (error) throw error;
-        
-        console.log(`New contact message from ${name} (${email}): ${subject}`);
-        
         res.json({ success: true, message: 'Message sent successfully' });
     } catch (error) {
-        console.error('Contact form error:', error);
         res.status(500).json({ error: 'Failed to send message' });
     }
 });
 
-// Admin endpoint to view messages (protected)
 app.get('/api/admin/contacts', async (req, res) => {
     try {
         const supabase = require('../lib/supabase');
-        
-        const { data, error } = await supabase
-            .from('contacts')
-            .select('*')
-            .order('created_at', { ascending: false });
-        
+        const { data, error } = await supabase.from('contacts').select('*').order('created_at', { ascending: false });
         if (error) throw error;
         res.json(data);
     } catch (error) {
@@ -284,6 +231,10 @@ app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, '../public/admin/index.html'));
 });
 
+app.get('/admin/messages', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/admin/messages.html'));
+});
+
 app.get('/privacy', (req, res) => {
     res.sendFile(path.join(__dirname, '../public/privacy.html'));
 });
@@ -296,15 +247,9 @@ app.get('/contact', (req, res) => {
     res.sendFile(path.join(__dirname, '../public/contact.html'));
 });
 
-// ============ GLOBAL ERROR HANDLER ============
+// ============ ERROR HANDLER ============
 app.use((err, req, res, next) => {
-    console.error('Server error:', {
-        message: err.message,
-        path: req.path,
-        method: req.method,
-        ip: req.ip
-    });
-    
+    console.error('Server error:', err.message);
     res.status(err.status || 500).json({ 
         error: process.env.NODE_ENV === 'production' 
             ? 'Something went wrong. Please try again later.' 
@@ -312,13 +257,12 @@ app.use((err, req, res, next) => {
     });
 });
 
-// Handle uncaught exceptions
 process.on('uncaughtException', (error) => {
     console.error('Uncaught Exception:', error);
     process.exit(1);
 });
 
-process.on('unhandledRejection', (reason, promise) => {
+process.on('unhandledRejection', (reason) => {
     console.error('Unhandled Rejection:', reason);
 });
 
