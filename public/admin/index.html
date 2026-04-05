@@ -4,79 +4,287 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Income School</title>
-    <link rel="stylesheet" href="/css/admin.css">
     <style>
-        .content-type-selector {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        .type-btn {
-            padding: 10px 20px;
-            border: 2px solid #ddd;
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f0f2f5;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 0;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        /* Navigation */
+        .nav {
             background: white;
-            cursor: pointer;
-            border-radius: 5px;
-            transition: all 0.3s;
-            font-size: 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
-        .type-btn.active {
+        
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .nav-btn {
             background: #667eea;
             color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .nav-btn:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+        
+        /* Sections */
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 30px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        /* Forms */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: border 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
             border-color: #667eea;
         }
-        .upload-section, .link-section {
+        
+        button[type="submit"] {
+            background: #48bb78;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        button[type="submit"]:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+        }
+        
+        /* Module Cards */
+        .module-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
             padding: 20px;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            margin-top: 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s;
         }
-        .hidden {
-            display: none;
+        
+        .module-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-        .youtube-preview {
-            margin-top: 20px;
-            padding: 15px;
-            background: #f9f9f9;
-            border-radius: 8px;
+        
+        .module-card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.3rem;
         }
-        .youtube-preview iframe {
-            max-width: 100%;
+        
+        .lesson-item {
+            background: white;
+            padding: 12px;
+            margin: 10px 0;
+            border-left: 4px solid #48bb78;
+            border-radius: 6px;
+        }
+        
+        /* Messages */
+        .message-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .message-subject {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 1.1rem;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .status-unread {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+        
+        /* Footer */
+        .footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 20px 0;
+            margin-top: 40px;
+        }
+        
+        .footer a {
+            color: white;
+            text-decoration: none;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .nav-btn {
+                width: 80%;
+            }
+            
+            .section {
+                padding: 20px;
+            }
+        }
+        
+        /* Alert messages */
+        .alert-success {
+            background: #c6f6d5;
+            color: #22543d;
+            padding: 12px;
             border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-error {
+            background: #fed7d7;
+            color: #742a2a;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .refresh-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 20px;
         }
     </style>
-    
-    <!-- Vercel Analytics -->
-    <script>
-        window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
-    </script>
-    <script defer src="/_vercel/insights/script.js"></script>
-    <script defer src="/_vercel/speed-insights/script.js"></script>
 </head>
 <body>
-    <header>
+    <div class="header">
         <div class="container">
             <h1>🔧 Admin Dashboard</h1>
             <p>Manage Courses and Content</p>
         </div>
-    </header>
-
-    <nav class="admin-nav">
+    </div>
+    
+    <div class="nav">
         <div class="container">
-            <button onclick="showSection('create-module')">➕ Create Module</button>
-            <button onclick="showSection('upload-content')">📤 Add Content</button>
-            <button onclick="showSection('view-modules')">📚 View All Modules</button>
-            <button onclick="location.href='/admin/messages'">📬 View Messages</button>
+            <div class="nav-buttons">
+                <button class="nav-btn" onclick="showSection('create')">➕ Create Module</button>
+                <button class="nav-btn" onclick="showSection('upload')">📤 Add Content</button>
+                <button class="nav-btn" onclick="showSection('modules')">📚 View Modules</button>
+                <button class="nav-btn" onclick="showSection('messages')">📬 View Messages</button>
+            </div>
         </div>
-    </nav>
-
-    <main class="container">
+    </div>
+    
+    <div class="container">
         <!-- Create Module Section -->
-        <section id="create-module-section" class="content-section">
+        <div id="createSection" class="section">
             <h2>Create New Module</h2>
-            <form id="module-form">
+            <form id="moduleForm">
                 <div class="form-group">
-                    <label>Module ID (unique identifier):</label>
+                    <label>Module ID (unique):</label>
                     <input type="text" name="moduleId" required placeholder="e.g., video-editing-101">
                 </div>
                 <div class="form-group">
@@ -85,7 +293,7 @@
                 </div>
                 <div class="form-group">
                     <label>Description:</label>
-                    <textarea name="description" rows="3" placeholder="What will students learn?"></textarea>
+                    <textarea name="description" rows="3"></textarea>
                 </div>
                 <div class="form-group">
                     <label>Estimated Time:</label>
@@ -93,63 +301,41 @@
                 </div>
                 <button type="submit">Create Module</button>
             </form>
-            <div id="create-message"></div>
-        </section>
-
+            <div id="createMsg"></div>
+        </div>
+        
         <!-- Upload Content Section -->
-        <section id="upload-content-section" class="content-section" style="display: none;">
+        <div id="uploadSection" class="section hidden">
             <h2>Add Content to Module</h2>
-            
-            <form id="upload-form">
+            <form id="uploadForm">
                 <div class="form-group">
                     <label>Select Module:</label>
-                    <select id="uploadModuleId" required>
-                        <option value="">Loading modules...</option>
+                    <select id="moduleSelect" required>
+                        <option value="">Loading...</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label>Lesson Title:</label>
-                    <input type="text" id="lessonTitle" required placeholder="e.g., Introduction to Video Editing">
+                    <input type="text" id="lessonTitle" required>
                 </div>
-                
-                <!-- Content Type Selection -->
                 <div class="form-group">
                     <label>Content Type:</label>
-                    <div class="content-type-selector">
-                        <button type="button" id="typeFileBtn" class="type-btn active">📁 Upload File</button>
-                        <button type="button" id="typeYoutubeBtn" class="type-btn">▶️ YouTube Link</button>
-                    </div>
+                    <select id="contentTypeSelect">
+                        <option value="youtube">YouTube Video</option>
+                        <option value="video">Upload Video</option>
+                        <option value="pdf">PDF Document</option>
+                    </select>
                 </div>
-                
-                <!-- File Upload Section -->
-                <div id="fileSection">
-                    <div class="form-group">
-                        <label>Content Type Category:</label>
-                        <select id="contentType">
-                            <option value="video">Video (MP4)</option>
-                            <option value="pdf">PDF Document</option>
-                            <option value="image">Image</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Upload File:</label>
-                        <input type="file" id="file" accept="video/mp4,application/pdf,image/*">
-                        <small>Supported: MP4, PDF, JPEG, PNG (Max 100MB)</small>
-                    </div>
+                <div class="form-group" id="youtubeUrlGroup">
+                    <label>YouTube URL:</label>
+                    <input type="url" id="youtubeUrl" placeholder="https://youtu.be/...">
                 </div>
-                
-                <!-- YouTube Link Section -->
-                <div id="youtubeSection" style="display: none;">
-                    <div class="form-group">
-                        <label>YouTube Video URL:</label>
-                        <input type="url" id="youtubeUrl" placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/...">
-                        <small>Paste any YouTube video URL - no file upload needed!</small>
-                    </div>
-                    <div id="youtubePreview" style="display: none; margin-top: 20px; padding: 15px; background: #f9f9f9; border-radius: 8px;"></div>
+                <div class="form-group" id="fileGroup" style="display:none;">
+                    <label>Upload File:</label>
+                    <input type="file" id="fileInput">
                 </div>
-                
                 <div class="form-group">
-                    <label>Duration (optional):</label>
+                    <label>Duration:</label>
                     <input type="text" id="duration" placeholder="e.g., 10 minutes">
                 </div>
                 <div class="form-group">
@@ -158,94 +344,226 @@
                 </div>
                 <button type="submit">Add Content</button>
             </form>
-            <div id="upload-message"></div>
-        </section>
-
+            <div id="uploadMsg"></div>
+        </div>
+        
         <!-- View Modules Section -->
-        <section id="view-modules-section" class="content-section" style="display: none;">
+        <div id="modulesSection" class="section hidden">
             <h2>All Modules</h2>
-            <div id="modules-list"></div>
-        </section>
-    </main>
-
-    <script src="/js/admin.js"></script>
+            <div id="modulesList"></div>
+        </div>
+        
+        <!-- View Messages Section -->
+        <div id="messagesSection" class="section hidden">
+            <h2>Contact Messages</h2>
+            <button class="refresh-btn" onclick="loadMessages()">🔄 Refresh</button>
+            <div id="messagesList"></div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <div class="container">
+            <p>© 2026 Income School - Admin Dashboard</p>
+        </div>
+    </div>
+    
     <script>
-        // Content type switching
-        const typeFileBtn = document.getElementById('typeFileBtn');
-        const typeYoutubeBtn = document.getElementById('typeYoutubeBtn');
-        const fileSection = document.getElementById('fileSection');
-        const youtubeSection = document.getElementById('youtubeSection');
-        const fileInput = document.getElementById('file');
-        const youtubeUrlInput = document.getElementById('youtubeUrl');
+        let currentContentType = 'youtube';
         
-        // Switch to File Upload
-        typeFileBtn.addEventListener('click', function() {
-            typeFileBtn.classList.add('active');
-            typeYoutubeBtn.classList.remove('active');
-            fileSection.style.display = 'block';
-            youtubeSection.style.display = 'none';
-            fileInput.required = true;
-            youtubeUrlInput.required = false;
-            document.getElementById('youtubePreview').style.display = 'none';
+        // Toggle between YouTube and File upload
+        document.getElementById('contentTypeSelect').addEventListener('change', function() {
+            currentContentType = this.value;
+            if (this.value === 'youtube') {
+                document.getElementById('youtubeUrlGroup').style.display = 'block';
+                document.getElementById('fileGroup').style.display = 'none';
+            } else {
+                document.getElementById('youtubeUrlGroup').style.display = 'none';
+                document.getElementById('fileGroup').style.display = 'block';
+            }
         });
         
-        // Switch to YouTube Link
-        typeYoutubeBtn.addEventListener('click', function() {
-            typeYoutubeBtn.classList.add('active');
-            typeFileBtn.classList.remove('active');
-            fileSection.style.display = 'none';
-            youtubeSection.style.display = 'block';
-            fileInput.required = false;
-            youtubeUrlInput.required = true;
-        });
-        
-        // YouTube URL preview
-        youtubeUrlInput.addEventListener('input', function() {
-            const url = this.value;
-            const previewDiv = document.getElementById('youtubePreview');
+        // Show section
+        function showSection(section) {
+            document.getElementById('createSection').classList.add('hidden');
+            document.getElementById('uploadSection').classList.add('hidden');
+            document.getElementById('modulesSection').classList.add('hidden');
+            document.getElementById('messagesSection').classList.add('hidden');
             
-            if (url) {
-                const videoId = extractYouTubeId(url);
-                if (videoId) {
-                    previewDiv.style.display = 'block';
-                    previewDiv.innerHTML = `
-                        <p>✅ Video Preview:</p>
-                        <iframe width="100%" height="315" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>
-                        <small>YouTube video will play directly in your course</small>
+            if (section === 'create') document.getElementById('createSection').classList.remove('hidden');
+            if (section === 'upload') {
+                document.getElementById('uploadSection').classList.remove('hidden');
+                loadModulesDropdown();
+            }
+            if (section === 'modules') {
+                document.getElementById('modulesSection').classList.remove('hidden');
+                loadAllModules();
+            }
+            if (section === 'messages') {
+                document.getElementById('messagesSection').classList.remove('hidden');
+                loadMessages();
+            }
+        }
+        
+        // Load modules dropdown
+        async function loadModulesDropdown() {
+            try {
+                const res = await fetch('/api/modules');
+                const modules = await res.json();
+                const select = document.getElementById('moduleSelect');
+                select.innerHTML = '<option value="">Select a module...</option>';
+                modules.forEach(m => {
+                    const option = document.createElement('option');
+                    option.value = m.module_id || m.moduleId;
+                    option.textContent = m.title;
+                    select.appendChild(option);
+                });
+            } catch (err) {
+                console.error(err);
+            }
+        }
+        
+        // Load all modules
+        async function loadAllModules() {
+            try {
+                const res = await fetch('/api/modules');
+                const modules = await res.json();
+                const container = document.getElementById('modulesList');
+                container.innerHTML = '';
+                
+                for (const module of modules) {
+                    const moduleId = module.module_id || module.moduleId;
+                    const lessonsRes = await fetch(`/api/modules/${moduleId}/lessons`);
+                    const lessons = await lessonsRes.json();
+                    
+                    const card = document.createElement('div');
+                    card.className = 'module-card';
+                    card.innerHTML = `
+                        <h3>📚 ${module.title}</h3>
+                        <p><strong>ID:</strong> ${moduleId}</p>
+                        <p>${module.description || 'No description'}</p>
+                        <p><strong>⏱️ ${module.estimatedTime || 'TBD'}</strong></p>
+                        <h4>Lessons (${lessons.length})</h4>
+                        <div>${lessons.map(l => `<div class="lesson-item"><strong>${l.order || 1}. ${l.title}</strong><br><small>${l.contentType} | ${l.duration || 'N/A'}</small></div>`).join('') || '<p>No lessons yet</p>'}</div>
                     `;
+                    container.appendChild(card);
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+        
+        // Load messages
+        async function loadMessages() {
+            try {
+                const res = await fetch('/api/admin/contacts');
+                if (res.status === 401) {
+                    document.getElementById('messagesList').innerHTML = '<p style="color: red;">⚠️ Please log in to view messages</p>';
+                    return;
+                }
+                const messages = await res.json();
+                const container = document.getElementById('messagesList');
+                
+                if (messages.length === 0) {
+                    container.innerHTML = '<p>📭 No messages yet</p>';
+                    return;
+                }
+                
+                container.innerHTML = messages.map(msg => `
+                    <div class="message-card">
+                        <div class="message-header">
+                            <span class="message-subject">${escapeHtml(msg.subject)}</span>
+                            <span class="status-badge status-${msg.status}">${msg.status}</span>
+                        </div>
+                        <div><strong>From:</strong> ${escapeHtml(msg.name)} (${escapeHtml(msg.email)})</div>
+                        <div><strong>Date:</strong> ${new Date(msg.created_at).toLocaleString()}</div>
+                        <div style="margin-top: 10px;"><strong>Message:</strong></div>
+                        <div>${escapeHtml(msg.message)}</div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error(err);
+                document.getElementById('messagesList').innerHTML = '<p style="color: red;">Error loading messages</p>';
+            }
+        }
+        
+        // Create module
+        document.getElementById('moduleForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            try {
+                const res = await fetch('/api/admin/modules', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (res.ok) {
+                    document.getElementById('createMsg').innerHTML = '<div class="alert-success">✅ Module created!</div>';
+                    e.target.reset();
+                    setTimeout(() => document.getElementById('createMsg').innerHTML = '', 3000);
                 } else {
-                    previewDiv.style.display = 'block';
-                    previewDiv.innerHTML = `<p style="color: red;">❌ Invalid YouTube URL. Please check the link.</p>`;
+                    const err = await res.json();
+                    document.getElementById('createMsg').innerHTML = `<div class="alert-error">❌ ${err.error}</div>`;
+                }
+            } catch (err) {
+                document.getElementById('createMsg').innerHTML = '<div class="alert-error">❌ Error</div>';
+            }
+        });
+        
+        // Upload content
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const moduleId = document.getElementById('moduleSelect').value;
+            const lessonTitle = document.getElementById('lessonTitle').value;
+            const duration = document.getElementById('duration').value;
+            const order = document.getElementById('order').value;
+            
+            if (!moduleId || !lessonTitle) {
+                document.getElementById('uploadMsg').innerHTML = '<div class="alert-error">❌ Please fill all fields</div>';
+                return;
+            }
+            
+            const contentType = document.getElementById('contentTypeSelect').value;
+            
+            if (contentType === 'youtube') {
+                const youtubeUrl = document.getElementById('youtubeUrl').value;
+                if (!youtubeUrl) {
+                    document.getElementById('uploadMsg').innerHTML = '<div class="alert-error">❌ Please enter YouTube URL</div>';
+                    return;
+                }
+                
+                try {
+                    const res = await fetch('/api/admin/youtube-lesson', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ moduleId, lessonTitle, youtubeUrl, duration, order })
+                    });
+                    if (res.ok) {
+                        document.getElementById('uploadMsg').innerHTML = '<div class="alert-success">✅ Lesson added!</div>';
+                        document.getElementById('lessonTitle').value = '';
+                        document.getElementById('youtubeUrl').value = '';
+                        setTimeout(() => document.getElementById('uploadMsg').innerHTML = '', 3000);
+                    } else {
+                        const err = await res.json();
+                        document.getElementById('uploadMsg').innerHTML = `<div class="alert-error">❌ ${err.error}</div>`;
+                    }
+                } catch (err) {
+                    document.getElementById('uploadMsg').innerHTML = '<div class="alert-error">❌ Error</div>';
                 }
             } else {
-                previewDiv.style.display = 'none';
+                document.getElementById('uploadMsg').innerHTML = '<div class="alert-error">❌ File upload coming soon</div>';
             }
         });
         
-        function extractYouTubeId(url) {
-            const patterns = [
-                /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?/]+)/,
-                /youtube\.com\/embed\/([^/?]+)/,
-                /youtube\.com\/v\/([^/?]+)/
-            ];
-            for (const pattern of patterns) {
-                const match = url.match(pattern);
-                if (match) return match[1];
-            }
-            return null;
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
+        
+        // Default view
+        showSection('create');
     </script>
 </body>
 </html>
-    <footer>
-        <div class="container">
-            <p>© 2026 Income School - Admin Dashboard</p>
-            <p><a href="/privacy" style="color: white;">Privacy Policy</a> | <a href="/terms" style="color: white;">Terms of Use</a></p>
-        </div>
-    </footer>
-    <footer>
-        <div class="container">
-            <p>© 2026 Income School - Admin Dashboard</p>
-            <p><a href="/privacy" style="color: white;">Privacy Policy</a> | <a href="/terms" style="color: white;">Terms of Use</a> | <a href="/contact" style="color: white;">Contact</a></p>
-        </div>
-    </footer>
