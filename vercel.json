@@ -16,12 +16,28 @@
       "dest": "/api/server.js"
     },
     {
+      "src": "/admin/messages",
+      "dest": "/api/server.js"
+    },
+    {
       "src": "/admin",
       "dest": "/api/server.js"
     },
     {
+      "src": "/privacy",
+      "dest": "/api/server.js"
+    },
+    {
+      "src": "/terms",
+      "dest": "/api/server.js"
+    },
+    {
+      "src": "/contact",
+      "dest": "/api/server.js"
+    },
+    {
       "src": "/(.*)",
-      "dest": "/public/$1"
+      "dest": "/api/server.js"
     }
   ]
 }
