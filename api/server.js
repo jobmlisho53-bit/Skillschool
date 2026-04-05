@@ -146,7 +146,6 @@ app.post('/api/admin/modules', async (req, res) => {
     try {
         const { moduleId, title, description, estimatedTime, category } = req.body;
         
-        // Validate input
         if (!moduleId || !title) {
             return res.status(400).json({ error: 'Module ID and Title are required' });
         }
@@ -173,7 +172,6 @@ app.post('/api/admin/youtube-lesson', async (req, res) => {
     try {
         const { moduleId, lessonTitle, youtubeUrl, duration, order } = req.body;
         
-        // Validate input
         if (!moduleId || !lessonTitle || !youtubeUrl) {
             return res.status(400).json({ error: 'Module ID, Lesson Title, and YouTube URL are required' });
         }
@@ -221,6 +219,62 @@ app.get('/api/skills', async (req, res) => {
     }
 });
 
+// Contact form endpoint - stores messages in Supabase
+app.post('/api/contact', async (req, res) => {
+    try {
+        const { name, email, subject, message, timestamp } = req.body;
+        
+        if (!name || !email || !subject || !message) {
+            return res.status(400).json({ error: 'All fields are required' });
+        }
+        
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ error: 'Invalid email address' });
+        }
+        
+        const supabase = require('../lib/supabase');
+        
+        const { data, error } = await supabase
+            .from('contacts')
+            .insert([{
+                name: name,
+                email: email,
+                subject: subject,
+                message: message,
+                created_at: timestamp || new Date().toISOString(),
+                status: 'unread'
+            }])
+            .select();
+        
+        if (error) throw error;
+        
+        console.log(`New contact message from ${name} (${email}): ${subject}`);
+        
+        res.json({ success: true, message: 'Message sent successfully' });
+    } catch (error) {
+        console.error('Contact form error:', error);
+        res.status(500).json({ error: 'Failed to send message' });
+    }
+});
+
+// Admin endpoint to view messages (protected)
+app.get('/api/admin/contacts', async (req, res) => {
+    try {
+        const supabase = require('../lib/supabase');
+        
+        const { data, error } = await supabase
+            .from('contacts')
+            .select('*')
+            .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // ============ FRONTEND ROUTES ============
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../public/index.html'));
@@ -228,6 +282,18 @@ app.get('/', (req, res) => {
 
 app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, '../public/admin/index.html'));
+});
+
+app.get('/privacy', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/privacy.html'));
+});
+
+app.get('/terms', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/terms.html'));
+});
+
+app.get('/contact', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/contact.html'));
 });
 
 // ============ GLOBAL ERROR HANDLER ============
