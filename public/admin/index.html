@@ -23,7 +23,6 @@
             padding: 0 20px;
         }
         
-        /* Header */
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -36,7 +35,6 @@
             margin-bottom: 10px;
         }
         
-        /* Navigation */
         .nav {
             background: white;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
@@ -70,7 +68,6 @@
             transform: translateY(-2px);
         }
         
-        /* Sections */
         .section {
             background: white;
             border-radius: 12px;
@@ -89,7 +86,6 @@
             display: none !important;
         }
         
-        /* Forms */
         .form-group {
             margin-bottom: 20px;
         }
@@ -137,7 +133,6 @@
             transform: translateY(-2px);
         }
         
-        /* Module Cards */
         .module-card {
             background: #f8f9fa;
             border: 1px solid #e9ecef;
@@ -163,9 +158,31 @@
             margin: 10px 0;
             border-left: 4px solid #48bb78;
             border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         
-        /* Messages */
+        .lesson-info {
+            flex: 1;
+        }
+        
+        .delete-btn {
+            background: #f56565;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+        }
+        
+        .delete-btn:hover {
+            background: #e53e3e;
+            transform: scale(1.05);
+        }
+        
         .message-card {
             background: #f8f9fa;
             border-radius: 10px;
@@ -201,7 +218,6 @@
             color: #742a2a;
         }
         
-        /* Footer */
         .footer {
             background: #333;
             color: white;
@@ -210,28 +226,26 @@
             margin-top: 40px;
         }
         
-        .footer a {
-            color: white;
-            text-decoration: none;
-        }
-        
-        /* Responsive */
         @media (max-width: 768px) {
             .nav-buttons {
                 flex-direction: column;
                 align-items: center;
             }
-            
             .nav-btn {
                 width: 80%;
             }
-            
             .section {
                 padding: 20px;
             }
+            .lesson-item {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .delete-btn {
+                width: 100%;
+            }
         }
         
-        /* Alert messages */
         .alert-success {
             background: #c6f6d5;
             color: #22543d;
@@ -257,6 +271,19 @@
             cursor: pointer;
             margin-bottom: 20px;
         }
+        
+        .confirm-dialog {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            z-index: 1000;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -279,7 +306,6 @@
     </div>
     
     <div class="container">
-        <!-- Create Module Section -->
         <div id="createSection" class="section">
             <h2>Create New Module</h2>
             <form id="moduleForm">
@@ -304,7 +330,6 @@
             <div id="createMsg"></div>
         </div>
         
-        <!-- Upload Content Section -->
         <div id="uploadSection" class="section hidden">
             <h2>Add Content to Module</h2>
             <form id="uploadForm">
@@ -347,13 +372,11 @@
             <div id="uploadMsg"></div>
         </div>
         
-        <!-- View Modules Section -->
         <div id="modulesSection" class="section hidden">
             <h2>All Modules</h2>
             <div id="modulesList"></div>
         </div>
         
-        <!-- View Messages Section -->
         <div id="messagesSection" class="section hidden">
             <h2>Contact Messages</h2>
             <button class="refresh-btn" onclick="loadMessages()">🔄 Refresh</button>
@@ -370,7 +393,6 @@
     <script>
         let currentContentType = 'youtube';
         
-        // Toggle between YouTube and File upload
         document.getElementById('contentTypeSelect').addEventListener('change', function() {
             currentContentType = this.value;
             if (this.value === 'youtube') {
@@ -382,7 +404,6 @@
             }
         });
         
-        // Show section
         function showSection(section) {
             document.getElementById('createSection').classList.add('hidden');
             document.getElementById('uploadSection').classList.add('hidden');
@@ -404,7 +425,6 @@
             }
         }
         
-        // Load modules dropdown
         async function loadModulesDropdown() {
             try {
                 const res = await fetch('/api/modules');
@@ -422,7 +442,6 @@
             }
         }
         
-        // Load all modules
         async function loadAllModules() {
             try {
                 const res = await fetch('/api/modules');
@@ -443,16 +462,54 @@
                         <p>${module.description || 'No description'}</p>
                         <p><strong>⏱️ ${module.estimatedTime || 'TBD'}</strong></p>
                         <h4>Lessons (${lessons.length})</h4>
-                        <div>${lessons.map(l => `<div class="lesson-item"><strong>${l.order || 1}. ${l.title}</strong><br><small>${l.contentType} | ${l.duration || 'N/A'}</small></div>`).join('') || '<p>No lessons yet</p>'}</div>
+                        <div id="lessons-${moduleId}"></div>
                     `;
                     container.appendChild(card);
+                    
+                    const lessonsDiv = document.getElementById(`lessons-${moduleId}`);
+                    if (lessons.length === 0) {
+                        lessonsDiv.innerHTML = '<p>No lessons yet</p>';
+                    } else {
+                        lessons.sort((a, b) => (a.order || 0) - (b.order || 0));
+                        lessons.forEach(lesson => {
+                            const lessonDiv = document.createElement('div');
+                            lessonDiv.className = 'lesson-item';
+                            lessonDiv.innerHTML = `
+                                <div class="lesson-info">
+                                    <strong>${lesson.order || 1}. ${lesson.title}</strong><br>
+                                    <small>${lesson.contentType} | ${lesson.duration || 'N/A'}</small>
+                                </div>
+                                <button class="delete-btn" onclick="deleteLesson('${lesson.id}', '${lesson.title.replace(/'/g, "\\'")}')">🗑️ Delete</button>
+                            `;
+                            lessonsDiv.appendChild(lessonDiv);
+                        });
+                    }
                 }
             } catch (err) {
                 console.error(err);
             }
         }
         
-        // Load messages
+        async function deleteLesson(lessonId, lessonTitle) {
+            if (confirm(`Delete "${lessonTitle}"? This cannot be undone.`)) {
+                try {
+                    const response = await fetch(`/api/admin/lessons/${lessonId}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        alert('✅ Lesson deleted successfully');
+                        loadAllModules(); // Refresh the view
+                    } else {
+                        const error = await response.json();
+                        alert('❌ Failed to delete: ' + (error.error || 'Unknown error'));
+                    }
+                } catch (err) {
+                    alert('❌ Error: ' + err.message);
+                }
+            }
+        }
+        
         async function loadMessages() {
             try {
                 const res = await fetch('/api/admin/contacts');
@@ -486,7 +543,6 @@
             }
         }
         
-        // Create module
         document.getElementById('moduleForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(e.target);
@@ -510,7 +566,6 @@
             }
         });
         
-        // Upload content
         document.getElementById('uploadForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const moduleId = document.getElementById('moduleSelect').value;
@@ -562,7 +617,6 @@
             return div.innerHTML;
         }
         
-        // Default view
         showSection('create');
     </script>
 </body>

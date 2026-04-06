@@ -267,3 +267,50 @@ process.on('unhandledRejection', (reason) => {
 });
 
 module.exports = app;
+
+// Delete a lesson
+app.delete('/api/admin/lessons/:lessonId', async (req, res) => {
+    try {
+        const { lessonId } = req.params;
+        const supabase = require('../lib/supabase');
+        
+        // First, get the lesson to know which module it belongs to
+        const { data: lesson, error: fetchError } = await supabase
+            .from('lessons')
+            .select('module_id')
+            .eq('id', lessonId)
+            .single();
+        
+        if (fetchError) throw fetchError;
+        
+        // Delete the lesson
+        const { error: deleteError } = await supabase
+            .from('lessons')
+            .delete()
+            .eq('id', lessonId);
+        
+        if (deleteError) throw deleteError;
+        
+        // Optional: Reorder remaining lessons
+        if (lesson && lesson.module_id) {
+            const { data: remainingLessons } = await supabase
+                .from('lessons')
+                .select('id')
+                .eq('module_id', lesson.module_id)
+                .order('lesson_order', { ascending: true });
+            
+            // Renumber lessons sequentially
+            for (let i = 0; i < remainingLessons.length; i++) {
+                await supabase
+                    .from('lessons')
+                    .update({ lesson_order: i + 1 })
+                    .eq('id', remainingLessons[i].id);
+            }
+        }
+        
+        res.json({ success: true, message: 'Lesson deleted successfully' });
+    } catch (error) {
+        console.error('Delete error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
