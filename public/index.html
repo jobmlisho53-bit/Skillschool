@@ -49,11 +49,33 @@
             cursor: pointer;
             transition: all 0.3s ease;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative;
         }
         
         .skill-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 5px 25px rgba(0,0,0,0.15);
+        }
+        
+        .progress-bar-container {
+            background: #e0e0e0;
+            border-radius: 10px;
+            height: 8px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        
+        .progress-bar-fill {
+            background: #48bb78;
+            height: 100%;
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+        
+        .progress-text {
+            font-size: 0.8rem;
+            color: #666;
+            text-align: right;
         }
         
         .skill-card h3 {
@@ -85,10 +107,42 @@
             cursor: pointer;
             transition: background 0.3s;
             border-left: 4px solid #667eea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         
         .lesson-item:hover {
             background: #f9f9f9;
+        }
+        
+        .lesson-completed {
+            border-left-color: #48bb78;
+            background: #f0fff4;
+        }
+        
+        .complete-badge {
+            background: #48bb78;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+        
+        .mark-complete-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-top: 15px;
+        }
+        
+        .mark-complete-btn:hover {
+            background: #5a67d8;
         }
         
         .video-container {
@@ -108,6 +162,70 @@
             border-radius: 8px;
         }
         
+        /* Feedback Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .rating-stars {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .star {
+            font-size: 2rem;
+            cursor: pointer;
+            color: #ddd;
+            transition: color 0.3s;
+        }
+        
+        .star.active {
+            color: #ffc107;
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: inherit;
+        }
+        
+        .feedback-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        
+        .feedback-btn:hover {
+            background: #5a67d8;
+        }
+        
         footer {
             background: #333;
             color: white;
@@ -121,10 +239,6 @@
             text-decoration: none;
         }
         
-        footer a:hover {
-            text-decoration: underline;
-        }
-        
         .hidden {
             display: none !important;
         }
@@ -134,6 +248,14 @@
             padding: 40px;
             font-size: 1.2rem;
             color: #666;
+        }
+        
+        @media (max-width: 768px) {
+            .lesson-item {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
         }
     </style>
     
@@ -166,6 +288,10 @@
             <button id="back-to-courses" class="back-button">← Back to Courses</button>
             <h2 id="course-title"></h2>
             <div id="course-description"></div>
+            <div class="progress-bar-container" id="module-progress-container" style="display: none;">
+                <div class="progress-bar-fill" id="module-progress-fill" style="width: 0%"></div>
+            </div>
+            <div class="progress-text" id="module-progress-text"></div>
             <h3>Course Lessons</h3>
             <div id="lessons-list"></div>
         </section>
@@ -175,8 +301,41 @@
             <button id="back-to-lessons" class="back-button">← Back to Lessons</button>
             <h2 id="lesson-title"></h2>
             <div id="lesson-player"></div>
+            <button id="mark-complete-btn" class="mark-complete-btn">✅ Mark as Complete</button>
         </section>
     </main>
+
+    <!-- Feedback Modal -->
+    <div id="feedbackModal" class="modal">
+        <div class="modal-content">
+            <h2>📝 Module Feedback</h2>
+            <p>Help us improve this course!</p>
+            
+            <div class="form-group">
+                <label>Was this module helpful?</label>
+                <div class="rating-stars" id="helpful-stars">
+                    <span class="star" data-value="1">★</span>
+                    <span class="star" data-value="2">★</span>
+                    <span class="star" data-value="3">★</span>
+                    <span class="star" data-value="4">★</span>
+                    <span class="star" data-value="5">★</span>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>What confused you? (Optional)</label>
+                <textarea id="confusion" rows="3" placeholder="Any topics that were unclear?"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>Suggestions for improvement (Optional)</label>
+                <textarea id="suggestions" rows="3" placeholder="What would make this course better?"></textarea>
+            </div>
+            
+            <button class="feedback-btn" onclick="submitFeedback()">Submit Feedback</button>
+            <button class="feedback-btn" onclick="closeFeedbackModal()">Skip</button>
+        </div>
+    </div>
 
     <footer>
         <div class="container">
@@ -188,6 +347,22 @@
     <script>
         let currentCourse = null;
         let currentLesson = null;
+        let currentLessons = [];
+        let userId = null;
+        let completedLessons = new Set();
+        let selectedRating = 0;
+        
+        // Generate or get user ID from localStorage
+        function getUserId() {
+            let id = localStorage.getItem('user_id');
+            if (!id) {
+                id = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('user_id', id);
+            }
+            return id;
+        }
+        
+        userId = getUserId();
         
         // Load courses on page load
         async function loadCourses() {
@@ -204,7 +379,10 @@
                 
                 container.innerHTML = '';
                 
-                courses.forEach(course => {
+                for (const course of courses) {
+                    const moduleId = course.module_id || course.moduleId;
+                    const progress = await getModuleProgress(moduleId);
+                    
                     const card = document.createElement('div');
                     card.className = 'skill-card';
                     card.onclick = () => showCourse(course);
@@ -223,13 +401,17 @@
                         <div style="font-size: 3rem; margin-bottom: 10px;">${emoji}</div>
                         <h3>${escapeHtml(course.title)}</h3>
                         <p style="color: #666; margin: 10px 0;">${escapeHtml(course.description || 'Learn this valuable skill')}</p>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar-fill" style="width: ${progress.percentage}%"></div>
+                        </div>
+                        <div class="progress-text">${progress.completed}/${progress.total} lessons completed (${progress.percentage}%)</div>
                         <div style="display: flex; justify-content: space-between; margin-top: 15px;">
                             <small style="color: #999;">⏱️ ${escapeHtml(course.estimatedTime || 'Self-paced')}</small>
-                            <small style="color: #48bb78;">▶️ Start Learning</small>
+                            <small style="color: #48bb78;">▶️ Continue Learning</small>
                         </div>
                     `;
                     container.appendChild(card);
-                });
+                }
                 
                 console.log(`Loaded ${courses.length} courses`);
             } catch (error) {
@@ -239,9 +421,21 @@
             }
         }
         
+        // Get module progress
+        async function getModuleProgress(moduleId) {
+            try {
+                const response = await fetch(`/api/progress/${userId}/${moduleId}`);
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                return { total: 0, completed: 0, percentage: 0 };
+            }
+        }
+        
         // Show course lessons
         async function showCourse(course) {
             currentCourse = course;
+            const moduleId = course.module_id || course.moduleId;
             
             document.getElementById('course-title').textContent = course.title;
             document.getElementById('course-description').innerHTML = `
@@ -252,8 +446,18 @@
             `;
             
             try {
-                const response = await fetch(`/api/modules/${course.module_id}/lessons`);
+                const response = await fetch(`/api/modules/${moduleId}/lessons`);
                 const lessons = await response.json();
+                currentLessons = lessons;
+                
+                // Get user progress
+                const progressResponse = await fetch(`/api/progress/${userId}/${moduleId}`);
+                const progress = await progressResponse.json();
+                
+                // Update progress bar
+                document.getElementById('module-progress-container').style.display = 'block';
+                document.getElementById('module-progress-fill').style.width = `${progress.percentage}%`;
+                document.getElementById('module-progress-text').textContent = `${progress.completed}/${progress.total} lessons completed (${progress.percentage}%)`;
                 
                 const lessonsList = document.getElementById('lessons-list');
                 lessonsList.innerHTML = '';
@@ -263,18 +467,17 @@
                 } else {
                     lessons.sort((a, b) => (a.order || 0) - (b.order || 0));
                     lessons.forEach(lesson => {
+                        const isCompleted = progress.completedLessons?.includes(lesson.id);
                         const lessonItem = document.createElement('div');
-                        lessonItem.className = 'lesson-item';
+                        lessonItem.className = `lesson-item ${isCompleted ? 'lesson-completed' : ''}`;
                         const icon = lesson.contentType === 'youtube' ? '▶️' : (lesson.contentType === 'video' ? '🎥' : '📄');
                         lessonItem.innerHTML = `
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <div>
-                                    <strong>${lesson.order || 1}. ${escapeHtml(lesson.title)}</strong>
-                                    <br>
-                                    <small>${icon} ${lesson.contentType === 'youtube' ? 'YouTube Video' : lesson.contentType} | ⏱️ ${lesson.duration || 'N/A'}</small>
-                                </div>
-                                <div style="color: #667eea;">▶️</div>
+                            <div>
+                                <strong>${lesson.order || 1}. ${escapeHtml(lesson.title)}</strong>
+                                <br>
+                                <small>${icon} ${lesson.contentType === 'youtube' ? 'YouTube Video' : lesson.contentType} | ⏱️ ${lesson.duration || 'N/A'}</small>
                             </div>
+                            ${isCompleted ? '<span class="complete-badge">✓ Completed</span>' : ''}
                         `;
                         lessonItem.onclick = () => playLesson(lesson);
                         lessonsList.appendChild(lessonItem);
@@ -291,7 +494,7 @@
             }
         }
         
-        // Play lesson (supports YouTube and file videos)
+        // Play lesson
         function playLesson(lesson) {
             currentLesson = lesson;
             
@@ -299,7 +502,6 @@
             const playerDiv = document.getElementById('lesson-player');
             
             if (lesson.contentType === 'youtube') {
-                // YouTube video
                 playerDiv.innerHTML = `
                     <div class="video-container">
                         <iframe src="https://www.youtube.com/embed/${lesson.youtubeId}" 
@@ -315,7 +517,6 @@
                     </div>
                 `;
             } else if (lesson.contentType === 'video' && lesson.fileUrl) {
-                // Uploaded video file
                 playerDiv.innerHTML = `
                     <video controls style="width: 100%; max-width: 800px; margin: 20px auto; display: block;">
                         <source src="${lesson.fileUrl}" type="video/mp4">
@@ -335,10 +536,122 @@
                 `;
             }
             
+            // Check if already completed
+            const markBtn = document.getElementById('mark-complete-btn');
+            markBtn.textContent = '✅ Mark as Complete';
+            markBtn.style.background = '#667eea';
+            
             // Switch views
             document.getElementById('courses-section').classList.add('hidden');
             document.getElementById('lessons-section').classList.add('hidden');
             document.getElementById('player-section').classList.remove('hidden');
+        }
+        
+        // Mark lesson as complete
+        document.getElementById('mark-complete-btn')?.addEventListener('click', async () => {
+            if (!currentLesson) return;
+            
+            try {
+                const response = await fetch('/api/progress/mark-complete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: userId,
+                        lessonId: currentLesson.id,
+                        moduleId: currentCourse?.module_id || currentCourse?.moduleId
+                    })
+                });
+                
+                if (response.ok) {
+                    const markBtn = document.getElementById('mark-complete-btn');
+                    markBtn.textContent = '✅ Completed!';
+                    markBtn.style.background = '#48bb78';
+                    markBtn.disabled = true;
+                    
+                    // Show feedback modal after completing all lessons in module
+                    const moduleId = currentCourse?.module_id || currentCourse?.moduleId;
+                    const progressResponse = await fetch(`/api/progress/${userId}/${moduleId}`);
+                    const progress = await progressResponse.json();
+                    
+                    if (progress.completed === progress.total && progress.total > 0) {
+                        // Check if already gave feedback for this module
+                        const feedbackGiven = localStorage.getItem(`feedback_${moduleId}_${userId}`);
+                        if (!feedbackGiven) {
+                            showFeedbackModal(moduleId);
+                        }
+                    }
+                    
+                    // Refresh course view
+                    if (currentCourse) {
+                        showCourse(currentCourse);
+                    }
+                } else {
+                    alert('Failed to mark as complete. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error marking complete:', error);
+                alert('Error saving progress.');
+            }
+        });
+        
+        // Show feedback modal
+        function showFeedbackModal(moduleId) {
+            const modal = document.getElementById('feedbackModal');
+            modal.style.display = 'flex';
+            
+            // Setup star rating
+            const stars = document.querySelectorAll('#helpful-stars .star');
+            stars.forEach(star => {
+                star.onclick = () => {
+                    selectedRating = parseInt(star.dataset.value);
+                    stars.forEach(s => {
+                        if (parseInt(s.dataset.value) <= selectedRating) {
+                            s.classList.add('active');
+                        } else {
+                            s.classList.remove('active');
+                        }
+                    });
+                };
+            });
+            
+            window.currentFeedbackModule = moduleId;
+        }
+        
+        function closeFeedbackModal() {
+            document.getElementById('feedbackModal').style.display = 'none';
+            selectedRating = 0;
+            document.getElementById('confusion').value = '';
+            document.getElementById('suggestions').value = '';
+            const stars = document.querySelectorAll('#helpful-stars .star');
+            stars.forEach(s => s.classList.remove('active'));
+        }
+        
+        async function submitFeedback() {
+            const moduleId = window.currentFeedbackModule;
+            const confusion = document.getElementById('confusion').value;
+            const suggestions = document.getElementById('suggestions').value;
+            
+            try {
+                const response = await fetch('/api/feedback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: userId,
+                        moduleId: moduleId,
+                        rating: selectedRating,
+                        confusion: confusion,
+                        suggestions: suggestions
+                    })
+                });
+                
+                if (response.ok) {
+                    localStorage.setItem(`feedback_${moduleId}_${userId}`, 'true');
+                    alert('Thank you for your feedback! 🙏');
+                    closeFeedbackModal();
+                }
+            } catch (error) {
+                console.error('Error submitting feedback:', error);
+            }
         }
         
         function escapeHtml(text) {
@@ -353,6 +666,7 @@
             document.getElementById('courses-section').classList.remove('hidden');
             document.getElementById('lessons-section').classList.add('hidden');
             document.getElementById('player-section').classList.add('hidden');
+            loadCourses(); // Refresh to show updated progress
         });
         
         document.getElementById('back-to-lessons')?.addEventListener('click', () => {

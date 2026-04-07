@@ -183,7 +183,7 @@
             transform: scale(1.05);
         }
         
-        .message-card {
+        .message-card, .feedback-card {
             background: #f8f9fa;
             border-radius: 10px;
             padding: 20px;
@@ -191,7 +191,7 @@
             border: 1px solid #e9ecef;
         }
         
-        .message-header {
+        .message-header, .feedback-header {
             display: flex;
             justify-content: space-between;
             margin-bottom: 10px;
@@ -199,7 +199,7 @@
             border-bottom: 1px solid #dee2e6;
         }
         
-        .message-subject {
+        .message-subject, .feedback-module {
             font-weight: bold;
             color: #667eea;
             font-size: 1.1rem;
@@ -218,12 +218,49 @@
             color: #742a2a;
         }
         
+        .rating-stars {
+            color: #ffc107;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+        }
+        
+        .feedback-stats {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .stat-box {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
         .footer {
             background: #333;
             color: white;
             text-align: center;
             padding: 20px 0;
             margin-top: 40px;
+        }
+        
+        .footer a {
+            color: white;
+            text-decoration: none;
         }
         
         @media (max-width: 768px) {
@@ -243,6 +280,10 @@
             }
             .delete-btn {
                 width: 100%;
+            }
+            .feedback-stats {
+                flex-direction: column;
+                align-items: center;
             }
         }
         
@@ -272,17 +313,20 @@
             margin-bottom: 20px;
         }
         
-        .confirm-dialog {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-            z-index: 1000;
-            display: none;
+        .module-selector {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .module-selector select {
+            padding: 10px;
+            font-size: 1rem;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            width: 100%;
+            max-width: 300px;
         }
     </style>
 </head>
@@ -290,7 +334,7 @@
     <div class="header">
         <div class="container">
             <h1>🔧 Admin Dashboard</h1>
-            <p>Manage Courses and Content</p>
+            <p>Manage Courses, Content & Feedback</p>
         </div>
     </div>
     
@@ -301,6 +345,7 @@
                 <button class="nav-btn" onclick="showSection('upload')">📤 Add Content</button>
                 <button class="nav-btn" onclick="showSection('modules')">📚 View Modules</button>
                 <button class="nav-btn" onclick="showSection('messages')">📬 View Messages</button>
+                <button class="nav-btn" onclick="showSection('feedback')">⭐ View Feedback</button>
             </div>
         </div>
     </div>
@@ -382,6 +427,19 @@
             <button class="refresh-btn" onclick="loadMessages()">🔄 Refresh</button>
             <div id="messagesList"></div>
         </div>
+        
+        <div id="feedbackSection" class="section hidden">
+            <h2>⭐ Student Feedback</h2>
+            <div class="module-selector">
+                <label>Select Module:</label>
+                <select id="feedbackModuleSelect" onchange="loadFeedback()">
+                    <option value="">Loading modules...</option>
+                </select>
+            </div>
+            <button class="refresh-btn" onclick="loadFeedback()">🔄 Refresh Feedback</button>
+            <div id="feedbackStats"></div>
+            <div id="feedbackList"></div>
+        </div>
     </div>
     
     <div class="footer">
@@ -409,6 +467,7 @@
             document.getElementById('uploadSection').classList.add('hidden');
             document.getElementById('modulesSection').classList.add('hidden');
             document.getElementById('messagesSection').classList.add('hidden');
+            document.getElementById('feedbackSection').classList.add('hidden');
             
             if (section === 'create') document.getElementById('createSection').classList.remove('hidden');
             if (section === 'upload') {
@@ -423,6 +482,11 @@
                 document.getElementById('messagesSection').classList.remove('hidden');
                 loadMessages();
             }
+            if (section === 'feedback') {
+                document.getElementById('feedbackSection').classList.remove('hidden');
+                loadModulesForFeedback();
+                loadFeedback();
+            }
         }
         
         async function loadModulesDropdown() {
@@ -431,6 +495,23 @@
                 const modules = await res.json();
                 const select = document.getElementById('moduleSelect');
                 select.innerHTML = '<option value="">Select a module...</option>';
+                modules.forEach(m => {
+                    const option = document.createElement('option');
+                    option.value = m.module_id || m.moduleId;
+                    option.textContent = m.title;
+                    select.appendChild(option);
+                });
+            } catch (err) {
+                console.error(err);
+            }
+        }
+        
+        async function loadModulesForFeedback() {
+            try {
+                const res = await fetch('/api/modules');
+                const modules = await res.json();
+                const select = document.getElementById('feedbackModuleSelect');
+                select.innerHTML = '<option value="">Select a module to view feedback...</option>';
                 modules.forEach(m => {
                     const option = document.createElement('option');
                     option.value = m.module_id || m.moduleId;
@@ -499,7 +580,7 @@
                     
                     if (response.ok) {
                         alert('✅ Lesson deleted successfully');
-                        loadAllModules(); // Refresh the view
+                        loadAllModules();
                     } else {
                         const error = await response.json();
                         alert('❌ Failed to delete: ' + (error.error || 'Unknown error'));
@@ -540,6 +621,71 @@
             } catch (err) {
                 console.error(err);
                 document.getElementById('messagesList').innerHTML = '<p style="color: red;">Error loading messages</p>';
+            }
+        }
+        
+        async function loadFeedback() {
+            const moduleId = document.getElementById('feedbackModuleSelect').value;
+            if (!moduleId) {
+                document.getElementById('feedbackStats').innerHTML = '';
+                document.getElementById('feedbackList').innerHTML = '<p>Select a module to view feedback</p>';
+                return;
+            }
+            
+            try {
+                const res = await fetch(`/api/admin/feedback/${moduleId}`);
+                if (res.status === 401) {
+                    document.getElementById('feedbackList').innerHTML = '<p style="color: red;">⚠️ Please log in to view feedback</p>';
+                    return;
+                }
+                const data = await res.json();
+                
+                // Display stats
+                const statsHtml = `
+                    <div class="feedback-stats">
+                        <div class="stat-box">
+                            <div class="stat-number">${data.total}</div>
+                            <div class="stat-label">Total Responses</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number">${data.averageRating || 'N/A'}</div>
+                            <div class="stat-label">Average Rating</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number">${data.feedback.filter(f => f.confusion).length}</div>
+                            <div class="stat-label">Had Confusion</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number">${data.feedback.filter(f => f.suggestions).length}</div>
+                            <div class="stat-label">Had Suggestions</div>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('feedbackStats').innerHTML = statsHtml;
+                
+                // Display feedback list
+                if (data.feedback.length === 0) {
+                    document.getElementById('feedbackList').innerHTML = '<p>📭 No feedback yet for this module</p>';
+                    return;
+                }
+                
+                document.getElementById('feedbackList').innerHTML = data.feedback.map(f => {
+                    const stars = f.rating ? '★'.repeat(f.rating) + '☆'.repeat(5-f.rating) : 'Not rated';
+                    return `
+                        <div class="feedback-card">
+                            <div class="feedback-header">
+                                <span class="feedback-module">${escapeHtml(f.module_id)}</span>
+                                <span class="status-badge">${new Date(f.created_at).toLocaleDateString()}</span>
+                            </div>
+                            <div class="rating-stars">${stars}</div>
+                            ${f.confusion ? `<div><strong>❓ Confusion:</strong><br>${escapeHtml(f.confusion)}</div>` : ''}
+                            ${f.suggestions ? `<div style="margin-top: 10px;"><strong>💡 Suggestion:</strong><br>${escapeHtml(f.suggestions)}</div>` : ''}
+                        </div>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error(err);
+                document.getElementById('feedbackList').innerHTML = '<p style="color: red;">Error loading feedback</p>';
             }
         }
         

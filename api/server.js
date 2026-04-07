@@ -314,3 +314,149 @@ app.delete('/api/admin/lessons/:lessonId', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+// ============ PROGRESS TRACKING API ============
+
+// Get user progress for a module
+app.get('/api/progress/:userId/:moduleId', async (req, res) => {
+    try {
+        const { userId, moduleId } = req.params;
+        const supabase = require('../lib/supabase');
+        
+        // Get all lessons for this module
+        const { data: lessons, error: lessonsError } = await supabase
+            .from('lessons')
+            .select('id')
+            .eq('module_id', moduleId);
+        
+        if (lessonsError) throw lessonsError;
+        
+        // Get completed lessons for this user
+        const { data: completed, error: progressError } = await supabase
+            .from('user_progress')
+            .select('lesson_id')
+            .eq('user_id', userId)
+            .eq('module_id', moduleId)
+            .eq('completed', true);
+        
+        if (progressError) throw progressError;
+        
+        const completedIds = completed?.map(c => c.lesson_id) || [];
+        const total = lessons?.length || 0;
+        const completedCount = completedIds.length;
+        const percentage = total > 0 ? Math.round((completedCount / total) * 100) : 0;
+        
+        res.json({
+            total,
+            completed: completedCount,
+            percentage,
+            completedLessons: completedIds
+        });
+    } catch (error) {
+        console.error('Progress error:', error);
+        res.json({ total: 0, completed: 0, percentage: 0, completedLessons: [] });
+    }
+});
+
+// Mark lesson as complete
+app.post('/api/progress/mark-complete', async (req, res) => {
+    try {
+        const { userId, lessonId, moduleId } = req.body;
+        const supabase = require('../lib/supabase');
+        
+        // Check if already exists
+        const { data: existing } = await supabase
+            .from('user_progress')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('lesson_id', lessonId)
+            .single();
+        
+        if (existing) {
+            // Update existing
+            const { error } = await supabase
+                .from('user_progress')
+                .update({ completed: true, completed_at: new Date().toISOString() })
+                .eq('id', existing.id);
+            
+            if (error) throw error;
+        } else {
+            // Insert new
+            const { error } = await supabase
+                .from('user_progress')
+                .insert([{
+                    user_id: userId,
+                    lesson_id: lessonId,
+                    module_id: moduleId,
+                    completed: true,
+                    completed_at: new Date().toISOString()
+                }]);
+            
+            if (error) throw error;
+        }
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Mark complete error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// ============ FEEDBACK API ============
+
+// Submit module feedback
+app.post('/api/feedback', async (req, res) => {
+    try {
+        const { userId, moduleId, rating, confusion, suggestions } = req.body;
+        const supabase = require('../lib/supabase');
+        
+        const { error } = await supabase
+            .from('module_feedback')
+            .insert([{
+                user_id: userId,
+                module_id: moduleId,
+                rating: rating || null,
+                helpful: rating ? (rating >= 4) : null,
+                confusion: confusion || null,
+                suggestions: suggestions || null,
+                created_at: new Date().toISOString()
+            }]);
+        
+        if (error) throw error;
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Feedback error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get feedback for a module (admin only)
+app.get('/api/admin/feedback/:moduleId', async (req, res) => {
+    try {
+        const { moduleId } = req.params;
+        const supabase = require('../lib/supabase');
+        
+        const { data, error } = await supabase
+            .from('module_feedback')
+            .select('*')
+            .eq('module_id', moduleId)
+            .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        
+        // Calculate average rating
+        const ratings = data.filter(f => f.rating).map(f => f.rating);
+        const avgRating = ratings.length > 0 
+            ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1)
+            : null;
+        
+        res.json({
+            total: data.length,
+            averageRating: avgRating,
+            feedback: data
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
