@@ -326,7 +326,14 @@ app.get('/api/skills', async (req, res) => {
 });
 
 // ============ FRONTEND ROUTES ============
+
+// MAIN ROUTE - Landing page (Skill to Income marketing page)
 app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/landing.html'));
+});
+
+// Original course dashboard (accessible at /courses)
+app.get('/courses', (req, res) => {
     res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
