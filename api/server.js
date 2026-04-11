@@ -342,3 +342,48 @@ process.on('unhandledRejection', (reason) => {
 });
 
 module.exports = app;
+
+// Email subscription endpoint
+app.post('/api/subscribe', async (req, res) => {
+    try {
+        const { email } = req.body;
+        
+        if (!email || !email.includes('@')) {
+            return res.status(400).json({ error: 'Valid email is required' });
+        }
+        
+        const supabase = require('../lib/supabase-admin');
+        
+        // Check if email already exists
+        const { data: existing } = await supabase
+            .from('subscribers')
+            .select('email')
+            .eq('email', email)
+            .single();
+        
+        if (existing) {
+            return res.json({ success: true, message: 'Already subscribed!' });
+        }
+        
+        // Save to database
+        const { error } = await supabase
+            .from('subscribers')
+            .insert([{
+                email: email,
+                subscribed_at: new Date().toISOString(),
+                source: 'landing_page'
+            }]);
+        
+        if (error) throw error;
+        
+        res.json({ success: true, message: 'Subscribed successfully!' });
+    } catch (error) {
+        console.error('Subscribe error:', error);
+        res.status(500).json({ error: 'Failed to subscribe' });
+    }
+});
+
+app.get("/landing", (req, res) => {
+    res.sendFile(path.join(__dirname, "../public/landing.html"));
+});
+

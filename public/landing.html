@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skill to Income - Learn Skills That Pay | Free Online Courses</title>
+    <meta name="description" content="Free skill-based learning platform. Learn web development, trading, copywriting, and more. No signup required. Start earning online today.">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Header / Hero Section */
+        .hero {
+            min-height: 80vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            padding: 80px 0;
+        }
+        
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            font-weight: 800;
+        }
+        
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            opacity: 0.95;
+        }
+        
+        .hero-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            margin-bottom: 30px;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: white;
+            color: #667eea;
+            padding: 15px 40px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-top: 30px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        
+        /* Section Styles */
+        .section {
+            background: white;
+            padding: 80px 0;
+        }
+        
+        .section-alt {
+            background: #f8f9fa;
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .section-subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 50px;
+            font-size: 1.2rem;
+        }
+        
+        /* Problem / Solution Grid */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 40px;
+            margin-top: 40px;
+        }
+        
+        .problem-card, .solution-card {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .problem-card {
+            border-left: 4px solid #f56565;
+        }
+        
+        .solution-card {
+            border-left: 4px solid #48bb78;
+        }
+        
+        .problem-card h3, .solution-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+        
+        .problem-list {
+            list-style: none;
+            margin-top: 15px;
+        }
+        
+        .problem-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .emoji {
+            font-size: 1.5rem;
+        }
+        
+        /* Courses Grid */
+        .courses-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 40px;
+        }
+        
+        .course-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.3s;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            border: 1px solid #e0e0e0;
+        }
+        
+        .course-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        }
+        
+        .course-emoji {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+        
+        .course-card h4 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+        
+        .course-card p {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        /* Trust Section */
+        .trust-badges {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            margin-top: 40px;
+        }
+        
+        .trust-item {
+            text-align: center;
+        }
+        
+        .trust-item .emoji {
+            font-size: 2.5rem;
+            display: block;
+            margin-bottom: 10px;
+        }
+        
+        /* Email Capture */
+        .email-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 60px 20px;
+            border-radius: 20px;
+            margin: 40px 0;
+        }
+        
+        .email-form {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+        
+        .email-input {
+            padding: 15px 20px;
+            border: none;
+            border-radius: 50px;
+            width: 300px;
+            font-size: 1rem;
+        }
+        
+        .email-button {
+            background: #48bb78;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .email-button:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+        }
+        
+        .success-message {
+            background: #c6f6d5;
+            color: #22543d;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        /* Footer */
+        .footer {
+            background: #1a1a2e;
+            color: white;
+            text-align: center;
+            padding: 40px 0;
+        }
+        
+        .footer a {
+            color: white;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+            
+            .hero p {
+                font-size: 1.1rem;
+            }
+            
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+            
+            .section-title {
+                font-size: 1.8rem;
+            }
+            
+            .email-input {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <div class="hero">
+        <div class="container">
+            <div class="hero-badge">🎓 Free. No Signup. Beginner-friendly</div>
+            <h1>Skill to Income</h1>
+            <p>Learn real skills that can make you money online</p>
+            <p style="font-size: 1rem; opacity: 0.8;">Web Development • Trading • Copywriting • AI • Business</p>
+            <a href="/" class="cta-button" id="getStartedBtn">👉 Get Started →</a>
+        </div>
+    </div>
+
+    <!-- Problem Section -->
+    <div class="section">
+        <div class="container">
+            <h2 class="section-title">😤 The Problem</h2>
+            <p class="section-subtitle">Most people want to learn skills online… but get stuck</p>
+            
+            <div class="grid-2">
+                <div class="problem-card">
+                    <h3>❌ What's stopping you?</h3>
+                    <ul class="problem-list">
+                        <li><span class="emoji">📺</span> YouTube has too many videos - where do you start?</li>
+                        <li><span class="emoji">📱</span> TikTok is entertaining but not structured</li>
+                        <li><span class="emoji">🤔</span> You don't know where to start</li>
+                        <li><span class="emoji">😓</span> So you end up learning nothing</li>
+                    </ul>
+                </div>
+                
+                <div class="solution-card">
+                    <h3>✅ The Solution</h3>
+                    <p><strong>Skill to Income</strong> solves that.</p>
+                    <p>We take the best content from YouTube and organize it into a clear step-by-step path.</p>
+                    <p style="margin-top: 15px;">So you can:</p>
+                    <ul class="problem-list">
+                        <li><span class="emoji">🎯</span> Start from zero</li>
+                        <li><span class="emoji">🗺️</span> Follow a clear path</li>
+                        <li><span class="emoji">🏆</span> Actually finish what you start</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Courses Section -->
+    <div class="section-alt">
+        <div class="container">
+            <h2 class="section-title">📚 What You Can Learn</h2>
+            <p class="section-subtitle">16+ real-world skills organized into complete courses</p>
+            
+            <div class="courses-grid">
+                <div class="course-card">
+                    <div class="course-emoji">💻</div>
+                    <h4>Web Development</h4>
+                    <p>Full-stack development from scratch</p>
+                </div>
+                <div class="course-card">
+                    <div class="course-emoji">🤖</div>
+                    <h4>AI Integration</h4>
+                    <p>Build apps with ChatGPT & AI</p>
+                </div>
+                <div class="course-card">
+                    <div class="course-emoji">💰</div>
+                    <h4>Crypto & Trading</h4>
+                    <p>Understand markets and strategies</p>
+                </div>
+                <div class="course-card">
+                    <div class="course-emoji">✍️</div>
+                    <h4>Freelance Copywriting</h4>
+                    <p>Write copy that sells</p>
+                </div>
+                <div class="course-card">
+                    <div class="course-emoji">🎥</div>
+                    <h4>YouTube Automation</h4>
+                    <p>Build and scale YouTube channels</p>
+                </div>
+                <div class="course-card">
+                    <div class="course-emoji">🏢</div>
+                    <h4>Digital Business</h4>
+                    <p>Start and monetize online</p>
+                </div>
+                <div class="course-card">
+                    <div class="course-emoji">📈</div>
+                    <h4>Advanced Trading</h4>
+                    <p>Smart money concepts</p>
+                </div>
+                <div class="course-card">
+                    <div class="course-emoji">🎬</div>
+                    <h4>Video Editing</h4>
+                    <p>Professional content production</p>
+                </div>
+                <div class="course-card">
+                    <div class="course-emoji">🚀</div>
+                    <h4>SaaS Building</h4>
+                    <p>Create your own platform</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Outcome Section -->
+    <div class="section">
+        <div class="container">
+            <h2 class="section-title">💰 The Outcome</h2>
+            <p class="section-subtitle">These are skills that can help you:</p>
+            
+            <div class="trust-badges">
+                <div class="trust-item">
+                    <span class="emoji">💼</span>
+                    <p>Get freelance work</p>
+                </div>
+                <div class="trust-item">
+                    <span class="emoji">🏗️</span>
+                    <p>Build real projects</p>
+                </div>
+                <div class="trust-item">
+                    <span class="emoji">💵</span>
+                    <p>Start earning online</p>
+                </div>
+            </div>
+            <p style="text-align: center; margin-top: 30px; color: #666;">(No fake promises. Just real skills.)</p>
+        </div>
+    </div>
+
+    <!-- Trust Section -->
+    <div class="section-alt">
+        <div class="container">
+            <h2 class="section-title">🛡️ Trust & Transparency</h2>
+            <div class="trust-badges">
+                <div class="trust-item">
+                    <span class="emoji">🎥</span>
+                    <p>Uses free YouTube videos</p>
+                </div>
+                <div class="trust-item">
+                    <span class="emoji">💰</span>
+                    <p>No payment required</p>
+                </div>
+                <div class="trust-item">
+                    <span class="emoji">🔓</span>
+                    <p>No hidden charges</p>
+                </div>
+                <div class="trust-item">
+                    <span class="emoji">📚</span>
+                    <p>Organized learning path</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Email Capture Section -->
+    <div class="container">
+        <div class="email-section">
+            <h3>📥 Want updates, new courses & certificates?</h3>
+            <p style="margin-top: 15px;">Join our newsletter (no spam, just valuable updates)</p>
+            
+            <form id="emailForm" class="email-form">
+                <input type="email" id="emailInput" class="email-input" placeholder="Enter your email" required>
+                <button type="submit" class="email-button">👉 Get Access →</button>
+            </form>
+            <div id="successMessage" class="success-message">
+                ✅ Thank you! You'll hear from us soon.
+            </div>
+            <p style="margin-top: 20px; font-size: 0.8rem; opacity: 0.8;">We respect your privacy. Unsubscribe anytime.</p>
+        </div>
+    </div>
+
+    <!-- Final CTA -->
+    <div class="section" style="padding: 40px 0;">
+        <div class="container" style="text-align: center;">
+            <h2 style="font-size: 2rem; margin-bottom: 20px;">If you don't know where to start…</h2>
+            <p style="font-size: 1.2rem; margin-bottom: 30px;">start here.</p>
+            <a href="/" class="cta-button" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: 2px solid white;">
+                🚀 Start Learning Now →
+            </a>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <div class="container">
+            <p>© 2026 Skill to Income - Free Education Platform</p>
+            <p style="margin-top: 15px;">
+                <a href="/privacy">Privacy Policy</a> | 
+                <a href="/terms">Terms of Use</a> | 
+                <a href="/contact">Contact</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Email capture functionality
+        const emailForm = document.getElementById('emailForm');
+        const successDiv = document.getElementById('successMessage');
+        
+        emailForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('emailInput').value;
+            
+            try {
+                const response = await fetch('/api/subscribe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email })
+                });
+                
+                if (response.ok) {
+                    successDiv.style.display = 'block';
+                    emailForm.reset();
+                    setTimeout(() => {
+                        successDiv.style.display = 'none';
+                    }, 5000);
+                } else {
+                    alert('Something went wrong. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Network error. Please try again.');
+            }
+        });
+        
+        // Smooth scroll for Get Started button
+        document.getElementById('getStartedBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            window.location.href = '/';
+        });
+    </script>
+</body>
+</html>
