@@ -1,7 +1,8 @@
 const supabase = require('../lib/supabase');
+const supabaseAdmin = require('../lib/supabase-admin');
 
 class SupabaseDB {
-    // Get all modules
+    // Get all modules (public read)
     async getAllModules() {
         const { data, error } = await supabase
             .from('modules')
@@ -10,7 +11,6 @@ class SupabaseDB {
         
         if (error) throw error;
         
-        // Transform for frontend compatibility
         return data.map(m => ({
             moduleId: m.module_id,
             module_id: m.module_id,
@@ -19,12 +19,11 @@ class SupabaseDB {
             estimatedTime: m.estimated_time,
             estimated_time: m.estimated_time,
             category: m.category,
-            isActive: m.is_active,
-            createdAt: m.created_at
+            isActive: m.is_active
         }));
     }
 
-    // Get module by ID
+    // Get module by ID (public read)
     async getModuleById(moduleId) {
         const { data, error } = await supabase
             .from('modules')
@@ -33,28 +32,17 @@ class SupabaseDB {
             .single();
         
         if (error && error.code !== 'PGRST116') throw error;
-        
-        if (!data) return null;
-        
-        return {
-            moduleId: data.module_id,
-            module_id: data.module_id,
-            title: data.title,
-            description: data.description,
-            estimatedTime: data.estimated_time,
-            category: data.category
-        };
+        return data;
     }
 
-    // Create module
+    // Create module (admin only - uses service role)
     async createModule(moduleData) {
-        // Check if module already exists
         const existing = await this.getModuleById(moduleData.moduleId);
         if (existing) {
             throw new Error(`Module "${moduleData.moduleId}" already exists`);
         }
         
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
             .from('modules')
             .insert([{
                 module_id: moduleData.moduleId,
@@ -78,7 +66,7 @@ class SupabaseDB {
         };
     }
 
-    // Get lessons by module
+    // Get lessons by module (public read)
     async getLessonsByModule(moduleId) {
         const { data, error } = await supabase
             .from('lessons')
@@ -88,7 +76,6 @@ class SupabaseDB {
         
         if (error) throw error;
         
-        // Transform for frontend
         return data.map(l => ({
             id: l.id,
             lessonId: l.lesson_id,
@@ -104,37 +91,22 @@ class SupabaseDB {
         }));
     }
 
-    // Add lesson (FIXED - with module existence check)
+    // Add lesson (admin only - uses service role)
     async addLesson(moduleId, lessonData) {
-        // CRITICAL FIX: First verify the module exists
         const module = await this.getModuleById(moduleId);
         if (!module) {
             throw new Error(`Module "${moduleId}" does not exist. Please create the module first.`);
         }
         
-        // Clean YouTube URL if present
-        let youtubeUrl = lessonData.youtubeUrl;
-        let youtubeId = lessonData.youtubeId;
-        
-        if (youtubeUrl && !youtubeId) {
-            // Extract ID from URL
-            const match = youtubeUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?/]+)/);
-            if (match) {
-                youtubeId = match[1];
-                // Clean the URL (remove tracking parameters)
-                youtubeUrl = `https://youtu.be/${youtubeId}`;
-            }
-        }
-        
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
             .from('lessons')
             .insert([{
                 lesson_id: `lesson_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                 module_id: moduleId,
                 title: lessonData.title,
                 content_type: lessonData.contentType,
-                youtube_url: youtubeUrl,
-                youtube_id: youtubeId,
+                youtube_url: lessonData.youtubeUrl,
+                youtube_id: lessonData.youtubeId,
                 file_url: lessonData.fileUrl,
                 duration: lessonData.duration || 'N/A',
                 lesson_order: lessonData.order || 1
@@ -155,21 +127,147 @@ class SupabaseDB {
         };
     }
 
-    // Delete module
-    async deleteModule(moduleId) {
-        // Check if module exists
-        const module = await this.getModuleById(moduleId);
-        if (!module) {
-            throw new Error(`Module "${moduleId}" does not exist`);
-        }
-        
-        const { error } = await supabase
-            .from('modules')
+    // Delete lesson (admin only - uses service role)
+    async deleteLesson(lessonId) {
+        const { error } = await supabaseAdmin
+            .from('lessons')
             .delete()
-            .eq('module_id', moduleId);
+            .eq('id', lessonId);
         
         if (error) throw error;
         return true;
+    }
+
+    // Save user progress (uses service role for safety)
+    async saveProgress(userId, lessonId, moduleId) {
+        const { data: existing } = await supabaseAdmin
+            .from('user_progress')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('lesson_id', lessonId)
+            .single();
+        
+        if (existing) {
+            const { error } = await supabaseAdmin
+                .from('user_progress')
+                .update({ completed: true, completed_at: new Date().toISOString() })
+                .eq('id', existing.id);
+            
+            if (error) throw error;
+        } else {
+            const { error } = await supabaseAdmin
+                .from('user_progress')
+                .insert([{
+                    user_id: userId,
+                    lesson_id: lessonId,
+                    module_id: moduleId,
+                    completed: true,
+                    completed_at: new Date().toISOString()
+                }]);
+            
+            if (error) throw error;
+        }
+        
+        return true;
+    }
+
+    // Get user progress (uses service role)
+    async getUserProgress(userId, moduleId) {
+        const { data: lessons, error: lessonsError } = await supabase
+            .from('lessons')
+            .select('id')
+            .eq('module_id', moduleId);
+        
+        if (lessonsError) throw lessonsError;
+        
+        const { data: completed, error: progressError } = await supabaseAdmin
+            .from('user_progress')
+            .select('lesson_id')
+            .eq('user_id', userId)
+            .eq('module_id', moduleId)
+            .eq('completed', true);
+        
+        if (progressError) throw progressError;
+        
+        const completedIds = completed?.map(c => c.lesson_id) || [];
+        const total = lessons?.length || 0;
+        const completedCount = completedIds.length;
+        const percentage = total > 0 ? Math.round((completedCount / total) * 100) : 0;
+        
+        return {
+            total,
+            completed: completedCount,
+            percentage,
+            completedLessons: completedIds
+        };
+    }
+
+    // Save feedback (public insert, admin only view)
+    async saveFeedback(userId, moduleId, rating, confusion, suggestions) {
+        const { error } = await supabaseAdmin
+            .from('module_feedback')
+            .insert([{
+                user_id: userId,
+                module_id: moduleId,
+                rating: rating || null,
+                helpful: rating ? (rating >= 4) : null,
+                confusion: confusion || null,
+                suggestions: suggestions || null,
+                created_at: new Date().toISOString()
+            }]);
+        
+        if (error) throw error;
+        return true;
+    }
+
+    // Get feedback for admin (uses service role)
+    async getFeedback(moduleId) {
+        const { data, error } = await supabaseAdmin
+            .from('module_feedback')
+            .select('*')
+            .eq('module_id', moduleId)
+            .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        
+        const ratings = data.filter(f => f.rating).map(f => f.rating);
+        const avgRating = ratings.length > 0 
+            ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1)
+            : null;
+        
+        return {
+            total: data.length,
+            averageRating: avgRating,
+            feedback: data
+        };
+    }
+
+    // Save contact message (public insert)
+    async saveContact(name, email, subject, message) {
+        const { error } = await supabaseAdmin
+            .from('contacts')
+            .insert([{
+                name: name,
+                email: email,
+                subject: subject,
+                message: message,
+                status: 'unread',
+                created_at: new Date().toISOString()
+            }]);
+        
+        if (error) throw error;
+        return true;
+    }
+
+    // Get contacts for admin (uses service role)
+    async getContacts() {
+        const { data, error } = await supabaseAdmin
+            .from('contacts')
+            .select('*')
+            .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        return data;
     }
 }
 

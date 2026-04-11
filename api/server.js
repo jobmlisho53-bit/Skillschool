@@ -105,7 +105,7 @@ function extractYouTubeId(url) {
     return null;
 }
 
-// ============ API ROUTES ============
+// ============ PUBLIC API ROUTES ============
 
 app.get('/api/health', (req, res) => {
     res.json({ status: 'healthy', timestamp: new Date().toISOString(), uptime: process.uptime() });
@@ -116,6 +116,7 @@ app.get('/api/modules', async (req, res) => {
         const modules = await supabaseDB.getAllModules();
         res.json(modules);
     } catch (error) {
+        console.error('Error fetching modules:', error);
         res.status(500).json({ error: 'Failed to fetch modules' });
     }
 });
@@ -125,16 +126,78 @@ app.get('/api/modules/:moduleId/lessons', async (req, res) => {
         const lessons = await supabaseDB.getLessonsByModule(req.params.moduleId);
         res.json(lessons);
     } catch (error) {
+        console.error('Error fetching lessons:', error);
         res.status(500).json({ error: 'Failed to fetch lessons' });
     }
 });
 
+// Progress tracking
+app.get('/api/progress/:userId/:moduleId', async (req, res) => {
+    try {
+        const { userId, moduleId } = req.params;
+        const progress = await supabaseDB.getUserProgress(userId, moduleId);
+        res.json(progress);
+    } catch (error) {
+        console.error('Progress error:', error);
+        res.json({ total: 0, completed: 0, percentage: 0, completedLessons: [] });
+    }
+});
+
+app.post('/api/progress/mark-complete', async (req, res) => {
+    try {
+        const { userId, lessonId, moduleId } = req.body;
+        await supabaseDB.saveProgress(userId, lessonId, moduleId);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Mark complete error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Feedback
+app.post('/api/feedback', async (req, res) => {
+    try {
+        const { userId, moduleId, rating, confusion, suggestions } = req.body;
+        await supabaseDB.saveFeedback(userId, moduleId, rating, confusion, suggestions);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Feedback error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Contact form
+app.post('/api/contact', async (req, res) => {
+    try {
+        const { name, email, subject, message } = req.body;
+        
+        if (!name || !email || !subject || !message) {
+            return res.status(400).json({ error: 'All fields are required' });
+        }
+        
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ error: 'Invalid email address' });
+        }
+        
+        await supabaseDB.saveContact(name, email, subject, message);
+        res.json({ success: true, message: 'Message sent successfully' });
+    } catch (error) {
+        console.error('Contact error:', error);
+        res.status(500).json({ error: 'Failed to send message' });
+    }
+});
+
+// ============ ADMIN API ROUTES (Protected) ============
+
 app.post('/api/admin/modules', async (req, res) => {
     try {
         const { moduleId, title, description, estimatedTime, category } = req.body;
+        
         if (!moduleId || !title) {
             return res.status(400).json({ error: 'Module ID and Title are required' });
         }
+        
         const newModule = await supabaseDB.createModule({
             moduleId: sanitizeInput(moduleId),
             title: sanitizeInput(title),
@@ -142,8 +205,10 @@ app.post('/api/admin/modules', async (req, res) => {
             estimatedTime: sanitizeInput(estimatedTime),
             category: sanitizeInput(category)
         });
+        
         res.status(201).json(newModule);
     } catch (error) {
+        console.error('Error creating module:', error);
         res.status(400).json({ error: error.message || 'Failed to create module' });
     }
 });
@@ -151,13 +216,16 @@ app.post('/api/admin/modules', async (req, res) => {
 app.post('/api/admin/youtube-lesson', async (req, res) => {
     try {
         const { moduleId, lessonTitle, youtubeUrl, duration, order } = req.body;
+        
         if (!moduleId || !lessonTitle || !youtubeUrl) {
             return res.status(400).json({ error: 'Module ID, Lesson Title, and YouTube URL are required' });
         }
+        
         const videoId = extractYouTubeId(cleanYouTubeUrl(youtubeUrl));
         if (!videoId) {
             return res.status(400).json({ error: 'Invalid YouTube URL' });
         }
+        
         const lesson = await supabaseDB.addLesson(moduleId, {
             title: sanitizeInput(lessonTitle),
             contentType: 'youtube',
@@ -167,9 +235,43 @@ app.post('/api/admin/youtube-lesson', async (req, res) => {
             duration: sanitizeInput(duration) || 'N/A',
             order: order || 1
         });
+        
         res.status(201).json(lesson);
     } catch (error) {
+        console.error('Error adding YouTube lesson:', error);
         res.status(400).json({ error: error.message || 'Failed to add lesson' });
+    }
+});
+
+app.delete('/api/admin/lessons/:lessonId', async (req, res) => {
+    try {
+        const { lessonId } = req.params;
+        await supabaseDB.deleteLesson(lessonId);
+        res.json({ success: true, message: 'Lesson deleted successfully' });
+    } catch (error) {
+        console.error('Delete error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/admin/contacts', async (req, res) => {
+    try {
+        const contacts = await supabaseDB.getContacts();
+        res.json(contacts);
+    } catch (error) {
+        console.error('Error fetching contacts:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/admin/feedback/:moduleId', async (req, res) => {
+    try {
+        const { moduleId } = req.params;
+        const feedback = await supabaseDB.getFeedback(moduleId);
+        res.json(feedback);
+    } catch (error) {
+        console.error('Error fetching feedback:', error);
+        res.status(500).json({ error: error.message });
     }
 });
 
@@ -184,41 +286,8 @@ app.get('/api/skills', async (req, res) => {
         }));
         res.json(skills);
     } catch (error) {
+        console.error('Error fetching skills:', error);
         res.status(500).json({ error: 'Failed to fetch skills' });
-    }
-});
-
-app.post('/api/contact', async (req, res) => {
-    try {
-        const { name, email, subject, message, timestamp } = req.body;
-        if (!name || !email || !subject || !message) {
-            return res.status(400).json({ error: 'All fields are required' });
-        }
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            return res.status(400).json({ error: 'Invalid email address' });
-        }
-        const supabase = require('../lib/supabase');
-        const { error } = await supabase.from('contacts').insert([{
-            name, email, subject, message,
-            created_at: timestamp || new Date().toISOString(),
-            status: 'unread'
-        }]);
-        if (error) throw error;
-        res.json({ success: true, message: 'Message sent successfully' });
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to send message' });
-    }
-});
-
-app.get('/api/admin/contacts', async (req, res) => {
-    try {
-        const supabase = require('../lib/supabase');
-        const { data, error } = await supabase.from('contacts').select('*').order('created_at', { ascending: false });
-        if (error) throw error;
-        res.json(data);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
     }
 });
 
@@ -247,9 +316,15 @@ app.get('/contact', (req, res) => {
     res.sendFile(path.join(__dirname, '../public/contact.html'));
 });
 
-// ============ ERROR HANDLER ============
+// ============ GLOBAL ERROR HANDLER ============
 app.use((err, req, res, next) => {
-    console.error('Server error:', err.message);
+    console.error('Server error:', {
+        message: err.message,
+        path: req.path,
+        method: req.method,
+        ip: req.ip
+    });
+    
     res.status(err.status || 500).json({ 
         error: process.env.NODE_ENV === 'production' 
             ? 'Something went wrong. Please try again later.' 
@@ -267,196 +342,3 @@ process.on('unhandledRejection', (reason) => {
 });
 
 module.exports = app;
-
-// Delete a lesson
-app.delete('/api/admin/lessons/:lessonId', async (req, res) => {
-    try {
-        const { lessonId } = req.params;
-        const supabase = require('../lib/supabase');
-        
-        // First, get the lesson to know which module it belongs to
-        const { data: lesson, error: fetchError } = await supabase
-            .from('lessons')
-            .select('module_id')
-            .eq('id', lessonId)
-            .single();
-        
-        if (fetchError) throw fetchError;
-        
-        // Delete the lesson
-        const { error: deleteError } = await supabase
-            .from('lessons')
-            .delete()
-            .eq('id', lessonId);
-        
-        if (deleteError) throw deleteError;
-        
-        // Optional: Reorder remaining lessons
-        if (lesson && lesson.module_id) {
-            const { data: remainingLessons } = await supabase
-                .from('lessons')
-                .select('id')
-                .eq('module_id', lesson.module_id)
-                .order('lesson_order', { ascending: true });
-            
-            // Renumber lessons sequentially
-            for (let i = 0; i < remainingLessons.length; i++) {
-                await supabase
-                    .from('lessons')
-                    .update({ lesson_order: i + 1 })
-                    .eq('id', remainingLessons[i].id);
-            }
-        }
-        
-        res.json({ success: true, message: 'Lesson deleted successfully' });
-    } catch (error) {
-        console.error('Delete error:', error);
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// ============ PROGRESS TRACKING API ============
-
-// Get user progress for a module
-app.get('/api/progress/:userId/:moduleId', async (req, res) => {
-    try {
-        const { userId, moduleId } = req.params;
-        const supabase = require('../lib/supabase');
-        
-        // Get all lessons for this module
-        const { data: lessons, error: lessonsError } = await supabase
-            .from('lessons')
-            .select('id')
-            .eq('module_id', moduleId);
-        
-        if (lessonsError) throw lessonsError;
-        
-        // Get completed lessons for this user
-        const { data: completed, error: progressError } = await supabase
-            .from('user_progress')
-            .select('lesson_id')
-            .eq('user_id', userId)
-            .eq('module_id', moduleId)
-            .eq('completed', true);
-        
-        if (progressError) throw progressError;
-        
-        const completedIds = completed?.map(c => c.lesson_id) || [];
-        const total = lessons?.length || 0;
-        const completedCount = completedIds.length;
-        const percentage = total > 0 ? Math.round((completedCount / total) * 100) : 0;
-        
-        res.json({
-            total,
-            completed: completedCount,
-            percentage,
-            completedLessons: completedIds
-        });
-    } catch (error) {
-        console.error('Progress error:', error);
-        res.json({ total: 0, completed: 0, percentage: 0, completedLessons: [] });
-    }
-});
-
-// Mark lesson as complete
-app.post('/api/progress/mark-complete', async (req, res) => {
-    try {
-        const { userId, lessonId, moduleId } = req.body;
-        const supabase = require('../lib/supabase');
-        
-        // Check if already exists
-        const { data: existing } = await supabase
-            .from('user_progress')
-            .select('id')
-            .eq('user_id', userId)
-            .eq('lesson_id', lessonId)
-            .single();
-        
-        if (existing) {
-            // Update existing
-            const { error } = await supabase
-                .from('user_progress')
-                .update({ completed: true, completed_at: new Date().toISOString() })
-                .eq('id', existing.id);
-            
-            if (error) throw error;
-        } else {
-            // Insert new
-            const { error } = await supabase
-                .from('user_progress')
-                .insert([{
-                    user_id: userId,
-                    lesson_id: lessonId,
-                    module_id: moduleId,
-                    completed: true,
-                    completed_at: new Date().toISOString()
-                }]);
-            
-            if (error) throw error;
-        }
-        
-        res.json({ success: true });
-    } catch (error) {
-        console.error('Mark complete error:', error);
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// ============ FEEDBACK API ============
-
-// Submit module feedback
-app.post('/api/feedback', async (req, res) => {
-    try {
-        const { userId, moduleId, rating, confusion, suggestions } = req.body;
-        const supabase = require('../lib/supabase');
-        
-        const { error } = await supabase
-            .from('module_feedback')
-            .insert([{
-                user_id: userId,
-                module_id: moduleId,
-                rating: rating || null,
-                helpful: rating ? (rating >= 4) : null,
-                confusion: confusion || null,
-                suggestions: suggestions || null,
-                created_at: new Date().toISOString()
-            }]);
-        
-        if (error) throw error;
-        
-        res.json({ success: true });
-    } catch (error) {
-        console.error('Feedback error:', error);
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// Get feedback for a module (admin only)
-app.get('/api/admin/feedback/:moduleId', async (req, res) => {
-    try {
-        const { moduleId } = req.params;
-        const supabase = require('../lib/supabase');
-        
-        const { data, error } = await supabase
-            .from('module_feedback')
-            .select('*')
-            .eq('module_id', moduleId)
-            .order('created_at', { ascending: false });
-        
-        if (error) throw error;
-        
-        // Calculate average rating
-        const ratings = data.filter(f => f.rating).map(f => f.rating);
-        const avgRating = ratings.length > 0 
-            ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1)
-            : null;
-        
-        res.json({
-            total: data.length,
-            averageRating: avgRating,
-            feedback: data
-        });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
