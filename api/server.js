@@ -131,7 +131,6 @@ app.get('/api/modules/:moduleId/lessons', async (req, res) => {
     }
 });
 
-// Progress tracking
 app.get('/api/progress/:userId/:moduleId', async (req, res) => {
     try {
         const { userId, moduleId } = req.params;
@@ -154,7 +153,6 @@ app.post('/api/progress/mark-complete', async (req, res) => {
     }
 });
 
-// Feedback
 app.post('/api/feedback', async (req, res) => {
     try {
         const { userId, moduleId, rating, confusion, suggestions } = req.body;
@@ -166,7 +164,6 @@ app.post('/api/feedback', async (req, res) => {
     }
 });
 
-// Contact form
 app.post('/api/contact', async (req, res) => {
     try {
         const { name, email, subject, message } = req.body;
@@ -185,6 +182,43 @@ app.post('/api/contact', async (req, res) => {
     } catch (error) {
         console.error('Contact error:', error);
         res.status(500).json({ error: 'Failed to send message' });
+    }
+});
+
+app.post('/api/subscribe', async (req, res) => {
+    try {
+        const { email } = req.body;
+        
+        if (!email || !email.includes('@')) {
+            return res.status(400).json({ error: 'Valid email is required' });
+        }
+        
+        const supabase = require('../lib/supabase-admin');
+        
+        const { data: existing } = await supabase
+            .from('subscribers')
+            .select('email')
+            .eq('email', email)
+            .single();
+        
+        if (existing) {
+            return res.json({ success: true, message: 'Already subscribed!' });
+        }
+        
+        const { error } = await supabase
+            .from('subscribers')
+            .insert([{
+                email: email,
+                subscribed_at: new Date().toISOString(),
+                source: 'landing_page'
+            }]);
+        
+        if (error) throw error;
+        
+        res.json({ success: true, message: 'Subscribed successfully!' });
+    } catch (error) {
+        console.error('Subscribe error:', error);
+        res.status(500).json({ error: 'Failed to subscribe' });
     }
 });
 
@@ -316,6 +350,10 @@ app.get('/contact', (req, res) => {
     res.sendFile(path.join(__dirname, '../public/contact.html'));
 });
 
+app.get('/landing', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/landing.html'));
+});
+
 // ============ GLOBAL ERROR HANDLER ============
 app.use((err, req, res, next) => {
     console.error('Server error:', {
@@ -342,48 +380,3 @@ process.on('unhandledRejection', (reason) => {
 });
 
 module.exports = app;
-
-// Email subscription endpoint
-app.post('/api/subscribe', async (req, res) => {
-    try {
-        const { email } = req.body;
-        
-        if (!email || !email.includes('@')) {
-            return res.status(400).json({ error: 'Valid email is required' });
-        }
-        
-        const supabase = require('../lib/supabase-admin');
-        
-        // Check if email already exists
-        const { data: existing } = await supabase
-            .from('subscribers')
-            .select('email')
-            .eq('email', email)
-            .single();
-        
-        if (existing) {
-            return res.json({ success: true, message: 'Already subscribed!' });
-        }
-        
-        // Save to database
-        const { error } = await supabase
-            .from('subscribers')
-            .insert([{
-                email: email,
-                subscribed_at: new Date().toISOString(),
-                source: 'landing_page'
-            }]);
-        
-        if (error) throw error;
-        
-        res.json({ success: true, message: 'Subscribed successfully!' });
-    } catch (error) {
-        console.error('Subscribe error:', error);
-        res.status(500).json({ error: 'Failed to subscribe' });
-    }
-});
-
-app.get("/landing", (req, res) => {
-    res.sendFile(path.join(__dirname, "../public/landing.html"));
-});
-
