@@ -327,14 +327,14 @@ app.get('/api/skills', async (req, res) => {
 
 // ============ FRONTEND ROUTES ============
 
-// MAIN ROUTE - Landing page (Skill to Income marketing page)
+// MAIN ROUTE - Landing page (now index.html)
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../public/landing.html'));
+    res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
-// Original course dashboard (accessible at /courses)
+// Original course dashboard (now at /courses)
 app.get('/courses', (req, res) => {
-    res.sendFile(path.join(__dirname, '../public/index.html'));
+    res.sendFile(path.join(__dirname, '../public/courses.html'));
 });
 
 app.get('/admin', (req, res) => {
@@ -358,7 +358,7 @@ app.get('/contact', (req, res) => {
 });
 
 app.get('/landing', (req, res) => {
-    res.sendFile(path.join(__dirname, '../public/landing.html'));
+    res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
 // ============ GLOBAL ERROR HANDLER ============
