@@ -993,3 +993,221 @@
         }
     });
 </script>
+<!-- Quiz Modal -->
+<div id="quizModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center; overflow-y: auto;">
+    <div style="background: white; border-radius: 12px; max-width: 700px; width: 90%; margin: 40px auto; padding: 32px; max-height: 85vh; overflow-y: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <h2 style="font-family: 'Cormorant Garamond', serif; font-size: 1.8rem;">Knowledge Check</h2>
+            <button onclick="closeQuizModal()" style="background: none; border: none; font-size: 24px; cursor: pointer;">✕</button>
+        </div>
+        <p style="margin-bottom: 20px; color: #6b6b6b;">Test your understanding of this lesson. You need 70% to pass.</p>
+        <div id="quiz-container"></div>
+        <div id="quiz-result" style="display: none; text-align: center; padding: 20px; border-radius: 8px;"></div>
+        <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+            <button onclick="closeQuizModal()" style="background: none; border: 1px solid #c9a03d; padding: 10px 24px; border-radius: 4px; cursor: pointer;">Cancel</button>
+            <button id="submit-quiz-btn" onclick="submitQuiz()" style="background: #c9a03d; color: white; border: none; padding: 10px 24px; border-radius: 4px; cursor: pointer;">Submit Quiz</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentQuiz = null;
+    let currentQuizLesson = null;
+    let userAnswers = {};
+    
+    async function loadQuiz(lessonId, moduleId) {
+        try {
+            const response = await fetch(`/api/quiz/${lessonId}?userId=${userId}`);
+            const data = await response.json();
+            
+            if (!data.canAttempt) {
+                alert(`You have used all ${data.maxAttempts} attempts. Last score: ${data.lastScore}%.`);
+                return false;
+            }
+            
+            currentQuiz = data.questions;
+            currentQuizLesson = { id: lessonId, moduleId: moduleId };
+            userAnswers = {};
+            
+            renderQuiz(data.questions);
+            document.getElementById('quizModal').style.display = 'flex';
+            return true;
+        } catch (error) {
+            console.error('Error loading quiz:', error);
+            alert('Unable to load quiz. Please try again.');
+            return false;
+        }
+    }
+    
+    function renderQuiz(questions) {
+        const container = document.getElementById('quiz-container');
+        container.innerHTML = '';
+        
+        questions.forEach((q, idx) => {
+            const questionDiv = document.createElement('div');
+            questionDiv.style.marginBottom = '24px';
+            questionDiv.style.padding = '16px';
+            questionDiv.style.background = '#fefcf8';
+            questionDiv.style.borderRadius = '8px';
+            
+            questionDiv.innerHTML = `
+                <p style="font-weight: 600; margin-bottom: 12px;">${idx + 1}. ${escapeHtml(q.question)}</p>
+                <div id="question-${q.id}" style="margin-left: 20px;">
+                    ${q.options.map((opt, optIdx) => {
+                        const letter = String.fromCharCode(65 + optIdx);
+                        return `
+                            <label style="display: block; margin: 8px 0; cursor: pointer;">
+                                <input type="radio" name="q_${q.id}" value="${letter}" onchange="userAnswers['${q.id}'] = '${letter}'">
+                                <span style="margin-left: 8px;"><strong>${letter}.</strong> ${escapeHtml(opt)}</span>
+                            </label>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+            container.appendChild(questionDiv);
+        });
+    }
+    
+    async function submitQuiz() {
+        const submitBtn = document.getElementById('submit-quiz-btn');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Grading...';
+        
+        try {
+            const response = await fetch('/api/quiz/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: userId,
+                    lessonId: currentQuizLesson.id,
+                    moduleId: currentQuizLesson.moduleId,
+                    answers: userAnswers
+                })
+            });
+            
+            const result = await response.json();
+            const resultDiv = document.getElementById('quiz-result');
+            const container = document.getElementById('quiz-container');
+            
+            container.style.display = 'none';
+            resultDiv.style.display = 'block';
+            
+            if (result.passed) {
+                resultDiv.innerHTML = `
+                    <div style="background: #c6f6d5; padding: 20px; border-radius: 8px;">
+                        <h3 style="color: #22543d;">✓ Quiz Passed!</h3>
+                        <p>Score: ${result.score}% (${result.correctCount}/${result.totalQuestions} correct)</p>
+                        <p>Lesson marked as complete!</p>
+                        <button onclick="closeQuizModalAndRefresh()" style="background: #22543d; color: white; border: none; padding: 10px 24px; border-radius: 4px; margin-top: 16px; cursor: pointer;">Continue</button>
+                    </div>
+                `;
+            } else {
+                const remainingMsg = result.remainingAttempts > 0 
+                    ? `You have ${result.remainingAttempts} attempt${result.remainingAttempts > 1 ? 's' : ''} remaining.`
+                    : 'No attempts remaining. Please review the lesson.';
+                
+                resultDiv.innerHTML = `
+                    <div style="background: #fed7d7; padding: 20px; border-radius: 8px;">
+                        <h3 style="color: #742a2a;">✗ Quiz Failed</h3>
+                        <p>Score: ${result.score}% (${result.correctCount}/${result.totalQuestions} correct)</p>
+                        <p>Need 70% to pass.</p>
+                        <p>${remainingMsg}</p>
+                        <button onclick="retryQuiz()" style="background: #742a2a; color: white; border: none; padding: 10px 24px; border-radius: 4px; margin-top: 16px; cursor: pointer;">Retry Quiz</button>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('submit-quiz-btn').style.display = 'none';
+        } catch (error) {
+            alert('Error submitting quiz. Please try again.');
+        } finally {
+            submitBtn.disabled = false;
+        }
+    }
+    
+    function closeQuizModal() {
+        document.getElementById('quizModal').style.display = 'none';
+        document.getElementById('quiz-container').style.display = 'block';
+        document.getElementById('quiz-container').innerHTML = '';
+        document.getElementById('quiz-result').style.display = 'none';
+        document.getElementById('quiz-result').innerHTML = '';
+        document.getElementById('submit-quiz-btn').style.display = 'block';
+        document.getElementById('submit-quiz-btn').disabled = false;
+        document.getElementById('submit-quiz-btn').textContent = 'Submit Quiz';
+        currentQuiz = null;
+        userAnswers = {};
+    }
+    
+    function closeQuizModalAndRefresh() {
+        closeQuizModal();
+        if (currentCourse) {
+            showCourse(currentCourse);
+        }
+    }
+    
+    function retryQuiz() {
+        document.getElementById('quiz-container').style.display = 'block';
+        document.getElementById('quiz-result').style.display = 'none';
+        document.getElementById('quiz-result').innerHTML = '';
+        document.getElementById('submit-quiz-btn').style.display = 'block';
+        document.getElementById('submit-quiz-btn').disabled = false;
+        document.getElementById('submit-quiz-btn').textContent = 'Submit Quiz';
+        userAnswers = {};
+        
+        // Reload quiz to get fresh questions
+        loadQuiz(currentQuizLesson.id, currentQuizLesson.moduleId);
+    }
+    
+    // Override mark complete to show quiz
+    const originalMarkComplete = document.getElementById('mark-complete-btn')?.click;
+    document.getElementById('mark-complete-btn')?.addEventListener('click', async () => {
+        if (!currentLesson) return;
+        
+        if (currentLesson.contentType === 'youtube' && watchPercentage < 90) {
+            alert('Please watch at least 90% of the video before taking the quiz.');
+            return;
+        }
+        
+        // Load and show quiz
+        const quizLoaded = await loadQuiz(currentLesson.id, currentCourse?.module_id || currentCourse?.moduleId);
+        if (!quizLoaded) {
+            // Fallback to direct completion if quiz fails to load
+            await completeLessonDirect();
+        }
+    });
+    
+    async function completeLessonDirect() {
+        const token = await getRequestToken(currentLesson.id);
+        if (!token) return;
+        
+        try {
+            const response = await fetch('/api/progress/mark-complete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: userId,
+                    lessonId: currentLesson.id,
+                    moduleId: currentCourse?.module_id || currentCourse?.moduleId,
+                    timeSpent: Math.floor(watchedSeconds),
+                    watchPercentage: Math.floor(watchPercentage),
+                    sessionId: sessionId,
+                    deviceFingerprint: deviceFingerprint,
+                    requestToken: token
+                })
+            });
+            
+            if (response.ok) {
+                const btn = document.getElementById('mark-complete-btn');
+                btn.textContent = 'Completed';
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+                
+                if (currentCourse) {
+                    showCourse(currentCourse);
+                }
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+</script>

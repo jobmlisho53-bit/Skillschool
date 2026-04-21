@@ -658,3 +658,199 @@ app.use((err, req, res, next) => {
 });
 
 module.exports = app;
+
+// ============ QUIZ SYSTEM API ============
+
+const { generateQuizFromMetadata } = require('../utils/quiz-generator');
+
+// Generate quiz for a lesson (admin only)
+app.post('/api/admin/quiz/generate/:lessonId', async (req, res) => {
+    try {
+        const { lessonId } = req.params;
+        
+        // Get lesson details
+        const { data: lesson, error: lessonError } = await supabase
+            .from('lessons')
+            .select('title, module_id')
+            .eq('id', lessonId)
+            .single();
+        
+        if (lessonError) throw lessonError;
+        
+        // Get module details for context
+        const { data: module, error: moduleError } = await supabase
+            .from('modules')
+            .select('title')
+            .eq('module_id', lesson.module_id)
+            .single();
+        
+        // Generate quiz using AI
+        const description = `Course: ${module?.title || 'Unknown'}. Lesson: ${lesson.title}`;
+        const questions = await generateQuizFromMetadata(lesson.title, description);
+        
+        // Save questions to database
+        for (const q of questions) {
+            await supabase
+                .from('quiz_questions')
+                .insert([{
+                    lesson_id: lessonId,
+                    question: q.question,
+                    options: q.options,
+                    correct_answer: q.correct_answer,
+                    explanation: q.explanation
+                }]);
+        }
+        
+        res.json({ success: true, questionsCount: questions.length });
+    } catch (error) {
+        console.error('Quiz generation error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get quiz for a lesson (student)
+app.get('/api/quiz/:lessonId', async (req, res) => {
+    try {
+        const { lessonId } = req.params;
+        const { userId } = req.query;
+        
+        // Get quiz questions
+        const { data: questions, error: qError } = await supabase
+            .from('quiz_questions')
+            .select('*')
+            .eq('lesson_id', lessonId);
+        
+        if (qError) throw qError;
+        
+        // Get user's attempts
+        const { data: attempts, error: aError } = await supabase
+            .from('quiz_attempts')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('lesson_id', lessonId)
+            .order('attempt_number', { ascending: false });
+        
+        const attemptCount = attempts?.length || 0;
+        const canAttempt = attemptCount < 3;
+        const lastAttempt = attempts?.[0];
+        
+        // Shuffle questions and options for each user
+        const shuffledQuestions = questions.map(q => ({
+            id: q.id,
+            question: q.question,
+            options: shuffleArray([...q.options]),
+            correct_answer: q.correct_answer,
+            explanation: q.explanation
+        }));
+        
+        res.json({
+            questions: shuffleArray(shuffledQuestions),
+            attemptCount,
+            canAttempt,
+            maxAttempts: 3,
+            lastScore: lastAttempt?.score,
+            lastPassed: lastAttempt?.passed
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Submit quiz answers
+app.post('/api/quiz/submit', async (req, res) => {
+    try {
+        const { userId, lessonId, answers } = req.body;
+        
+        // Get correct answers
+        const { data: questions, error: qError } = await supabase
+            .from('quiz_questions')
+            .select('id, correct_answer')
+            .eq('lesson_id', lessonId);
+        
+        if (qError) throw qError;
+        
+        // Calculate score
+        let correctCount = 0;
+        const answerMap = new Map();
+        
+        for (const [questionId, userAnswer] of Object.entries(answers)) {
+            const question = questions.find(q => q.id == questionId);
+            if (question && userAnswer === question.correct_answer) {
+                correctCount++;
+            }
+            answerMap.set(questionId, userAnswer);
+        }
+        
+        const score = Math.round((correctCount / questions.length) * 100);
+        const passed = score >= 70;
+        
+        // Get existing attempts
+        const { data: existingAttempts } = await supabase
+            .from('quiz_attempts')
+            .select('attempt_number')
+            .eq('user_id', userId)
+            .eq('lesson_id', lessonId)
+            .order('attempt_number', { ascending: false });
+        
+        const attemptNumber = (existingAttempts?.length || 0) + 1;
+        
+        // Save attempt
+        const { error: insertError } = await supabase
+            .from('quiz_attempts')
+            .insert([{
+                user_id: userId,
+                lesson_id: lessonId,
+                score: score,
+                passed: passed,
+                answers: Object.fromEntries(answerMap),
+                attempt_number: attemptNumber
+            }]);
+        
+        if (insertError) throw insertError;
+        
+        // If passed, automatically mark lesson as complete
+        if (passed) {
+            // Check if already completed
+            const { data: existingProgress } = await supabase
+                .from('user_progress')
+                .select('id')
+                .eq('user_id', userId)
+                .eq('lesson_id', lessonId)
+                .single();
+            
+            if (!existingProgress) {
+                await supabase
+                    .from('user_progress')
+                    .insert([{
+                        user_id: userId,
+                        lesson_id: lessonId,
+                        module_id: req.body.moduleId,
+                        completed: true,
+                        completed_at: new Date().toISOString()
+                    }]);
+            }
+        }
+        
+        res.json({
+            success: true,
+            score: score,
+            passed: passed,
+            attemptNumber: attemptNumber,
+            remainingAttempts: 3 - attemptNumber,
+            correctCount: correctCount,
+            totalQuestions: questions.length
+        });
+    } catch (error) {
+        console.error('Quiz submit error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Helper: Shuffle array
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
