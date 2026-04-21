@@ -1349,3 +1349,77 @@ app.get('/api/certificate/status/:userId/:moduleId', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+// ============ PDF CERTIFICATE GENERATION ============
+
+const { generateCertificateImage } = require('../utils/certificate-generator');
+
+// Generate and download certificate as PDF
+app.get('/api/certificate/download/:certificateId', async (req, res) => {
+    try {
+        const { certificateId } = req.params;
+        
+        // Get certificate data
+        const { data: certificate, error } = await supabase
+            .from('certificates')
+            .select('*')
+            .eq('certificate_id', certificateId)
+            .single();
+        
+        if (error || !certificate) {
+            return res.status(404).json({ error: 'Certificate not found' });
+        }
+        
+        // Generate PDF
+        const pdfBytes = await generateCertificateImage(
+            certificate.user_name,
+            certificate.module_title,
+            certificate.certificate_id,
+            certificate.completed_at
+        );
+        
+        // Set response headers for PDF download
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="certificate-${certificateId}.pdf"`);
+        res.setHeader('Content-Length', pdfBytes.length);
+        
+        res.send(Buffer.from(pdfBytes));
+        
+    } catch (error) {
+        console.error('PDF generation error:', error);
+        res.status(500).json({ error: 'Failed to generate certificate PDF' });
+    }
+});
+
+// View certificate as PDF in browser
+app.get('/api/certificate/view/:certificateId', async (req, res) => {
+    try {
+        const { certificateId } = req.params;
+        
+        const { data: certificate, error } = await supabase
+            .from('certificates')
+            .select('*')
+            .eq('certificate_id', certificateId)
+            .single();
+        
+        if (error || !certificate) {
+            return res.status(404).json({ error: 'Certificate not found' });
+        }
+        
+        const pdfBytes = await generateCertificateImage(
+            certificate.user_name,
+            certificate.module_title,
+            certificate.certificate_id,
+            certificate.completed_at
+        );
+        
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `inline; filename="certificate-${certificateId}.pdf"`);
+        
+        res.send(Buffer.from(pdfBytes));
+        
+    } catch (error) {
+        console.error('PDF view error:', error);
+        res.status(500).json({ error: 'Failed to view certificate' });
+    }
+});

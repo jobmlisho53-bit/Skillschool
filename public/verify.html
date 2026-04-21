@@ -17,6 +17,9 @@
         .result { margin-top: 30px; padding: 20px; border-radius: 8px; display: none; }
         .valid { background: rgba(76, 175, 80, 0.1); border: 1px solid #4caf50; color: #2e7d32; }
         .invalid { background: rgba(244, 67, 54, 0.1); border: 1px solid #f44336; color: #c62828; }
+        .certificate-preview { margin-top: 30px; text-align: center; }
+        .download-btn { display: inline-block; background: #c9a03d; color: white; padding: 12px 24px; border-radius: 4px; text-decoration: none; margin-top: 20px; }
+        .disclaimer { margin-top: 30px; padding: 16px; background: #fefcf8; border-left: 3px solid #c9a03d; font-size: 0.7rem; color: #6b6b6b; text-align: left; }
         .back-link { display: inline-block; margin-top: 20px; color: #c9a03d; text-decoration: none; }
     </style>
 </head>
@@ -30,6 +33,13 @@
             <input type="text" id="certificateId" placeholder="Enter Certificate ID (e.g., CERT-20260115-abc123-def456)">
             <button onclick="verifyCertificate()">Verify Certificate</button>
             <div id="result" class="result"></div>
+            <div id="certificatePreview" class="certificate-preview"></div>
+        </div>
+        <div class="disclaimer">
+            <strong>⚠️ Legal Disclaimer</strong><br>
+            This certificate acknowledges completion of a non-accredited course offered by Skill to Income, an independent learning platform.
+            It is not a professional certification, degree, or guarantee of employment. This document does not represent endorsement by
+            any educational institution or professional body. Verification of this certificate only confirms completion of the course content.
         </div>
         <div style="text-align: center; margin-top: 20px;">
             <a href="/" class="back-link">← Back to Home</a>
@@ -39,11 +49,13 @@
         async function verifyCertificate() {
             const certificateId = document.getElementById('certificateId').value.trim();
             const resultDiv = document.getElementById('result');
+            const previewDiv = document.getElementById('certificatePreview');
             
             if (!certificateId) {
                 resultDiv.className = 'result invalid';
                 resultDiv.style.display = 'block';
                 resultDiv.innerHTML = 'Please enter a certificate ID';
+                previewDiv.innerHTML = '';
                 return;
             }
             
@@ -65,14 +77,29 @@
                         <strong>Completed on:</strong> ${new Date(data.completedAt).toLocaleDateString()}<br>
                         <strong>Verifications:</strong> ${data.verifications}
                     `;
+                    
+                    previewDiv.innerHTML = `
+                        <a href="/api/certificate/view/${certificateId}" target="_blank" class="download-btn">📄 View Full Certificate PDF</a>
+                        <a href="/api/certificate/download/${certificateId}" class="download-btn" style="background: #2c2c2c; margin-left: 12px;">📥 Download Certificate PDF</a>
+                    `;
                 } else {
                     resultDiv.className = 'result invalid';
                     resultDiv.innerHTML = `✗ INVALID CERTIFICATE<br><br>${data.message || 'No matching certificate found'}`;
+                    previewDiv.innerHTML = '';
                 }
             } catch (error) {
                 resultDiv.className = 'result invalid';
                 resultDiv.innerHTML = 'Error verifying certificate. Please try again.';
+                previewDiv.innerHTML = '';
             }
+        }
+        
+        // Check if certificate ID in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const certId = urlParams.get('id');
+        if (certId) {
+            document.getElementById('certificateId').value = certId;
+            verifyCertificate();
         }
     </script>
 </body>

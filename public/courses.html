@@ -1608,3 +1608,76 @@
         await checkCertificateStatus(moduleId);
     };
 </script>
+<!-- Update certificate claimed section -->
+<div id="certificate-claimed" style="display: none;">
+    <p style="color: #2e7d32;">✓ Certificate claimed!</p>
+    <div style="display: flex; gap: 12px; justify-content: center; margin-top: 12px;">
+        <button onclick="downloadCertificate('${certificateId}')" style="background: #c9a03d; color: white; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer;">📥 Download PDF</button>
+        <button onclick="viewCertificate('${certificateId}')" style="background: #2c2c2c; color: white; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer;">👁️ View Certificate</button>
+    </div>
+</div>
+
+<script>
+    // Download certificate as PDF
+    async function downloadCertificate(certificateId) {
+        window.open(`/api/certificate/download/${certificateId}`, '_blank');
+    }
+    
+    // View certificate in browser
+    async function viewCertificate(certificateId) {
+        window.open(`/api/certificate/view/${certificateId}`, '_blank');
+    }
+    
+    // Update certificate claimed section with dynamic buttons
+    function updateCertificateClaimed(certificateId) {
+        const claimedDiv = document.getElementById('certificate-claimed');
+        claimedDiv.innerHTML = `
+            <p style="color: #2e7d32;">✓ Certificate claimed!</p>
+            <div style="display: flex; gap: 12px; justify-content: center; margin-top: 12px;">
+                <button onclick="downloadCertificate('${certificateId}')" style="background: #c9a03d; color: white; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer;">📥 Download PDF</button>
+                <button onclick="viewCertificate('${certificateId}')" style="background: #2c2c2c; color: white; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer;">👁️ View Certificate</button>
+            </div>
+        `;
+    }
+    
+    // Update checkCertificateStatus to use dynamic buttons
+    async function checkCertificateStatus(moduleId) {
+        try {
+            const response = await fetch(`/api/certificate/status/${userId}/${moduleId}`);
+            const status = await response.json();
+            
+            const certSection = document.getElementById('certificate-status');
+            const lockedDiv = document.getElementById('certificate-locked');
+            const readyDiv = document.getElementById('certificate-ready');
+            const claimedDiv = document.getElementById('certificate-claimed');
+            
+            certSection.style.display = 'block';
+            
+            if (status.certificateAvailable) {
+                lockedDiv.style.display = 'none';
+                readyDiv.style.display = 'none';
+                claimedDiv.style.display = 'block';
+                updateCertificateClaimed(status.certificateId);
+            } else if (status.canGenerate) {
+                lockedDiv.style.display = 'none';
+                readyDiv.style.display = 'block';
+                claimedDiv.style.display = 'none';
+            } else {
+                lockedDiv.style.display = 'block';
+                readyDiv.style.display = 'none';
+                claimedDiv.style.display = 'none';
+                
+                const reqText = [];
+                if (status.requirements.lessonsRemaining > 0) {
+                    reqText.push(`${status.requirements.lessonsRemaining} lessons remaining`);
+                }
+                if (status.requirements.quizzesRemaining > 0) {
+                    reqText.push(`${status.requirements.quizzesRemaining} quizzes to pass`);
+                }
+                document.getElementById('certificate-requirements').textContent = reqText.join(', ');
+            }
+        } catch (error) {
+            console.error('Certificate status error:', error);
+        }
+    }
+</script>
