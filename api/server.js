@@ -387,3 +387,148 @@ process.on('unhandledRejection', (reason) => {
 });
 
 module.exports = app;
+
+// ============ SOLUTION 2: Completion Path Validation ============
+
+// Add this function to check lesson order
+async function validateLessonOrder(userId, moduleId, lessonId, lessonOrder) {
+    // First lesson (order 1) has no prerequisite
+    if (lessonOrder === 1) {
+        return { valid: true };
+    }
+    
+    // Get the previous lesson ID (order - 1)
+    const { data: previousLesson, error: prevLessonError } = await supabase
+        .from('lessons')
+        .select('id')
+        .eq('module_id', moduleId)
+        .eq('lesson_order', lessonOrder - 1)
+        .single();
+    
+    if (prevLessonError || !previousLesson) {
+        return { valid: false, error: 'Previous lesson not found' };
+    }
+    
+    // Check if previous lesson is completed
+    const { data: progress, error: progressError } = await supabase
+        .from('user_progress')
+        .select('completed, completed_at')
+        .eq('user_id', userId)
+        .eq('lesson_id', previousLesson.id)
+        .eq('completed', true)
+        .single();
+    
+    if (progressError || !progress) {
+        return { 
+            valid: false, 
+            error: `Please complete Lesson ${lessonOrder - 1} first before moving to Lesson ${lessonOrder}.` 
+        };
+    }
+    
+    // Also check minimum time between completions (anti-cheat)
+    if (progress.completed_at) {
+        const completedTime = new Date(progress.completed_at).getTime();
+        const currentTime = Date.now();
+        const timeDiffMinutes = (currentTime - completedTime) / 1000 / 60;
+        
+        // Require at least 1 minute between lesson completions
+        if (timeDiffMinutes < 1 && lessonOrder > 1) {
+            return { 
+                valid: false, 
+                error: 'Please wait a moment before continuing to the next lesson.' 
+            };
+        }
+    }
+    
+    return { valid: true };
+}
+
+// Replace the mark-complete endpoint with this enhanced version
+app.post('/api/progress/mark-complete', async (req, res) => {
+    try {
+        const { userId, lessonId, moduleId, timeSpent, watchPercentage } = req.body;
+        
+        if (!userId || !lessonId || !moduleId) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+        
+        // Get lesson details
+        const { data: lesson, error: lessonError } = await supabase
+            .from('lessons')
+            .select('duration, content_type, lesson_order')
+            .eq('id', lessonId)
+            .single();
+        
+        if (lessonError) throw lessonError;
+        
+        // SOLUTION 1: Watch time validation (for YouTube videos)
+        if (lesson.content_type === 'youtube') {
+            if (!timeSpent || !watchPercentage) {
+                return res.status(400).json({ error: 'Watch time data required' });
+            }
+            
+            let requiredSeconds = 300;
+            if (lesson.duration) {
+                const match = lesson.duration.match(/(\d+)/);
+                if (match) {
+                    requiredSeconds = parseInt(match[1]) * 60;
+                }
+            }
+            
+            const minRequiredSeconds = requiredSeconds * 0.85;
+            
+            if (timeSpent < minRequiredSeconds && watchPercentage < 90) {
+                return res.status(400).json({ 
+                    error: `Please watch at least 90% of the video. You watched ${Math.floor(watchPercentage)}%.` 
+                });
+            }
+        }
+        
+        // SOLUTION 2: Path validation (check previous lesson completed)
+        const orderValidation = await validateLessonOrder(userId, moduleId, lessonId, lesson.lesson_order);
+        if (!orderValidation.valid) {
+            return res.status(400).json({ error: orderValidation.error });
+        }
+        
+        // Check if already completed
+        const { data: existing } = await supabase
+            .from('user_progress')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('lesson_id', lessonId)
+            .single();
+        
+        if (existing) {
+            const { error } = await supabase
+                .from('user_progress')
+                .update({ 
+                    completed: true, 
+                    completed_at: new Date().toISOString(),
+                    time_spent_seconds: timeSpent || 0,
+                    watch_percentage: watchPercentage || 100
+                })
+                .eq('id', existing.id);
+            
+            if (error) throw error;
+        } else {
+            const { error } = await supabase
+                .from('user_progress')
+                .insert([{
+                    user_id: userId,
+                    lesson_id: lessonId,
+                    module_id: moduleId,
+                    completed: true,
+                    completed_at: new Date().toISOString(),
+                    time_spent_seconds: timeSpent || 0,
+                    watch_percentage: watchPercentage || 100
+                }]);
+            
+            if (error) throw error;
+        }
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Mark complete error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
