@@ -3,87 +3,273 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Privacy Policy | Skill to Income</title>
-    <link rel="stylesheet" href="/css/luxury.css?v=2">
+    <title>Privacy Policy - Skill to Income</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #ffffff;
+            color: #1a1a1a;
+            line-height: 1.5;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 32px;
+        }
+        
+        /* Navigation */
+        .nav {
+            background: #ffffff;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.98);
+        }
+        
+        .nav-content {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .logo {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            background: linear-gradient(135deg, #1a1a1a 0%, #c9a03d 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            align-items: center;
+        }
+        
+        .nav-links a {
+            color: #6b6b6b;
+            text-decoration: none;
+            font-size: 0.8rem;
+            transition: color 0.2s;
+        }
+        
+        .nav-links a:hover {
+            color: #c9a03d;
+        }
+        
+        /* Content */
+        .content {
+            padding: 60px 0 80px;
+        }
+        
+        h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #c9a03d 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .last-updated {
+            color: #c9a03d;
+            font-size: 0.8rem;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+        }
+        
+        h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 32px 0 16px;
+            color: #1a1a1a;
+        }
+        
+        h3 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 24px 0 12px;
+            color: #c9a03d;
+        }
+        
+        p {
+            color: #6b6b6b;
+            margin-bottom: 16px;
+            line-height: 1.6;
+            font-size: 0.9rem;
+        }
+        
+        ul {
+            margin: 16px 0 16px 32px;
+            color: #6b6b6b;
+        }
+        
+        li {
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-top: 40px;
+            color: #c9a03d;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: opacity 0.2s;
+        }
+        
+        .back-link:hover {
+            opacity: 0.7;
+        }
+        
+        /* Footer */
+        .footer {
+            background: #ffffff;
+            border-top: 1px solid rgba(212, 175, 55, 0.15);
+            padding: 48px 0 32px;
+        }
+        
+        .footer-content {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 32px;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 32px;
+        }
+        
+        .footer-links {
+            display: flex;
+            gap: 32px;
+            flex-wrap: wrap;
+        }
+        
+        .footer a {
+            color: #6b6b6b;
+            text-decoration: none;
+            font-size: 0.8rem;
+        }
+        
+        .footer a:hover {
+            color: #c9a03d;
+        }
+        
+        .copyright {
+            font-size: 0.75rem;
+            color: #9a9a9a;
+        }
+        
+        @media (max-width: 768px) {
+            .container, .nav-content, .footer-content {
+                padding: 0 20px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            h2 {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
 </head>
 <body>
-    <header class="luxury-header">
-        <div class="container">
-            <div class="header-inner">
-                <div class="logo">
-                    <h1>Skill to Income</h1>
-                    <p>Premium Education Platform</p>
-                </div>
-                <nav class="luxury-nav">
-                    <a href="/" class="nav-link">Home</a>
-                    <a href="/courses" class="nav-link">Course Library</a>
-                    <a href="/contact" class="nav-link">Contact</a>
-                </nav>
+    <div class="nav">
+        <div class="nav-content">
+            <div class="logo">Skill to Income</div>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/courses">Courses</a>
+                <a href="/contact">Contact</a>
             </div>
         </div>
-    </header>
+    </div>
 
-    <main class="container" style="padding: 60px 0;">
-        <h1 style="margin-bottom: 40px;">Privacy Policy</h1>
-        
-        <div style="display: flex; flex-direction: column; gap: 32px;">
-            <div>
-                <h3 style="color: var(--gold-primary); margin-bottom: 16px;">1. Information Collection</h3>
-                <p style="color: var(--gray-600); line-height: 1.8;">Skill to Income does not require user registration or personal information to access educational content. Anonymous usage data is collected through Vercel Analytics to improve platform performance.</p>
-            </div>
+    <div class="container">
+        <div class="content">
+            <h1>Privacy Policy</h1>
+            <div class="last-updated">Effective Date: April 12, 2026</div>
             
-            <div>
-                <h3 style="color: var(--gold-primary); margin-bottom: 16px;">2. Email Subscriptions</h3>
-                <p style="color: var(--gray-600); line-height: 1.8;">When voluntarily subscribing to updates, we collect email addresses solely for sending course announcements and platform news. Subscribers may unsubscribe at any time.</p>
-            </div>
+            <h2>1. Information We Collect</h2>
+            <p>Skill to Income collects minimal information to provide and improve our services:</p>
+            <ul>
+                <li><strong>Anonymous Usage Data:</strong> Page views, course progress, and lesson completion (stored locally or anonymously)</li>
+                <li><strong>Email Address:</strong> Only if you voluntarily subscribe to our newsletter</li>
+                <li><strong>Feedback:</strong> Voluntary course ratings and suggestions</li>
+            </ul>
             
-            <div>
-                <h3 style="color: var(--gold-primary); margin-bottom: 16px;">3. Data Storage</h3>
-                <p style="color: var(--gray-600); line-height: 1.8;">Progress tracking data is stored locally in your browser. No personal information is stored on our servers. Email subscriptions are securely stored in encrypted databases.</p>
-            </div>
+            <h2>2. How We Use Your Information</h2>
+            <p>We use the information we collect to:</p>
+            <ul>
+                <li>Track your course progress (stored locally in your browser)</li>
+                <li>Improve our courses based on anonymous feedback</li>
+                <li>Send newsletter updates (only if you subscribed)</li>
+            </ul>
             
-            <div>
-                <h3 style="color: var(--gold-primary); margin-bottom: 16px;">4. Third-Party Services</h3>
-                <p style="color: var(--gray-600); line-height: 1.8;">We utilize Vercel for hosting and Supabase for database management. YouTube embeds may collect viewing data according to their policies.</p>
-            </div>
+            <h2>3. Data Storage</h2>
+            <p>Your progress is stored locally in your browser. We do not require accounts or store personal information on our servers. Email addresses for newsletters are stored securely in our database.</p>
             
-            <div>
-                <h3 style="color: var(--gold-primary); margin-bottom: 16px;">5. Your Rights</h3>
-                <p style="color: var(--gray-600); line-height: 1.8;">You have the right to access, modify, or delete any personal information you have provided. Contact us for assistance.</p>
-            </div>
+            <h2>4. Third-Party Services</h2>
+            <p>We use the following third-party services:</p>
+            <ul>
+                <li><strong>Supabase:</strong> Database for course content and anonymous feedback</li>
+                <li><strong>Vercel:</strong> Hosting and anonymous analytics</li>
+                <li><strong>YouTube:</strong> Video content (embedded players)</li>
+            </ul>
             
-            <div>
-                <h3 style="color: var(--gold-primary); margin-bottom: 16px;">6. Contact Information</h3>
-                <p style="color: var(--gray-600); line-height: 1.8;">For privacy concerns or data requests, please contact our support team through the contact page.</p>
-            </div>
+            <h2>5. Cookies</h2>
+            <p>We do not use tracking cookies. Essential cookies may be used for platform functionality.</p>
+            
+            <h2>6. Your Rights</h2>
+            <p>Since we collect no personal information (except email for newsletter), there is no personal data to access or delete. You can unsubscribe from newsletters at any time.</p>
+            
+            <h2>7. Children's Privacy</h2>
+            <p>Our platform is intended for general audience. We do not knowingly collect information from children under 13.</p>
+            
+            <h2>8. Changes to This Policy</h2>
+            <p>We may update this Privacy Policy occasionally. Changes will be posted on this page with an updated effective date.</p>
+            
+            <h2>9. Contact Us</h2>
+            <p>If you have questions about this Privacy Policy, please contact us through our <a href="/contact" style="color: #c9a03d;">contact page</a>.</p>
+            
+            <a href="/" class="back-link">← Back to Home</a>
         </div>
-        
-        <div style="margin-top: 60px; padding: 24px; background: var(--cream); border-radius: 16px; text-align: center;">
-            <p style="color: var(--gray-600);">Last updated: April 2026</p>
-        </div>
-    </main>
+    </div>
 
-    <footer class="luxury-footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h4>Skill to Income</h4>
-                    <a href="/courses">Course Library</a>
-                    <a href="/contact">Contact</a>
-                </div>
-                <div class="footer-section">
-                    <h4>Legal</h4>
-                    <a href="/privacy">Privacy Policy</a>
-                    <a href="/terms">Terms of Use</a>
-                </div>
-                <div class="footer-section">
-                    <h4>Connect</h4>
-                    <a href="/contact">Support</a>
-                    <a href="/admin">Admin Access</a>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>© 2026 Skill to Income. All rights reserved.</p>
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="copyright">© 2026 Skill to Income. All rights reserved.</div>
+            <div class="footer-links">
+                <a href="/privacy">Privacy</a>
+                <a href="/terms">Terms</a>
+                <a href="/contact">Contact</a>
             </div>
         </div>
     </footer>
