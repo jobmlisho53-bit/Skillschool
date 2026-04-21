@@ -1492,3 +1492,81 @@ app.post('/api/progress/mark-complete', async (req, res) => {
         // ... error handling ...
     }
 });
+
+// Get certificate status with user name
+app.get('/api/certificate/status/:userId/:moduleId', async (req, res) => {
+    try {
+        const { userId, moduleId } = req.params;
+        
+        // Get course requirements
+        const { data: requirements } = await supabase
+            .from('course_completion_requirements')
+            .select('*')
+            .eq('module_id', moduleId)
+            .single();
+        
+        // Get lessons
+        const { data: lessons } = await supabase
+            .from('lessons')
+            .select('id')
+            .eq('module_id', moduleId);
+        
+        // Get completed lessons
+        const { data: completedLessons } = await supabase
+            .from('user_progress')
+            .select('lesson_id')
+            .eq('user_id', userId)
+            .eq('module_id', moduleId)
+            .eq('completed', true);
+        
+        // Get quiz results
+        const { data: quizAttempts } = await supabase
+            .from('quiz_attempts')
+            .select('lesson_id, passed')
+            .eq('user_id', userId)
+            .in('lesson_id', lessons?.map(l => l.id) || []);
+        
+        const lessonPassed = new Map();
+        quizAttempts?.forEach(attempt => {
+            if (attempt.passed && !lessonPassed.has(attempt.lesson_id)) {
+                lessonPassed.set(attempt.lesson_id, true);
+            }
+        });
+        
+        const totalLessons = lessons?.length || 0;
+        const completedCount = completedLessons?.length || 0;
+        const passedQuizzes = lessons?.filter(l => lessonPassed.get(l.id)).length || 0;
+        
+        const allLessonsComplete = completedCount === totalLessons;
+        const allQuizzesPassed = passedQuizzes === totalLessons;
+        
+        // Check if certificate exists
+        const { data: existingCert } = await supabase
+            .from('certificates')
+            .select('certificate_id, issued_at, user_name')
+            .eq('user_id', userId)
+            .eq('module_id', moduleId)
+            .single();
+        
+        res.json({
+            certificateAvailable: !!existingCert,
+            certificateId: existingCert?.certificate_id,
+            issuedAt: existingCert?.issued_at,
+            userName: existingCert?.user_name,
+            requirements: {
+                totalLessons,
+                completedLessons: completedCount,
+                lessonsRemaining: totalLessons - completedCount,
+                quizzesPassed: passedQuizzes,
+                quizzesRemaining: totalLessons - passedQuizzes,
+                allLessonsComplete,
+                allQuizzesPassed
+            },
+            canGenerate: allLessonsComplete && allQuizzesPassed && !existingCert,
+            lockedReason: !allLessonsComplete ? 'Complete all lessons' : (!allQuizzesPassed ? 'Pass all quizzes' : null)
+        });
+    } catch (error) {
+        console.error('Certificate status error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
