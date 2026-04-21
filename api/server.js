@@ -1839,3 +1839,229 @@ pp.get('/verify', (req, res) => {    res.sendFile(path.join(__dirname, '../publi
 pp.get('/verify', (req, res) => {    res.sendFile(path.join(__dirname, '../public/verify.html'));});
 });
 pp.get('/verify', (req, res) => {    res.sendFile(path.join(__dirname, '../public/verify.html'));});
+
+// ============ SOLUTION 6: Direct API Call Blocking ============
+
+// Store valid request tokens (in-memory with expiration)
+const validTokens = new Map(); // token -> { userId, lessonId, expiresAt, used }
+
+// Clean up expired tokens every 5 minutes
+setInterval(() => {
+    const now = Date.now();
+    for (const [token, data] of validTokens.entries()) {
+        if (data.expiresAt < now || data.used) {
+            validTokens.delete(token);
+        }
+    }
+}, 5 * 60 * 1000);
+
+// Generate a one-time request token
+function generateRequestToken(userId, lessonId) {
+    const token = crypto.randomBytes(32).toString('hex');
+    validTokens.set(token, {
+        userId: userId,
+        lessonId: lessonId,
+        expiresAt: Date.now() + 5 * 60 * 1000, // 5 minutes expiry
+        used: false
+    });
+    return token;
+}
+
+// Validate and consume request token
+function validateRequestToken(token, userId, lessonId) {
+    const tokenData = validTokens.get(token);
+    
+    if (!tokenData) {
+        return { valid: false, reason: 'Invalid or expired token' };
+    }
+    
+    if (tokenData.used) {
+        return { valid: false, reason: 'Token already used' };
+    }
+    
+    if (tokenData.expiresAt < Date.now()) {
+        return { valid: false, reason: 'Token expired' };
+    }
+    
+    if (tokenData.userId !== userId || tokenData.lessonId !== lessonId) {
+        return { valid: false, reason: 'Token user/lesson mismatch' };
+    }
+    
+    // Mark token as used
+    tokenData.used = true;
+    validTokens.set(token, tokenData);
+    
+    return { valid: true };
+}
+
+// Endpoint to get a request token before completing a lesson
+app.post('/api/progress/request-token', async (req, res) => {
+    try {
+        const { userId, lessonId } = req.body;
+        
+        if (!userId || !lessonId) {
+            return res.status(400).json({ error: 'Missing userId or lessonId' });
+        }
+        
+        // Verify the lesson exists
+        const { data: lesson, error } = await supabase
+            .from('lessons')
+            .select('id')
+            .eq('id', lessonId)
+            .single();
+        
+        if (error || !lesson) {
+            return res.status(404).json({ error: 'Lesson not found' });
+        }
+        
+        const token = generateRequestToken(userId, lessonId);
+        res.json({ token: token, expiresIn: 300 }); // 5 minutes
+        
+    } catch (error) {
+        console.error('Token generation error:', error);
+        res.status(500).json({ error: 'Failed to generate token' });
+    }
+});
+
+// Enhanced mark-complete endpoint with token validation
+// (Replace the existing mark-complete endpoint)
+app.post('/api/progress/mark-complete', async (req, res) => {
+    try {
+        const { 
+            userId, lessonId, moduleId, timeSpent, watchPercentage,
+            sessionId, deviceFingerprint, requestToken  // NEW: requestToken required
+        } = req.body;
+        
+        if (!userId || !lessonId || !moduleId) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+        
+        // SOLUTION 6: Validate request token (prevents direct API calls)
+        if (!requestToken) {
+            return res.status(401).json({ error: 'Request token required. Please use the web interface.' });
+        }
+        
+        const tokenValidation = validateRequestToken(requestToken, userId, lessonId);
+        if (!tokenValidation.valid) {
+            console.warn(`Invalid token attempt for user ${userId}: ${tokenValidation.reason}`);
+            return res.status(403).json({ error: tokenValidation.reason });
+        }
+        
+        // Get client IP address
+        const ipAddress = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+        
+        // SOLUTION 4: Check for incognito abuse
+        if (deviceFingerprint) {
+            const abuseCheck = await checkIncognitoAbuse(deviceFingerprint, userId, ipAddress);
+            if (abuseCheck.isAbuse) {
+                console.warn(`Incognito abuse detected: ${abuseCheck.reason}`);
+                return res.status(403).json({ error: abuseCheck.reason });
+            }
+        }
+        
+        // Check if same IP has multiple active user IDs
+        const { data: sameIpUsers, error: ipError } = await supabase
+            .from('user_progress')
+            .select('user_id')
+            .eq('ip_address', ipAddress)
+            .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+            .limit(10);
+        
+        if (!ipError && sameIpUsers) {
+            const uniqueUsers = new Set(sameIpUsers.map(u => u.user_id));
+            if (uniqueUsers.size > 5) {
+                return res.status(403).json({ 
+                    error: 'Too many different users from this IP address. Please use a consistent session.' 
+                });
+            }
+        }
+        
+        // SOLUTION 3: Anomaly detection
+        const anomaly = await detectAnomaly(userId, ipAddress, moduleId);
+        if (anomaly.isAnomaly) {
+            console.warn(`Anomaly detected for user ${userId}: ${anomaly.reason}`);
+            return res.status(429).json({ error: anomaly.reason });
+        }
+        
+        // Get lesson details
+        const { data: lesson, error: lessonError } = await supabase
+            .from('lessons')
+            .select('duration, content_type, lesson_order')
+            .eq('id', lessonId)
+            .single();
+        
+        if (lessonError) throw lessonError;
+        
+        // SOLUTION 1: Watch time validation
+        if (lesson.content_type === 'youtube') {
+            if (!timeSpent || !watchPercentage) {
+                return res.status(400).json({ error: 'Watch time data required' });
+            }
+            
+            let requiredSeconds = 300;
+            if (lesson.duration) {
+                const match = lesson.duration.match(/(\d+)/);
+                if (match) {
+                    requiredSeconds = parseInt(match[1]) * 60;
+                }
+            }
+            
+            const minRequiredSeconds = requiredSeconds * 0.85;
+            
+            if (timeSpent < minRequiredSeconds && watchPercentage < 90) {
+                return res.status(400).json({ 
+                    error: `Please watch at least 90% of the video. You watched ${Math.floor(watchPercentage)}%.` 
+                });
+            }
+        }
+        
+        // SOLUTION 2: Path validation
+        const orderValidation = await validateLessonOrder(userId, moduleId, lessonId, lesson.lesson_order);
+        if (!orderValidation.valid) {
+            return res.status(400).json({ error: orderValidation.error });
+        }
+        
+        // Check if already completed
+        const { data: existing } = await supabase
+            .from('user_progress')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('lesson_id', lessonId)
+            .single();
+        
+        const completionData = {
+            completed: true,
+            completed_at: new Date().toISOString(),
+            time_spent_seconds: timeSpent || 0,
+            watch_percentage: watchPercentage || 100,
+            ip_address: ipAddress,
+            session_id: sessionId || null,
+            device_fingerprint: deviceFingerprint || null
+        };
+        
+        if (existing) {
+            const { error } = await supabase
+                .from('user_progress')
+                .update(completionData)
+                .eq('id', existing.id);
+            
+            if (error) throw error;
+        } else {
+            const { error } = await supabase
+                .from('user_progress')
+                .insert([{
+                    user_id: userId,
+                    lesson_id: lessonId,
+                    module_id: moduleId,
+                    ...completionData
+                }]);
+            
+            if (error) throw error;
+        }
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Mark complete error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});

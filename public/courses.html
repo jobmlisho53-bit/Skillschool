@@ -913,3 +913,83 @@
         await checkAndShowCertificateButton(moduleId);
     };
 </script>
+<script>
+    // SOLUTION 6: Request token before marking complete
+    let currentRequestToken = null;
+    
+    async function getRequestToken(lessonId) {
+        try {
+            const response = await fetch('/api/progress/request-token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: userId,
+                    lessonId: lessonId
+                })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                currentRequestToken = data.token;
+                return data.token;
+            } else {
+                console.error('Failed to get request token');
+                return null;
+            }
+        } catch (error) {
+            console.error('Token request error:', error);
+            return null;
+        }
+    }
+    
+    // Replace the mark-complete button click handler
+    document.getElementById('mark-complete-btn')?.addEventListener('click', async () => {
+        if (!currentLesson) return;
+        
+        if (currentLesson.contentType === 'youtube' && watchPercentage < 90) {
+            alert('Please watch at least 90% of the video before marking complete.');
+            return;
+        }
+        
+        // Get a fresh request token
+        const token = await getRequestToken(currentLesson.id);
+        if (!token) {
+            alert('Unable to process request. Please refresh and try again.');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/progress/mark-complete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: userId,
+                    lessonId: currentLesson.id,
+                    moduleId: currentCourse?.module_id || currentCourse?.moduleId,
+                    timeSpent: Math.floor(watchedSeconds),
+                    watchPercentage: Math.floor(watchPercentage),
+                    sessionId: sessionId,
+                    deviceFingerprint: deviceFingerprint,
+                    requestToken: token  // Include the one-time token
+                })
+            });
+            
+            if (response.ok) {
+                const btn = document.getElementById('mark-complete-btn');
+                btn.textContent = 'Completed';
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+                
+                if (currentCourse) {
+                    showCourse(currentCourse);
+                }
+            } else {
+                const error = await response.json();
+                alert(error.error || 'Failed to mark complete. Please watch the video properly.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error saving progress. Please try again.');
+        }
+    });
+</script>
