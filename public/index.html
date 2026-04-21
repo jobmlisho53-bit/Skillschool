@@ -3,221 +3,497 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Skill to Income | Master Real Skills for Financial Freedom</title>
-    <meta name="description" content="Premium skill-based learning platform. Master web development, trading, copywriting, and more. No signup required. Start your journey today.">
-    <link rel="stylesheet" href="/css/luxury.css?v=2">
-    
-    <!-- Vercel Analytics -->
-    <script>
-        window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
-    </script>
-    <script defer src="/_vercel/insights/script.js"></script>
-    <script defer src="/_vercel/speed-insights/script.js"></script>
+    <title>Skill to Income | Professional Skills Mastery</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #ffffff;
+            color: #1a1a1a;
+            line-height: 1.5;
+        }
+        
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 32px;
+        }
+        
+        /* Premium Gold Navigation */
+        .nav {
+            background: #ffffff;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.98);
+        }
+        
+        .nav-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .logo {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            background: linear-gradient(135deg, #1a1a1a 0%, #c9a03d 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            align-items: center;
+        }
+        
+        .nav-links a {
+            color: #6b6b6b;
+            text-decoration: none;
+            font-size: 0.8rem;
+            transition: color 0.2s;
+            letter-spacing: 0.3px;
+        }
+        
+        .nav-links a:hover {
+            color: #c9a03d;
+        }
+        
+        .nav-links .primary {
+            background: #c9a03d;
+            color: #ffffff;
+            padding: 8px 20px;
+            border-radius: 2px;
+        }
+        
+        .nav-links .primary:hover {
+            background: #b8922e;
+            color: #ffffff;
+        }
+        
+        /* Hero Section */
+        .hero {
+            padding: 100px 0 80px;
+            text-align: center;
+        }
+        
+        .hero h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 4rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #c9a03d 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero p {
+            font-size: 1rem;
+            color: #6b6b6b;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .hero-badge {
+            display: inline-block;
+            background: rgba(212, 175, 55, 0.1);
+            padding: 6px 16px;
+            border-radius: 2px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            letter-spacing: 1px;
+            color: #c9a03d;
+            margin-bottom: 24px;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: #c9a03d;
+            color: #ffffff;
+            padding: 14px 40px;
+            border-radius: 2px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+            margin-top: 32px;
+            transition: all 0.2s;
+        }
+        
+        .cta-button:hover {
+            background: #b8922e;
+            transform: translateY(-2px);
+        }
+        
+        /* Sections */
+        .section {
+            padding: 80px 0;
+        }
+        
+        .section-light {
+            background: #fefcf8;
+        }
+        
+        .section-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.2rem;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        
+        .section-subtitle {
+            text-align: center;
+            color: #6b6b6b;
+            margin-bottom: 48px;
+            font-size: 0.9rem;
+        }
+        
+        /* Two Column Layout */
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 48px;
+            align-items: start;
+        }
+        
+        .problem-box, .solution-box {
+            background: #ffffff;
+            padding: 32px;
+            border-radius: 4px;
+            border: 1px solid rgba(212, 175, 55, 0.15);
+        }
+        
+        .problem-box h3, .solution-box h3 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        
+        .list-item {
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+            display: flex;
+            gap: 12px;
+            font-size: 0.85rem;
+            color: #6b6b6b;
+        }
+        
+        /* Courses Grid */
+        .courses-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+        }
+        
+        .course-card {
+            background: #ffffff;
+            padding: 24px;
+            border-radius: 4px;
+            border: 1px solid rgba(212, 175, 55, 0.15);
+            transition: all 0.2s;
+        }
+        
+        .course-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(212, 175, 55, 0.4);
+        }
+        
+        .course-icon {
+            font-size: 1.8rem;
+            margin-bottom: 16px;
+        }
+        
+        .course-card h4 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .course-card p {
+            font-size: 0.8rem;
+            color: #6b6b6b;
+        }
+        
+        /* Trust Badges */
+        .trust-grid {
+            display: flex;
+            justify-content: center;
+            gap: 48px;
+            flex-wrap: wrap;
+        }
+        
+        .trust-item {
+            text-align: center;
+        }
+        
+        .trust-number {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #c9a03d;
+            font-family: 'Cormorant Garamond', serif;
+        }
+        
+        .trust-label {
+            font-size: 0.75rem;
+            color: #9a9a9a;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Email Section */
+        .email-section {
+            background: #fefcf8;
+            border-radius: 4px;
+            padding: 48px;
+            text-align: center;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            margin: 40px 0;
+        }
+        
+        .email-form {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 24px;
+        }
+        
+        .email-input {
+            padding: 12px 20px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 2px;
+            width: 280px;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .email-input:focus {
+            outline: none;
+            border-color: #c9a03d;
+        }
+        
+        .email-button {
+            background: #c9a03d;
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 2px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+        
+        .email-button:hover {
+            background: #b8922e;
+        }
+        
+        /* Footer */
+        .footer {
+            background: #ffffff;
+            border-top: 1px solid rgba(212, 175, 55, 0.15);
+            padding: 48px 0 32px;
+        }
+        
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 32px;
+        }
+        
+        .footer-links {
+            display: flex;
+            gap: 32px;
+        }
+        
+        .footer a {
+            color: #6b6b6b;
+            text-decoration: none;
+            font-size: 0.8rem;
+        }
+        
+        .footer a:hover {
+            color: #c9a03d;
+        }
+        
+        .copyright {
+            font-size: 0.75rem;
+            color: #9a9a9a;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 20px;
+            }
+            
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .two-column {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+            
+            .courses-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .trust-grid {
+                gap: 24px;
+            }
+            
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .footer-links {
+                justify-content: center;
+            }
+        }
+    </style>
 </head>
 <body>
-    <header class="luxury-header">
+    <div class="nav">
         <div class="container">
-            <div class="header-inner">
-                <div class="logo">
-                    <h1>Skill to Income</h1>
-                    <p>Premium Education Platform</p>
+            <div class="nav-content">
+                <div class="logo">Skill to Income</div>
+                <div class="nav-links">
+                    <a href="/courses">Courses</a>
+                    <a href="/contact">Contact</a>
+                    <a href="/courses" class="primary">Start Learning</a>
                 </div>
-                <nav class="luxury-nav">
-                    <a href="/" class="nav-link active">Home</a>
-                    <a href="/courses" class="nav-link">Course Library</a>
-                    <a href="/contact" class="nav-link">Contact</a>
-                </nav>
             </div>
         </div>
-    </header>
+    </div>
 
-    <main>
-        <!-- Hero Section -->
-        <section class="hero-luxury">
-            <div class="container">
-                <span class="hero-badge">Premium Education</span>
-                <h1 class="hero-title">Master Real Skills for Financial Freedom</h1>
-                <p class="hero-subtitle">Industry-recognized courses designed to transform your career. Learn from the best, at your own pace, completely free.</p>
-                <a href="/courses" class="btn-primary">Explore Courses →</a>
-            </div>
-        </section>
+    <div class="hero">
+        <div class="container">
+            <div class="hero-badge">Professional Skills Mastery</div>
+            <h1>Skill to Income</h1>
+            <p>Learn real-world skills that help you earn. Structured courses from industry professionals.</p>
+            <a href="/courses" class="cta-button">Explore Courses →</a>
+        </div>
+    </div>
 
-        <!-- Problem Section -->
-        <section style="padding: 80px 0; background: var(--white-off);">
-            <div class="container">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 48px;">
-                    <div>
-                        <h3 style="color: var(--gold-primary); margin-bottom: 24px;">The Challenge</h3>
-                        <p style="color: var(--gray-600); line-height: 1.8;">Quality education should be accessible. Yet most learners face fragmented resources, unclear paths, and overwhelming choices.</p>
-                    </div>
-                    <div>
-                        <h3 style="color: var(--gold-primary); margin-bottom: 24px;">Our Solution</h3>
-                        <p style="color: var(--gray-600); line-height: 1.8;">We curate premium content into structured, career-focused learning paths. Start anywhere, progress systematically, achieve mastery.</p>
-                    </div>
-                    <div>
-                        <h3 style="color: var(--gold-primary); margin-bottom: 24px;">The Outcome</h3>
-                        <p style="color: var(--gray-600); line-height: 1.8;">Marketable skills, professional portfolio, and the confidence to pursue new opportunities in the digital economy.</p>
-                    </div>
+    <div class="section">
+        <div class="container">
+            <div class="two-column">
+                <div class="problem-box">
+                    <h3>The Challenge</h3>
+                    <div class="list-item"><span>→</span><span>Scattered information across platforms</span></div>
+                    <div class="list-item"><span>→</span><span>No clear learning path</span></div>
+                    <div class="list-item"><span>→</span><span>Difficulty finding quality content</span></div>
+                </div>
+                <div class="solution-box">
+                    <h3>The Solution</h3>
+                    <div class="list-item"><span>→</span><span>Curated, structured learning paths</span></div>
+                    <div class="list-item"><span>→</span><span>Progress tracking & completion</span></div>
+                    <div class="list-item"><span>→</span><span>Free, no signup required</span></div>
                 </div>
             </div>
-        </section>
+        </div>
+    </div>
 
-        <!-- Courses Preview -->
-        <section style="padding: 80px 0;">
-            <div class="container">
-                <h2 style="text-align: center; margin-bottom: 16px;">Featured Disciplines</h2>
-                <p style="text-align: center; color: var(--gray-600); margin-bottom: 48px;">Comprehensive programs across high-demand fields</p>
-                
-                <div class="courses-grid-luxury" id="featured-courses">
-                    <div class="loading-luxury">Loading courses...</div>
-                </div>
-                
-                <div style="text-align: center; margin-top: 48px;">
-                    <a href="/courses" class="btn-primary">View Complete Course Library →</a>
-                </div>
+    <div class="section-light">
+        <div class="container">
+            <h2 class="section-title">What You'll Learn</h2>
+            <p class="section-subtitle">Professional courses designed for real-world application</p>
+            
+            <div class="courses-grid">
+                <div class="course-card"><div class="course-icon">⌨️</div><h4>Web Development</h4><p>Full-stack development from fundamentals</p></div>
+                <div class="course-card"><div class="course-icon">⚡</div><h4>AI Integration</h4><p>Build applications with artificial intelligence</p></div>
+                <div class="course-card"><div class="course-icon">📊</div><h4>Trading & Crypto</h4><p>Understanding markets and analysis</p></div>
+                <div class="course-card"><div class="course-icon">✎</div><h4>Copywriting</h4><p>Professional writing that converts</p></div>
+                <div class="course-card"><div class="course-icon">🎬</div><h4>Content Creation</h4><p>YouTube and video production</p></div>
+                <div class="course-card"><div class="course-icon">🏢</div><h4>Digital Business</h4><p>Launch and scale online ventures</p></div>
+                <div class="course-card"><div class="course-icon">🎨</div><h4>Video Editing</h4><p>Professional post-production</p></div>
+                <div class="course-card"><div class="course-icon">🚀</div><h4>SaaS Development</h4><p>Build your own platform</p></div>
             </div>
-        </section>
+        </div>
+    </div>
 
-        <!-- Trust Section -->
-        <section style="padding: 80px 0; background: linear-gradient(135deg, var(--gray-900) 0%, var(--gray-800) 100%); color: white;">
-            <div class="container">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 48px; text-align: center;">
-                    <div>
-                        <div style="font-size: 2.5rem; margin-bottom: 16px;">🎓</div>
-                        <h4 style="margin-bottom: 8px;">Free Access</h4>
-                        <p style="font-size: 0.85rem; opacity: 0.8;">No payment required</p>
-                    </div>
-                    <div>
-                        <div style="font-size: 2.5rem; margin-bottom: 16px;">📚</div>
-                        <h4 style="margin-bottom: 8px;">Structured Learning</h4>
-                        <p style="font-size: 0.85rem; opacity: 0.8;">Clear step-by-step paths</p>
-                    </div>
-                    <div>
-                        <div style="font-size: 2.5rem; margin-bottom: 16px;">🎥</div>
-                        <h4 style="margin-bottom: 8px;">Premium Content</h4>
-                        <p style="font-size: 0.85rem; opacity: 0.8;">Curated YouTube resources</p>
-                    </div>
-                    <div>
-                        <div style="font-size: 2.5rem; margin-bottom: 16px;">📊</div>
-                        <h4 style="margin-bottom: 8px;">Track Progress</h4>
-                        <p style="font-size: 0.85rem; opacity: 0.8;">Monitor your advancement</p>
-                    </div>
-                </div>
+    <div class="section">
+        <div class="container">
+            <div class="trust-grid">
+                <div class="trust-item"><div class="trust-number">16+</div><div class="trust-label">Professional Courses</div></div>
+                <div class="trust-item"><div class="trust-number">100%</div><div class="trust-label">Free Access</div></div>
+                <div class="trust-item"><div class="trust-number">No Signup</div><div class="trust-label">Start Instantly</div></div>
             </div>
-        </section>
+        </div>
+    </div>
 
-        <!-- Email Capture -->
-        <section style="padding: 80px 0;">
-            <div class="container">
-                <div style="max-width: 600px; margin: 0 auto; text-align: center;">
-                    <h2 style="margin-bottom: 16px;">Stay Informed</h2>
-                    <p style="color: var(--gray-600); margin-bottom: 32px;">Receive updates on new courses, features, and professional certifications.</p>
-                    
-                    <form id="emailForm" style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;">
-                        <input type="email" id="emailInput" placeholder="Enter your email address" style="flex: 1; min-width: 250px; padding: 14px 20px; border: 1px solid var(--gray-300); border-radius: 40px; font-family: 'Inter', sans-serif;">
-                        <button type="submit" class="btn-primary">Subscribe →</button>
-                    </form>
-                    <div id="successMessage" style="display: none; margin-top: 20px; padding: 12px; background: var(--cream); border-left: 3px solid var(--gold-primary); border-radius: 8px;">
-                        Thank you for subscribing. You will receive updates shortly.
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
+    <div class="container">
+        <div class="email-section">
+            <h3 style="font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 600;">Stay Updated</h3>
+            <p style="color: #6b6b6b; margin-top: 8px;">Receive new course announcements and resources</p>
+            <form id="emailForm" class="email-form">
+                <input type="email" id="emailInput" class="email-input" placeholder="Enter your email" required>
+                <button type="submit" class="email-button">Subscribe</button>
+            </form>
+            <div id="successMessage" style="display: none; margin-top: 16px; color: #c9a03d;">✓ Thank you for subscribing</div>
+        </div>
+    </div>
 
-    <footer class="luxury-footer">
+    <footer class="footer">
         <div class="container">
             <div class="footer-content">
-                <div class="footer-section">
-                    <h4>Skill to Income</h4>
-                    <a href="/courses">Course Library</a>
+                <div class="copyright">© 2026 Skill to Income. All rights reserved.</div>
+                <div class="footer-links">
+                    <a href="/privacy">Privacy</a>
+                    <a href="/terms">Terms</a>
                     <a href="/contact">Contact</a>
                 </div>
-                <div class="footer-section">
-                    <h4>Legal</h4>
-                    <a href="/privacy">Privacy Policy</a>
-                    <a href="/terms">Terms of Use</a>
-                </div>
-                <div class="footer-section">
-                    <h4>Connect</h4>
-                    <a href="/contact">Support</a>
-                    <a href="/admin">Admin Access</a>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>© 2026 Skill to Income. All rights reserved.</p>
             </div>
         </div>
     </footer>
 
     <script>
-        // Load featured courses preview
-        async function loadFeaturedCourses() {
-            try {
-                const response = await fetch('/api/modules');
-                const courses = await response.json();
-                const container = document.getElementById('featured-courses');
-                
-                if (courses.length === 0) {
-                    container.innerHTML = '<p>Courses coming soon</p>';
-                    return;
-                }
-                
-                // Show first 6 courses as preview
-                const previewCourses = courses.slice(0, 6);
-                container.innerHTML = previewCourses.map(course => `
-                    <div class="course-card-luxury" onclick="window.location.href='/courses'">
-                        <div class="course-icon">📚</div>
-                        <h3 class="course-title">${escapeHtml(course.title)}</h3>
-                        <p class="course-description">${escapeHtml(course.description || 'Professional skill development program')}</p>
-                        <div class="progress-container">
-                            <div class="progress-fill" style="width: 0%"></div>
-                        </div>
-                        <div class="progress-text">Not started</div>
-                    </div>
-                `).join('');
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        }
-        
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
-        // Email capture
         const emailForm = document.getElementById('emailForm');
         const successDiv = document.getElementById('successMessage');
         
-        if (emailForm) {
-            emailForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const email = document.getElementById('emailInput').value;
+        emailForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('emailInput').value;
+            
+            try {
+                const response = await fetch('/api/subscribe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email })
+                });
                 
-                try {
-                    const response = await fetch('/api/subscribe', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email: email })
-                    });
-                    
-                    if (response.ok) {
-                        successDiv.style.display = 'block';
-                        emailForm.reset();
-                        setTimeout(() => {
-                            successDiv.style.display = 'none';
-                        }, 5000);
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
+                if (response.ok) {
+                    successDiv.style.display = 'block';
+                    emailForm.reset();
+                    setTimeout(() => { successDiv.style.display = 'none'; }, 5000);
                 }
-            });
-        }
-        
-        loadFeaturedCourses();
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
     </script>
 </body>
 </html>
