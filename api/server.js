@@ -532,3 +532,188 @@ app.post('/api/progress/mark-complete', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+// ============ SOLUTION 3: Rate Limiting & Anomaly Detection ============
+
+// Track completion attempts per user/IP
+const completionAttempts = new Map(); // userId -> { count, firstAttempt, timestamps[] }
+
+// Clean up old entries every hour
+setInterval(() => {
+    const oneHourAgo = Date.now() - 60 * 60 * 1000;
+    for (const [key, data] of completionAttempts.entries()) {
+        if (data.firstAttempt < oneHourAgo) {
+            completionAttempts.delete(key);
+        }
+    }
+}, 60 * 60 * 1000);
+
+// Anomaly detection function
+async function detectAnomaly(userId, ipAddress, moduleId) {
+    const now = Date.now();
+    const oneHourAgo = now - 60 * 60 * 1000;
+    const fiveMinutesAgo = now - 5 * 60 * 1000;
+    
+    // Get user's completion history from database (last hour)
+    const { data: recentCompletions, error } = await supabase
+        .from('user_progress')
+        .select('created_at, lesson_id')
+        .eq('user_id', userId)
+        .gte('created_at', new Date(oneHourAgo).toISOString())
+        .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    
+    // Check 1: Too many completions in an hour (max 15)
+    if (recentCompletions && recentCompletions.length >= 15) {
+        return { 
+            isAnomaly: true, 
+            reason: 'Too many lessons completed in a short period. Please slow down.' 
+        };
+    }
+    
+    // Check 2: Completions happening too fast (less than 60 seconds apart)
+    if (recentCompletions && recentCompletions.length >= 2) {
+        const lastCompletion = new Date(recentCompletions[0].created_at).getTime();
+        const secondLastCompletion = new Date(recentCompletions[1].created_at).getTime();
+        const timeDiffSeconds = (lastCompletion - secondLastCompletion) / 1000;
+        
+        if (timeDiffSeconds < 60 && timeDiffSeconds > 0) {
+            return { 
+                isAnomaly: true, 
+                reason: 'Lessons are being completed too quickly. Please take your time with each lesson.' 
+            };
+        }
+    }
+    
+    // Check 3: Track in-memory attempts (for very rapid requests)
+    const key = `${userId}:${ipAddress}`;
+    const attempts = completionAttempts.get(key);
+    
+    if (attempts) {
+        // More than 10 completion attempts in 5 minutes
+        const recentAttempts = attempts.timestamps.filter(t => t > fiveMinutesAgo);
+        if (recentAttempts.length > 10) {
+            return { 
+                isAnomaly: true, 
+                reason: 'Suspicious activity detected. Please contact support if this is an error.' 
+            };
+        }
+        
+        // Update attempts
+        attempts.timestamps.push(now);
+        attempts.count++;
+        completionAttempts.set(key, attempts);
+    } else {
+        completionAttempts.set(key, {
+            count: 1,
+            firstAttempt: now,
+            timestamps: [now]
+        });
+    }
+    
+    return { isAnomaly: false };
+}
+
+// Enhanced mark-complete endpoint with rate limiting
+// (Replace the existing mark-complete endpoint)
+app.post('/api/progress/mark-complete', async (req, res) => {
+    try {
+        const { userId, lessonId, moduleId, timeSpent, watchPercentage } = req.body;
+        
+        if (!userId || !lessonId || !moduleId) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+        
+        // Get client IP address
+        const ipAddress = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+        
+        // SOLUTION 3: Anomaly detection
+        const anomaly = await detectAnomaly(userId, ipAddress, moduleId);
+        if (anomaly.isAnomaly) {
+            console.warn(`Anomaly detected for user ${userId}: ${anomaly.reason}`);
+            return res.status(429).json({ error: anomaly.reason });
+        }
+        
+        // Get lesson details
+        const { data: lesson, error: lessonError } = await supabase
+            .from('lessons')
+            .select('duration, content_type, lesson_order')
+            .eq('id', lessonId)
+            .single();
+        
+        if (lessonError) throw lessonError;
+        
+        // SOLUTION 1: Watch time validation (for YouTube videos)
+        if (lesson.content_type === 'youtube') {
+            if (!timeSpent || !watchPercentage) {
+                return res.status(400).json({ error: 'Watch time data required' });
+            }
+            
+            let requiredSeconds = 300;
+            if (lesson.duration) {
+                const match = lesson.duration.match(/(\d+)/);
+                if (match) {
+                    requiredSeconds = parseInt(match[1]) * 60;
+                }
+            }
+            
+            const minRequiredSeconds = requiredSeconds * 0.85;
+            
+            if (timeSpent < minRequiredSeconds && watchPercentage < 90) {
+                return res.status(400).json({ 
+                    error: `Please watch at least 90% of the video. You watched ${Math.floor(watchPercentage)}%.` 
+                });
+            }
+        }
+        
+        // SOLUTION 2: Path validation (check previous lesson completed)
+        const orderValidation = await validateLessonOrder(userId, moduleId, lessonId, lesson.lesson_order);
+        if (!orderValidation.valid) {
+            return res.status(400).json({ error: orderValidation.error });
+        }
+        
+        // Check if already completed
+        const { data: existing } = await supabase
+            .from('user_progress')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('lesson_id', lessonId)
+            .single();
+        
+        if (existing) {
+            const { error } = await supabase
+                .from('user_progress')
+                .update({ 
+                    completed: true, 
+                    completed_at: new Date().toISOString(),
+                    time_spent_seconds: timeSpent || 0,
+                    watch_percentage: watchPercentage || 100,
+                    ip_address: ipAddress
+                })
+                .eq('id', existing.id);
+            
+            if (error) throw error;
+        } else {
+            const { error } = await supabase
+                .from('user_progress')
+                .insert([{
+                    user_id: userId,
+                    lesson_id: lessonId,
+                    module_id: moduleId,
+                    completed: true,
+                    completed_at: new Date().toISOString(),
+                    time_spent_seconds: timeSpent || 0,
+                    watch_percentage: watchPercentage || 100,
+                    ip_address: ipAddress
+                }]);
+            
+            if (error) throw error;
+        }
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Mark complete error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
