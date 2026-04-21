@@ -3,148 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact Us - Income School</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #333; line-height: 1.6; }
-        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
-        header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 0; text-align: center; }
-        .content { background: white; padding: 40px; border-radius: 12px; margin: 40px 0; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1 { margin-bottom: 20px; }
-        h2 { color: #667eea; margin: 25px 0 15px 0; }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; }
-        input, select, textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 1rem;
-            font-family: inherit;
-        }
-        textarea { resize: vertical; }
-        button {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: bold;
-        }
-        button:hover { background: #5a67d8; }
-        .success-message { background: #c6f6d5; color: #22543d; padding: 15px; border-radius: 6px; margin-bottom: 20px; display: none; }
-        .error-message { background: #fed7d7; color: #742a2a; padding: 15px; border-radius: 6px; margin-bottom: 20px; display: none; }
-        footer { background: #333; color: white; text-align: center; padding: 20px 0; margin-top: 40px; }
-        footer a { color: white; text-decoration: none; }
-        .back-button { display: inline-block; background: #667eea; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-bottom: 20px; }
-        .back-button:hover { background: #5a67d8; }
-    </style>
+    <title>Contact Us | Skill to Income</title>
+    <link rel="stylesheet" href="/css/luxury.css">
 </head>
 <body>
-    <header>
+    <header class="luxury-header">
         <div class="container">
-            <h1>📧 Contact Us</h1>
-            <p>Income School - Free Education Platform</p>
+            <div class="header-inner">
+                <div class="logo">
+                    <h1>Skill to Income</h1>
+                    <p>Premium Education Platform</p>
+                </div>
+                <nav class="luxury-nav">
+                    <a href="/" class="nav-link">Home</a>
+                    <a href="/courses" class="nav-link">Course Library</a>
+                    <a href="/contact" class="nav-link active">Contact</a>
+                </nav>
+            </div>
         </div>
     </header>
 
-    <main class="container">
-        <a href="/" class="back-button">← Back to Home</a>
-        
-        <div class="content">
-            <div id="successMessage" class="success-message">✅ Message sent successfully! We'll respond within 48 hours.</div>
-            <div id="errorMessage" class="error-message">❌ Failed to send message. Please try again or email us directly.</div>
+    <main class="container" style="padding: 60px 0;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 60px;">
+            <div>
+                <h1 style="margin-bottom: 24px;">Contact Us</h1>
+                <p style="color: var(--gray-600); margin-bottom: 32px;">Have questions about our programs? We're here to help.</p>
+                
+                <div style="margin-top: 40px;">
+                    <h3 style="color: var(--gold-primary); margin-bottom: 16px;">Support Hours</h3>
+                    <p style="color: var(--gray-600);">Monday - Friday: 9am - 6pm EST</p>
+                    <p style="color: var(--gray-600);">Response time: 24-48 hours</p>
+                </div>
+            </div>
             
-            <form id="contactForm">
-                <div class="form-group">
-                    <label>Your Name *</label>
-                    <input type="text" id="name" required placeholder="Enter your full name">
-                </div>
-                
-                <div class="form-group">
-                    <label>Your Email *</label>
-                    <input type="email" id="email" required placeholder="Enter your email address">
-                </div>
-                
-                <div class="form-group">
-                    <label>Subject *</label>
-                    <select id="subject" required>
-                        <option value="">Select a subject</option>
-                        <option value="Course Suggestion">Course Suggestion</option>
-                        <option value="Technical Issue">Technical Issue</option>
-                        <option value="Content Question">Content Question</option>
-                        <option value="Business Inquiry">Business Inquiry</option>
-                        <option value="Other">Other</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label>Message *</label>
-                    <textarea id="message" rows="6" required placeholder="Type your message here..."></textarea>
-                </div>
-                
-                <button type="submit">Send Message</button>
-            </form>
-            
-            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; text-align: center;">
-                <p>Or email us directly at: <strong>jobmlisho63@gmail.com</strong></p>
+            <div>
+                <form id="contactForm">
+                    <div class="form-group-luxury">
+                        <label>Full Name</label>
+                        <input type="text" id="name" required placeholder="Your name">
+                    </div>
+                    
+                    <div class="form-group-luxury">
+                        <label>Email Address</label>
+                        <input type="email" id="email" required placeholder="your@email.com">
+                    </div>
+                    
+                    <div class="form-group-luxury">
+                        <label>Subject</label>
+                        <select id="subject" required>
+                            <option value="">Select a topic</option>
+                            <option value="Course Inquiry">Course Inquiry</option>
+                            <option value="Technical Support">Technical Support</option>
+                            <option value="Partnership">Partnership</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group-luxury">
+                        <label>Message</label>
+                        <textarea id="message" rows="5" required placeholder="How can we assist you?"></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn-primary" style="width: 100%;">Send Message →</button>
+                    <div id="contactSuccess" style="display: none; margin-top: 16px; padding: 12px; background: var(--cream); border-left: 3px solid var(--gold-primary); border-radius: 8px;">
+                        Thank you. We'll respond within 48 hours.
+                    </div>
+                    <div id="contactError" style="display: none; margin-top: 16px; padding: 12px; background: #FEF2F0; border-left: 3px solid #E53E3E; border-radius: 8px;">
+                        Please complete all required fields.
+                    </div>
+                </form>
             </div>
         </div>
     </main>
 
-    <footer>
+    <footer class="luxury-footer">
         <div class="container">
-            <p>© 2026 Income School - Free Education Platform</p>
-            <p><a href="/privacy">Privacy Policy</a> | <a href="/terms">Terms of Use</a> | <a href="/contact">Contact</a></p>
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>Skill to Income</h4>
+                    <a href="/courses">Course Library</a>
+                    <a href="/contact">Contact</a>
+                </div>
+                <div class="footer-section">
+                    <h4>Legal</h4>
+                    <a href="/privacy">Privacy Policy</a>
+                    <a href="/terms">Terms of Use</a>
+                </div>
+                <div class="footer-section">
+                    <h4>Connect</h4>
+                    <a href="/contact">Support</a>
+                    <a href="/admin">Admin Access</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 Skill to Income. All rights reserved.</p>
+            </div>
         </div>
     </footer>
 
     <script>
-        const form = document.getElementById('contactForm');
-        const successDiv = document.getElementById('successMessage');
-        const errorDiv = document.getElementById('errorMessage');
+        const contactForm = document.getElementById('contactForm');
+        const successDiv = document.getElementById('contactSuccess');
+        const errorDiv = document.getElementById('contactError');
         
-        // Hide messages initially
-        successDiv.style.display = 'none';
-        errorDiv.style.display = 'none';
-        
-        form.addEventListener('submit', async (e) => {
+        contactForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            // Get form data
-            const formData = {
-                name: document.getElementById('name').value,
-                email: document.getElementById('email').value,
-                subject: document.getElementById('subject').value,
-                message: document.getElementById('message').value,
-                timestamp: new Date().toISOString()
-            };
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const subject = document.getElementById('subject').value;
+            const message = document.getElementById('message').value;
+            
+            if (!name || !email || !subject || !message) {
+                errorDiv.style.display = 'block';
+                setTimeout(() => errorDiv.style.display = 'none', 5000);
+                return;
+            }
             
             try {
                 const response = await fetch('/api/contact', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
+                    body: JSON.stringify({ name, email, subject, message })
                 });
                 
                 if (response.ok) {
                     successDiv.style.display = 'block';
-                    errorDiv.style.display = 'none';
-                    form.reset();
-                    setTimeout(() => {
-                        successDiv.style.display = 'none';
-                    }, 5000);
+                    contactForm.reset();
+                    setTimeout(() => successDiv.style.display = 'none', 5000);
                 } else {
-                    throw new Error('Failed to send');
+                    errorDiv.style.display = 'block';
+                    setTimeout(() => errorDiv.style.display = 'none', 5000);
                 }
             } catch (error) {
                 errorDiv.style.display = 'block';
-                successDiv.style.display = 'none';
-                setTimeout(() => {
-                    errorDiv.style.display = 'none';
-                }, 5000);
+                setTimeout(() => errorDiv.style.display = 'none', 5000);
             }
         });
     </script>
