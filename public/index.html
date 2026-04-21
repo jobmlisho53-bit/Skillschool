@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Skill to Income | Professional Skills for Financial Freedom</title>
     <meta name="description" content="Professional skill-based learning platform. Master web development, trading, copywriting, and more. No signup required. Start your journey today.">
+    
+    <!-- Professional Font System -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    
     <style>
         * {
             margin: 0;
@@ -13,10 +19,14 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background: #ffffff;
-            color: #1a1a2e;
-            line-height: 1.6;
+            color: #111827;
+            line-height: 1.5;
+            font-weight: 400;
+            font-size: 16px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
         
         .container {
@@ -33,7 +43,8 @@
             top: 0;
             z-index: 100;
             border-bottom: 1px solid #eaeaea;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            backdrop-filter: blur(10px);
+            background: rgba(255,255,255,0.95);
         }
         
         .nav-links {
@@ -47,16 +58,18 @@
         .logo {
             font-size: 1.5rem;
             font-weight: 700;
-            color: #1a1a2e;
+            color: #111827;
             letter-spacing: -0.02em;
+            font-family: 'Inter', sans-serif;
         }
         
         .nav-link {
-            color: #4a5568;
+            color: #4b5563;
             text-decoration: none;
             font-weight: 500;
             transition: color 0.2s;
             padding: 8px 16px;
+            font-size: 0.95rem;
         }
         
         .nav-link:hover {
@@ -64,10 +77,10 @@
         }
         
         .nav-link-primary {
-            background: #1a1a2e;
+            background: #111827;
             color: white;
             padding: 8px 20px;
-            border-radius: 6px;
+            border-radius: 8px;
             font-weight: 500;
         }
         
@@ -80,7 +93,7 @@
         .hero {
             padding: 100px 0 80px;
             text-align: center;
-            background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+            background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
         }
         
         .hero-badge {
@@ -89,25 +102,29 @@
             color: #2563eb;
             padding: 6px 16px;
             border-radius: 20px;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-weight: 500;
             margin-bottom: 30px;
+            letter-spacing: -0.01em;
         }
         
         .hero h1 {
-            font-size: 3.5rem;
+            font-size: 3.75rem;
             margin-bottom: 20px;
             font-weight: 800;
             letter-spacing: -0.02em;
-            color: #1a1a2e;
+            color: #111827;
             line-height: 1.2;
+            font-family: 'Inter', sans-serif;
         }
         
         .hero p {
-            font-size: 1.25rem;
-            color: #4a5568;
+            font-size: 1.125rem;
+            color: #4b5563;
             max-width: 600px;
             margin: 0 auto 15px;
+            font-weight: 400;
+            line-height: 1.6;
         }
         
         .hero-tags {
@@ -117,26 +134,27 @@
             flex-wrap: wrap;
             margin: 20px 0 30px;
             color: #6b7280;
-            font-size: 0.95rem;
+            font-size: 0.875rem;
+            font-weight: 500;
         }
         
         .cta-button {
             display: inline-block;
-            background: #1a1a2e;
+            background: #111827;
             color: white;
             padding: 14px 36px;
-            border-radius: 8px;
+            border-radius: 10px;
             text-decoration: none;
             font-weight: 600;
-            font-size: 1rem;
+            font-size: 0.95rem;
             transition: all 0.2s;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            font-family: 'Inter', sans-serif;
+            letter-spacing: -0.01em;
         }
         
         .cta-button:hover {
             background: #2563eb;
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(37,99,235,0.2);
         }
         
         /* Section Styles */
@@ -145,26 +163,28 @@
         }
         
         .section-gray {
-            background: #f8fafc;
+            background: #f9fafb;
         }
         
         .section-title {
             text-align: center;
-            font-size: 2.5rem;
+            font-size: 2.25rem;
             margin-bottom: 16px;
-            color: #1a1a2e;
+            color: #111827;
             font-weight: 700;
-            letter-spacing: -0.01em;
+            letter-spacing: -0.02em;
+            font-family: 'Inter', sans-serif;
         }
         
         .section-subtitle {
             text-align: center;
             color: #6b7280;
             margin-bottom: 48px;
-            font-size: 1.1rem;
+            font-size: 1rem;
             max-width: 700px;
             margin-left: auto;
             margin-right: auto;
+            font-weight: 400;
         }
         
         /* Problem/Solution Grid */
@@ -178,9 +198,8 @@
         .problem-card, .solution-card {
             background: white;
             padding: 32px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            border: 1px solid #eaeaea;
+            border-radius: 16px;
+            border: 1px solid #e5e7eb;
         }
         
         .problem-card {
@@ -192,9 +211,11 @@
         }
         
         .problem-card h3, .solution-card h3 {
-            font-size: 1.5rem;
+            font-size: 1.25rem;
             margin-bottom: 20px;
             font-weight: 600;
+            color: #111827;
+            font-family: 'Inter', sans-serif;
         }
         
         .problem-list {
@@ -208,6 +229,8 @@
             display: flex;
             align-items: center;
             gap: 12px;
+            font-size: 0.9rem;
+            color: #4b5563;
         }
         
         .check-icon {
@@ -219,7 +242,8 @@
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 12px;
+            font-size: 11px;
+            font-weight: bold;
         }
         
         .x-icon {
@@ -231,7 +255,8 @@
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 12px;
+            font-size: 11px;
+            font-weight: bold;
         }
         
         /* Courses Grid */
@@ -245,33 +270,35 @@
         .course-card {
             background: white;
             padding: 28px;
-            border-radius: 12px;
+            border-radius: 16px;
             transition: all 0.2s;
-            border: 1px solid #eaeaea;
+            border: 1px solid #e5e7eb;
         }
         
         .course-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 12px 24px rgba(0,0,0,0.08);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.05);
             border-color: #d1d5db;
         }
         
         .course-icon {
-            font-size: 2rem;
+            font-size: 1.75rem;
             margin-bottom: 16px;
         }
         
         .course-card h4 {
-            font-size: 1.25rem;
+            font-size: 1.125rem;
             margin-bottom: 8px;
             font-weight: 600;
-            color: #1a1a2e;
+            color: #111827;
+            font-family: 'Inter', sans-serif;
         }
         
         .course-card p {
-            font-size: 0.9rem;
+            font-size: 0.875rem;
             color: #6b7280;
             line-height: 1.5;
+            font-weight: 400;
         }
         
         /* Trust Badges */
@@ -288,30 +315,38 @@
         }
         
         .trust-icon {
-            font-size: 2rem;
+            font-size: 1.5rem;
             display: block;
             margin-bottom: 12px;
         }
         
         .trust-item p {
-            color: #4a5568;
+            color: #4b5563;
             font-weight: 500;
+            font-size: 0.875rem;
         }
         
         /* Email Capture */
         .email-section {
-            background: #1a1a2e;
+            background: #111827;
             color: white;
             text-align: center;
             padding: 60px;
-            border-radius: 16px;
+            border-radius: 20px;
             margin: 40px 0;
         }
         
         .email-section h3 {
-            font-size: 1.75rem;
+            font-size: 1.5rem;
             margin-bottom: 12px;
             font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            letter-spacing: -0.01em;
+        }
+        
+        .email-section p {
+            font-size: 0.95rem;
+            opacity: 0.8;
         }
         
         .email-form {
@@ -325,10 +360,16 @@
         .email-input {
             padding: 14px 20px;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             width: 320px;
-            font-size: 1rem;
+            font-size: 0.95rem;
             background: white;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .email-input:focus {
+            outline: none;
+            ring: 2px solid #2563eb;
         }
         
         .email-button {
@@ -336,11 +377,12 @@
             color: white;
             border: none;
             padding: 14px 28px;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
-            font-size: 1rem;
+            font-size: 0.9rem;
             font-weight: 500;
             transition: background 0.2s;
+            font-family: 'Inter', sans-serif;
         }
         
         .email-button:hover {
@@ -354,21 +396,27 @@
             border-radius: 8px;
             margin-top: 20px;
             display: none;
+            font-size: 0.875rem;
         }
         
         /* Footer */
         .footer {
-            background: #1a1a2e;
+            background: #111827;
             color: #9ca3af;
             text-align: center;
             padding: 48px 0;
             margin-top: 40px;
         }
         
+        .footer p {
+            font-size: 0.875rem;
+        }
+        
         .footer a {
             color: #9ca3af;
             text-decoration: none;
             margin: 0 12px;
+            font-size: 0.875rem;
         }
         
         .footer a:hover {
@@ -378,7 +426,11 @@
         /* Responsive */
         @media (max-width: 768px) {
             .hero h1 {
-                font-size: 2.2rem;
+                font-size: 2.25rem;
+            }
+            
+            .hero p {
+                font-size: 1rem;
             }
             
             .grid-2 {
@@ -386,7 +438,7 @@
             }
             
             .section-title {
-                font-size: 1.8rem;
+                font-size: 1.75rem;
             }
             
             .trust-badges {
@@ -420,7 +472,7 @@
     <!-- Hero Section -->
     <div class="hero">
         <div class="container">
-            <div class="hero-badge">Free Professional Training</div>
+            <div class="hero-badge">Professional Training</div>
             <h1>Skill to Income</h1>
             <p>Learn real skills that can help you build a sustainable income online.</p>
             <div class="hero-tags">
@@ -432,7 +484,7 @@
                 <span>•</span>
                 <span>Digital Business</span>
             </div>
-            <a href="/courses" class="cta-button">Start Learning Now →</a>
+            <a href="/courses" class="cta-button">Start Learning →</a>
         </div>
     </div>
 
@@ -470,7 +522,7 @@
     <div class="section-gray">
         <div class="container">
             <h2 class="section-title">Course Catalog</h2>
-            <p class="section-subtitle">16 professional skills organized into complete learning paths.</p>
+            <p class="section-subtitle">Professional skills organized into complete learning paths.</p>
             
             <div class="courses-grid">
                 <div class="course-card">
@@ -542,7 +594,7 @@
                     <p>Income Potential</p>
                 </div>
             </div>
-            <p style="text-align: center; margin-top: 30px; color: #6b7280; font-size: 0.9rem;">No guarantees, just practical skills that are in demand.</p>
+            <p style="text-align: center; margin-top: 30px; color: #6b7280; font-size: 0.875rem;">No guarantees, just practical skills that are in demand.</p>
         </div>
     </div>
 
@@ -584,15 +636,15 @@
             <div id="successMessage" class="success-message">
                 Thank you for subscribing! You'll receive updates soon.
             </div>
-            <p style="margin-top: 20px; font-size: 0.8rem; opacity: 0.7;">No spam. Unsubscribe at any time.</p>
+            <p style="margin-top: 20px; font-size: 0.75rem; opacity: 0.7;">No spam. Unsubscribe at any time.</p>
         </div>
     </div>
 
     <!-- Final CTA -->
     <div class="section" style="padding: 40px 0 80px;">
         <div class="container" style="text-align: center;">
-            <h2 style="font-size: 1.8rem; margin-bottom: 20px; font-weight: 600;">Ready to start your journey?</h2>
-            <p style="font-size: 1.1rem; margin-bottom: 30px; color: #4a5568;">Join thousands of learners building valuable skills.</p>
+            <h2 style="font-size: 1.5rem; margin-bottom: 20px; font-weight: 600;">Ready to start your journey?</h2>
+            <p style="font-size: 0.95rem; margin-bottom: 30px; color: #4b5563;">Join thousands of learners building valuable skills.</p>
             <a href="/courses" class="cta-button">Browse All Courses →</a>
         </div>
     </div>
