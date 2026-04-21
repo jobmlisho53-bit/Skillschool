@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Course Library - Skill to Income</title>
+    <title>Income School - Professional Skills Mastery</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -12,206 +13,428 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: #f8fafc;
-            color: #1a1a2e;
-            line-height: 1.6;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #faf9f7;
+            color: #2c2c2c;
+            line-height: 1.5;
         }
         
         .container {
-            max-width: 1200px;
+            max-width: 1280px;
             margin: 0 auto;
-            padding: 0 24px;
+            padding: 0 32px;
         }
         
-        /* Header */
+        /* Premium Header */
         .header {
-            background: white;
-            border-bottom: 1px solid #eaeaea;
-            padding: 60px 0 40px;
-            text-align: center;
-        }
-        
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 12px;
-            font-weight: 700;
-            letter-spacing: -0.01em;
-        }
-        
-        .header p {
-            color: #4a5568;
-            font-size: 1.1rem;
-        }
-        
-        /* Navigation */
-        .top-nav {
-            background: white;
-            padding: 16px 0;
+            background: #ffffff;
+            border-bottom: 1px solid #e8e5e0;
+            padding: 20px 0;
             position: sticky;
             top: 0;
             z-index: 100;
-            border-bottom: 1px solid #eaeaea;
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
         }
         
-        .nav-links {
+        .header-content {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
         }
         
-        .logo {
-            font-weight: 700;
-            font-size: 1.25rem;
-            color: #1a1a2e;
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #2c2c2c 0%, #6b6b6b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
         
-        .nav-link {
-            color: #4a5568;
-            text-decoration: none;
-            margin-left: 24px;
-            font-weight: 500;
+        .logo p {
+            font-size: 0.8rem;
+            color: #9a9a9a;
+            letter-spacing: 0.3px;
         }
         
-        .nav-link:hover {
-            color: #2563eb;
-        }
-        
-        /* Course Grid */
+        /* Premium Grid */
         .courses-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 30px;
-            padding: 60px 0;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 32px;
+            padding: 48px 0;
         }
         
         .course-card {
-            background: white;
-            border-radius: 12px;
-            padding: 24px;
-            transition: all 0.2s;
-            border: 1px solid #eaeaea;
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 28px;
+            transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
+            border: 1px solid #e8e5e0;
             cursor: pointer;
         }
         
         .course-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 12px 24px rgba(0,0,0,0.08);
-            border-color: #cbd5e1;
+            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.08);
+            border-color: #d4d0c8;
+        }
+        
+        .course-category {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            color: #9a9a9a;
+            margin-bottom: 12px;
         }
         
         .course-card h3 {
-            font-size: 1.25rem;
-            margin-bottom: 12px;
+            font-size: 1.35rem;
             font-weight: 600;
-            color: #1a1a2e;
+            margin-bottom: 12px;
+            color: #1a1a1a;
+            letter-spacing: -0.01em;
         }
         
-        .course-card p {
-            color: #6b7280;
-            margin-bottom: 16px;
+        .course-description {
+            color: #5a5a5a;
             font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 20px;
         }
         
-        .progress-container {
-            background: #e5e7eb;
-            border-radius: 8px;
-            height: 6px;
-            margin: 16px 0;
+        .progress-section {
+            margin: 20px 0 16px;
+        }
+        
+        .progress-bar-container {
+            background: #f0ede8;
+            border-radius: 100px;
+            height: 4px;
             overflow: hidden;
         }
         
-        .progress-fill {
-            background: #2563eb;
+        .progress-bar-fill {
+            background: #2c2c2c;
             height: 100%;
-            transition: width 0.3s;
-            border-radius: 8px;
+            transition: width 0.3s ease;
+            border-radius: 100px;
         }
         
         .progress-text {
             font-size: 0.75rem;
-            color: #6b7280;
+            color: #9a9a9a;
+            margin-top: 8px;
             text-align: right;
         }
         
         .course-meta {
             display: flex;
             justify-content: space-between;
-            margin-top: 16px;
-            font-size: 0.8rem;
-            color: #9ca3af;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid #f0ede8;
         }
         
+        .course-duration {
+            font-size: 0.8rem;
+            color: #9a9a9a;
+        }
+        
+        .start-link {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #2c2c2c;
+            text-decoration: none;
+            transition: opacity 0.2s;
+        }
+        
+        .start-link:hover {
+            opacity: 0.7;
+        }
+        
+        /* Back Button */
+        .back-button {
+            background: none;
+            border: none;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #2c2c2c;
+            cursor: pointer;
+            padding: 12px 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: opacity 0.2s;
+            margin: 24px 0 16px;
+        }
+        
+        .back-button:hover {
+            opacity: 0.6;
+        }
+        
+        /* Lesson Items */
+        .lesson-item {
+            background: #ffffff;
+            padding: 20px;
+            margin: 12px 0;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid #e8e5e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .lesson-item:hover {
+            border-color: #d4d0c8;
+            background: #fefdfc;
+        }
+        
+        .lesson-completed {
+            border-left: 3px solid #2c2c2c;
+            background: #faf9f7;
+        }
+        
+        .complete-badge {
+            background: #2c2c2c;
+            color: #ffffff;
+            padding: 4px 12px;
+            border-radius: 100px;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+        
+        .lesson-content {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 32px;
+            margin: 24px 0;
+            border: 1px solid #e8e5e0;
+        }
+        
+        .mark-complete-btn {
+            background: #2c2c2c;
+            color: #ffffff;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 100px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            margin-top: 24px;
+        }
+        
+        .mark-complete-btn:hover {
+            background: #1a1a1a;
+            transform: translateY(-1px);
+        }
+        
+        /* Video Container */
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            margin: 24px 0;
+            border-radius: 16px;
+        }
+        
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 16px;
+        }
+        
+        /* Footer */
         .footer {
-            background: #1a1a2e;
-            color: #9ca3af;
-            text-align: center;
-            padding: 40px 0;
-            margin-top: 40px;
+            background: #ffffff;
+            border-top: 1px solid #e8e5e0;
+            padding: 48px 0 32px;
+            margin-top: 64px;
+        }
+        
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 32px;
+        }
+        
+        .footer-links {
+            display: flex;
+            gap: 32px;
+            flex-wrap: wrap;
         }
         
         .footer a {
-            color: #9ca3af;
+            color: #5a5a5a;
             text-decoration: none;
-            margin: 0 12px;
+            font-size: 0.85rem;
+            transition: color 0.2s;
+        }
+        
+        .footer a:hover {
+            color: #2c2c2c;
+        }
+        
+        .copyright {
+            font-size: 0.8rem;
+            color: #9a9a9a;
+        }
+        
+        .hidden {
+            display: none !important;
         }
         
         .loading {
             text-align: center;
             padding: 60px;
-            color: #6b7280;
+            color: #9a9a9a;
         }
         
         @media (max-width: 768px) {
-            .courses-grid {
-                grid-template-columns: 1fr;
+            .container {
+                padding: 0 20px;
             }
             
-            .header h1 {
-                font-size: 1.8rem;
+            .courses-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .footer-links {
+                justify-content: center;
+            }
+            
+            .lesson-item {
+                flex-direction: column;
+                gap: 12px;
+                text-align: center;
             }
         }
     </style>
+    
+    <!-- Vercel Analytics -->
+    <script>
+        window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+    </script>
+    <script defer src="/_vercel/insights/script.js"></script>
+    <script defer src="/_vercel/speed-insights/script.js"></script>
 </head>
 <body>
-    <div class="top-nav">
+    <div class="header">
         <div class="container">
-            <div class="nav-links">
-                <div class="logo">Skill to Income</div>
-                <div>
-                    <a href="/" class="nav-link">Home</a>
-                    <a href="/courses" class="nav-link">Courses</a>
+            <div class="header-content">
+                <div class="logo">
+                    <h1>Income School</h1>
+                    <p>Professional Skills Mastery</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="header">
-        <div class="container">
-            <h1>Course Library</h1>
-            <p>Professional skills training. Self-paced. Completely free.</p>
-        </div>
-    </div>
+    <main class="container">
+        <section id="courses-section">
+            <div id="courses-container" class="courses-grid">
+                <div class="loading">Loading courses...</div>
+            </div>
+        </section>
 
-    <div class="container">
-        <div id="courses-container" class="courses-grid">
-            <div class="loading">Loading courses...</div>
-        </div>
-    </div>
+        <section id="lessons-section" class="hidden">
+            <button id="back-to-courses" class="back-button">← Back to Courses</button>
+            <h2 id="course-title" style="font-size: 1.8rem; font-weight: 600; letter-spacing: -0.02em;"></h2>
+            <div id="course-description"></div>
+            <div class="progress-section" id="module-progress-container" style="display: none;">
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" id="module-progress-fill" style="width: 0%"></div>
+                </div>
+                <div class="progress-text" id="module-progress-text"></div>
+            </div>
+            <h3 style="margin: 32px 0 16px; font-weight: 500;">Course Lessons</h3>
+            <div id="lessons-list"></div>
+        </section>
 
-    <div class="footer">
+        <section id="player-section" class="hidden">
+            <button id="back-to-lessons" class="back-button">← Back to Lessons</button>
+            <h2 id="lesson-title" style="font-size: 1.5rem; font-weight: 600;"></h2>
+            <div id="lesson-player"></div>
+            <button id="mark-complete-btn" class="mark-complete-btn">Mark as Complete</button>
+        </section>
+    </main>
+
+    <footer class="footer">
         <div class="container">
-            <p>© 2026 Skill to Income. Professional skills training.</p>
-            <p style="margin-top: 16px;">
-                <a href="/privacy">Privacy</a> | 
-                <a href="/terms">Terms</a> | 
-                <a href="/contact">Contact</a>
-            </p>
+            <div class="footer-content">
+                <div class="copyright">
+                    © 2026 Income School. All rights reserved.
+                </div>
+                <div class="footer-links">
+                    <a href="/privacy">Privacy</a>
+                    <a href="/terms">Terms</a>
+                    <a href="/contact">Contact</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <div id="feedbackModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+        <div style="background: white; padding: 32px; border-radius: 24px; max-width: 500px; width: 90%;">
+            <h2 style="margin-bottom: 16px;">Module Feedback</h2>
+            <p style="margin-bottom: 20px; color: #5a5a5a;">Help us improve this course</p>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 500;">Was this module helpful?</label>
+                <div id="helpful-stars" style="display: flex; gap: 8px;">
+                    <span data-value="1" style="font-size: 28px; cursor: pointer; color: #ddd;">★</span>
+                    <span data-value="2" style="font-size: 28px; cursor: pointer; color: #ddd;">★</span>
+                    <span data-value="3" style="font-size: 28px; cursor: pointer; color: #ddd;">★</span>
+                    <span data-value="4" style="font-size: 28px; cursor: pointer; color: #ddd;">★</span>
+                    <span data-value="5" style="font-size: 28px; cursor: pointer; color: #ddd;">★</span>
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 500;">What confused you? (Optional)</label>
+                <textarea id="confusion" rows="3" style="width: 100%; padding: 12px; border: 1px solid #e8e5e0; border-radius: 12px; font-family: inherit;"></textarea>
+            </div>
+            
+            <div style="margin-bottom: 24px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 500;">Suggestions for improvement (Optional)</label>
+                <textarea id="suggestions" rows="3" style="width: 100%; padding: 12px; border: 1px solid #e8e5e0; border-radius: 12px; font-family: inherit;"></textarea>
+            </div>
+            
+            <div style="display: flex; gap: 12px;">
+                <button onclick="submitFeedback()" style="background: #2c2c2c; color: white; border: none; padding: 12px 24px; border-radius: 100px; cursor: pointer; font-family: inherit;">Submit Feedback</button>
+                <button onclick="closeFeedbackModal()" style="background: none; border: 1px solid #e8e5e0; padding: 12px 24px; border-radius: 100px; cursor: pointer; font-family: inherit;">Skip</button>
+            </div>
         </div>
     </div>
 
     <script>
+        let currentCourse = null;
+        let currentLesson = null;
+        let currentLessons = [];
         let userId = null;
+        let selectedRating = 0;
         
         function getUserId() {
             let id = localStorage.getItem('user_id');
@@ -228,11 +451,10 @@
             try {
                 const response = await fetch('/api/modules');
                 const courses = await response.json();
-                
                 const container = document.getElementById('courses-container');
                 
                 if (courses.length === 0) {
-                    container.innerHTML = '<div class="loading">No courses available yet. Check back soon.</div>';
+                    container.innerHTML = '<div class="loading">No courses available yet. Check back soon!</div>';
                     return;
                 }
                 
@@ -240,34 +462,155 @@
                 
                 for (const course of courses) {
                     const moduleId = course.module_id || course.moduleId;
-                    const progressResponse = await fetch(`/api/progress/${userId}/${moduleId}`);
-                    const progress = await progressResponse.json();
+                    const progress = await getModuleProgress(moduleId);
                     
                     const card = document.createElement('div');
                     card.className = 'course-card';
-                    card.onclick = () => {
-                        window.location.href = `/courses?module=${moduleId}`;
-                    };
+                    card.onclick = () => showCourse(course);
                     
                     card.innerHTML = `
+                        <div class="course-category">${course.category || 'Professional Course'}</div>
                         <h3>${escapeHtml(course.title)}</h3>
-                        <p>${escapeHtml(course.description || 'Comprehensive professional training.')}</p>
-                        <div class="progress-container">
-                            <div class="progress-fill" style="width: ${progress.percentage}%"></div>
+                        <p class="course-description">${escapeHtml(course.description || 'Master this professional skill with our comprehensive curriculum.')}</p>
+                        <div class="progress-section">
+                            <div class="progress-bar-container">
+                                <div class="progress-bar-fill" style="width: ${progress.percentage}%"></div>
+                            </div>
+                            <div class="progress-text">${progress.completed}/${progress.total} lessons completed</div>
                         </div>
-                        <div class="progress-text">${progress.completed}/${progress.total} lessons completed</div>
                         <div class="course-meta">
-                            <span>⏱️ ${escapeHtml(course.estimatedTime || 'Self-paced')}</span>
-                            <span>${progress.percentage}% complete</span>
+                            <span class="course-duration">${escapeHtml(course.estimatedTime || 'Self-paced')}</span>
+                            <span class="start-link">Continue →</span>
                         </div>
                     `;
                     container.appendChild(card);
                 }
             } catch (error) {
                 console.error('Error:', error);
-                document.getElementById('courses-container').innerHTML = '<div class="loading">Unable to load courses. Please try again.</div>';
+                document.getElementById('courses-container').innerHTML = '<div class="loading">Unable to load courses. Please refresh the page.</div>';
             }
         }
+        
+        async function getModuleProgress(moduleId) {
+            try {
+                const response = await fetch(`/api/progress/${userId}/${moduleId}`);
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                return { total: 0, completed: 0, percentage: 0 };
+            }
+        }
+        
+        async function showCourse(course) {
+            currentCourse = course;
+            const moduleId = course.module_id || course.moduleId;
+            
+            document.getElementById('course-title').textContent = course.title;
+            document.getElementById('course-description').innerHTML = `
+                <div style="background: #faf9f7; padding: 24px; border-radius: 20px; margin: 20px 0;">
+                    <p>${escapeHtml(course.description || 'No description available')}</p>
+                    <p style="margin-top: 12px;"><strong>Estimated time:</strong> ${escapeHtml(course.estimatedTime || 'Self-paced')}</p>
+                </div>
+            `;
+            
+            try {
+                const response = await fetch(`/api/modules/${moduleId}/lessons`);
+                const lessons = await response.json();
+                currentLessons = lessons;
+                
+                const progressResponse = await fetch(`/api/progress/${userId}/${moduleId}`);
+                const progress = await progressResponse.json();
+                
+                document.getElementById('module-progress-container').style.display = 'block';
+                document.getElementById('module-progress-fill').style.width = `${progress.percentage}%`;
+                document.getElementById('module-progress-text').textContent = `${progress.completed}/${progress.total} lessons completed`;
+                
+                const lessonsList = document.getElementById('lessons-list');
+                lessonsList.innerHTML = '';
+                
+                if (lessons.length === 0) {
+                    lessonsList.innerHTML = '<div class="loading">No lessons yet. Content coming soon!</div>';
+                } else {
+                    lessons.sort((a, b) => (a.order || 0) - (b.order || 0));
+                    lessons.forEach(lesson => {
+                        const isCompleted = progress.completedLessons?.includes(lesson.id);
+                        const lessonDiv = document.createElement('div');
+                        lessonDiv.className = `lesson-item ${isCompleted ? 'lesson-completed' : ''}`;
+                        lessonDiv.innerHTML = `
+                            <div>
+                                <strong>${lesson.order || 1}. ${escapeHtml(lesson.title)}</strong>
+                                <br>
+                                <small style="color: #9a9a9a;">${lesson.contentType === 'youtube' ? 'Video Lesson' : lesson.contentType} | ${lesson.duration || 'N/A'}</small>
+                            </div>
+                            ${isCompleted ? '<span class="complete-badge">Completed</span>' : ''}
+                        `;
+                        lessonDiv.onclick = () => playLesson(lesson);
+                        lessonsList.appendChild(lessonDiv);
+                    });
+                }
+                
+                document.getElementById('courses-section').classList.add('hidden');
+                document.getElementById('lessons-section').classList.remove('hidden');
+                document.getElementById('player-section').classList.add('hidden');
+                
+            } catch (error) {
+                console.error('Error loading lessons:', error);
+            }
+        }
+        
+        function playLesson(lesson) {
+            currentLesson = lesson;
+            
+            document.getElementById('lesson-title').textContent = lesson.title;
+            const playerDiv = document.getElementById('lesson-player');
+            
+            if (lesson.contentType === 'youtube') {
+                playerDiv.innerHTML = `
+                    <div class="video-container">
+                        <iframe src="https://www.youtube.com/embed/${lesson.youtubeId}" frameborder="0" allowfullscreen></iframe>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <p>${escapeHtml(lesson.title)}</p>
+                        <p style="color: #9a9a9a; font-size: 0.85rem;">${lesson.duration || 'N/A'}</p>
+                    </div>
+                `;
+            } else {
+                playerDiv.innerHTML = `<div style="padding: 40px; text-align: center;">Content type: ${lesson.contentType}</div>`;
+            }
+            
+            document.getElementById('courses-section').classList.add('hidden');
+            document.getElementById('lessons-section').classList.add('hidden');
+            document.getElementById('player-section').classList.remove('hidden');
+        }
+        
+        document.getElementById('mark-complete-btn')?.addEventListener('click', async () => {
+            if (!currentLesson) return;
+            
+            try {
+                const response = await fetch('/api/progress/mark-complete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: userId,
+                        lessonId: currentLesson.id,
+                        moduleId: currentCourse?.module_id || currentCourse?.moduleId
+                    })
+                });
+                
+                if (response.ok) {
+                    const btn = document.getElementById('mark-complete-btn');
+                    btn.textContent = 'Completed';
+                    btn.disabled = true;
+                    btn.style.opacity = '0.5';
+                    
+                    if (currentCourse) {
+                        showCourse(currentCourse);
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
         
         function escapeHtml(text) {
             if (!text) return '';
@@ -276,7 +619,67 @@
             return div.innerHTML;
         }
         
+        document.getElementById('back-to-courses')?.addEventListener('click', () => {
+            document.getElementById('courses-section').classList.remove('hidden');
+            document.getElementById('lessons-section').classList.add('hidden');
+            document.getElementById('player-section').classList.add('hidden');
+            loadCourses();
+        });
+        
+        document.getElementById('back-to-lessons')?.addEventListener('click', () => {
+            if (currentCourse) {
+                showCourse(currentCourse);
+            }
+        });
+        
         loadCourses();
+        
+        // Star rating for feedback
+        const stars = document.querySelectorAll('#helpful-stars .star');
+        stars.forEach(star => {
+            star.onclick = () => {
+                selectedRating = parseInt(star.dataset.value);
+                stars.forEach(s => {
+                    if (parseInt(s.dataset.value) <= selectedRating) {
+                        s.style.color = '#2c2c2c';
+                    } else {
+                        s.style.color = '#ddd';
+                    }
+                });
+            };
+        });
+        
+        window.submitFeedback = async function() {
+            const moduleId = window.currentFeedbackModule;
+            const confusion = document.getElementById('confusion').value;
+            const suggestions = document.getElementById('suggestions').value;
+            
+            try {
+                await fetch('/api/feedback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: userId,
+                        moduleId: moduleId,
+                        rating: selectedRating,
+                        confusion: confusion,
+                        suggestions: suggestions
+                    })
+                });
+                closeFeedbackModal();
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        };
+        
+        window.closeFeedbackModal = function() {
+            document.getElementById('feedbackModal').style.display = 'none';
+            selectedRating = 0;
+            document.getElementById('confusion').value = '';
+            document.getElementById('suggestions').value = '';
+            const stars = document.querySelectorAll('#helpful-stars .star');
+            stars.forEach(s => s.style.color = '#ddd');
+        };
     </script>
 </body>
 </html>
