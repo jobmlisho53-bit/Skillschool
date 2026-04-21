@@ -25,7 +25,6 @@
             padding: 0 32px;
         }
         
-        /* Premium Gold Header */
         .header {
             background: #ffffff;
             border-bottom: 1px solid rgba(212, 175, 55, 0.15);
@@ -49,7 +48,6 @@
             font-family: 'Cormorant Garamond', serif;
             font-size: 1.6rem;
             font-weight: 600;
-            letter-spacing: -0.01em;
             background: linear-gradient(135deg, #1a1a1a 0%, #c9a03d 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -63,7 +61,6 @@
             color: #c9a03d;
         }
         
-        /* Premium Gold Grid */
         .courses-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
@@ -176,11 +173,6 @@
             transition: opacity 0.2s;
         }
         
-        .start-link:hover {
-            opacity: 0.7;
-        }
-        
-        /* Buttons */
         .back-button {
             background: none;
             border: none;
@@ -197,11 +189,6 @@
             margin: 24px 0 16px;
         }
         
-        .back-button:hover {
-            opacity: 0.6;
-        }
-        
-        /* Lesson Items */
         .lesson-item {
             background: #ffffff;
             padding: 20px;
@@ -232,7 +219,6 @@
             border-radius: 2px;
             font-size: 0.65rem;
             font-weight: 500;
-            letter-spacing: 0.5px;
         }
         
         .lesson-content {
@@ -244,7 +230,7 @@
         }
         
         .mark-complete-btn {
-            background: linear-gradient(135deg, #c9a03d, #b8922e);
+            background: #c9a03d;
             color: #ffffff;
             border: none;
             padding: 14px 32px;
@@ -258,12 +244,16 @@
             margin-top: 24px;
         }
         
-        .mark-complete-btn:hover {
-            background: linear-gradient(135deg, #b8922e, #a07e28);
+        .mark-complete-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .mark-complete-btn:hover:not(:disabled) {
+            background: #b8922e;
             transform: translateY(-1px);
         }
         
-        /* Video Container */
         .video-container {
             position: relative;
             padding-bottom: 56.25%;
@@ -282,7 +272,41 @@
             border-radius: 4px;
         }
         
-        /* Footer */
+        .watch-progress {
+            margin-top: 12px;
+        }
+        
+        .watch-progress-bar-container {
+            background: #f0f0f0;
+            border-radius: 2px;
+            height: 4px;
+        }
+        
+        .watch-progress-fill {
+            width: 0%;
+            background: #c9a03d;
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.3s;
+        }
+        
+        .watch-progress-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+        }
+        
+        .watch-progress-label {
+            font-size: 0.7rem;
+            color: #9a9a9a;
+        }
+        
+        .watch-progress-percent {
+            font-size: 0.7rem;
+            color: #c9a03d;
+            font-weight: 500;
+        }
+        
         .footer {
             background: #ffffff;
             border-top: 1px solid rgba(212, 175, 55, 0.15);
@@ -307,7 +331,6 @@
             color: #6b6b6b;
             text-decoration: none;
             font-size: 0.8rem;
-            transition: color 0.2s;
         }
         
         .footer a:hover {
@@ -333,30 +356,23 @@
             .container {
                 padding: 0 20px;
             }
-            
             .courses-grid {
                 grid-template-columns: 1fr;
-                gap: 20px;
             }
-            
-            .footer-content {
-                flex-direction: column;
-                text-align: center;
-            }
-            
-            .footer-links {
-                justify-content: center;
-            }
-            
             .lesson-item {
                 flex-direction: column;
                 gap: 12px;
                 text-align: center;
             }
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            .footer-links {
+                justify-content: center;
+            }
         }
     </style>
-    
-    <!-- Vercel Analytics -->
     <script>
         window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
     </script>
@@ -400,16 +416,14 @@
             <button id="back-to-lessons" class="back-button">← Back to Lessons</button>
             <h2 id="lesson-title" style="font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 500;"></h2>
             <div id="lesson-player"></div>
-            <button id="mark-complete-btn" class="mark-complete-btn">Mark as Complete</button>
+            <button id="mark-complete-btn" class="mark-complete-btn" disabled>Mark as Complete</button>
         </section>
     </main>
 
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
-                <div class="copyright">
-                    © 2026 Income School. All rights reserved.
-                </div>
+                <div class="copyright">© 2026 Income School. All rights reserved.</div>
                 <div class="footer-links">
                     <a href="/privacy">Privacy</a>
                     <a href="/terms">Terms</a>
@@ -423,7 +437,6 @@
         <div style="background: white; padding: 32px; border-radius: 6px; max-width: 500px; width: 90%; border-top: 3px solid #c9a03d;">
             <h2 style="font-family: 'Cormorant Garamond', serif; margin-bottom: 16px;">Module Feedback</h2>
             <p style="margin-bottom: 20px; color: #6b6b6b;">Help us improve this course</p>
-            
             <div style="margin-bottom: 20px;">
                 <label style="display: block; margin-bottom: 8px; font-weight: 500;">Was this module helpful?</label>
                 <div id="helpful-stars" style="display: flex; gap: 8px;">
@@ -434,17 +447,14 @@
                     <span data-value="5" style="font-size: 28px; cursor: pointer; color: #ddd;">★</span>
                 </div>
             </div>
-            
             <div style="margin-bottom: 20px;">
                 <label style="display: block; margin-bottom: 8px; font-weight: 500;">What confused you? (Optional)</label>
                 <textarea id="confusion" rows="3" style="width: 100%; padding: 12px; border: 1px solid rgba(212,175,55,0.3); border-radius: 4px; font-family: inherit;"></textarea>
             </div>
-            
             <div style="margin-bottom: 24px;">
                 <label style="display: block; margin-bottom: 8px; font-weight: 500;">Suggestions for improvement (Optional)</label>
                 <textarea id="suggestions" rows="3" style="width: 100%; padding: 12px; border: 1px solid rgba(212,175,55,0.3); border-radius: 4px; font-family: inherit;"></textarea>
             </div>
-            
             <div style="display: flex; gap: 12px;">
                 <button onclick="submitFeedback()" style="background: #c9a03d; color: white; border: none; padding: 12px 24px; border-radius: 2px; cursor: pointer; font-family: inherit; font-weight: 500;">Submit Feedback</button>
                 <button onclick="closeFeedbackModal()" style="background: none; border: 1px solid rgba(212,175,55,0.3); padding: 12px 24px; border-radius: 2px; cursor: pointer; font-family: inherit;">Skip</button>
@@ -458,6 +468,14 @@
         let currentLessons = [];
         let userId = null;
         let selectedRating = 0;
+        
+        // YouTube tracking variables
+        let youtubePlayer = null;
+        let watchInterval = null;
+        let watchedSeconds = 0;
+        let totalDuration = 0;
+        let watchPercentage = 0;
+        let isTracking = false;
         
         function getUserId() {
             let id = localStorage.getItem('user_id');
@@ -584,21 +602,65 @@
         function playLesson(lesson) {
             currentLesson = lesson;
             
+            // Reset tracking variables
+            watchedSeconds = 0;
+            watchPercentage = 0;
+            isTracking = false;
+            if (watchInterval) clearInterval(watchInterval);
+            
             document.getElementById('lesson-title').textContent = lesson.title;
             const playerDiv = document.getElementById('lesson-player');
+            const markBtn = document.getElementById('mark-complete-btn');
+            markBtn.disabled = true;
+            markBtn.style.opacity = '0.5';
             
             if (lesson.contentType === 'youtube') {
+                // Parse duration to seconds
+                if (lesson.duration) {
+                    const match = lesson.duration.match(/(\d+)/);
+                    if (match) {
+                        totalDuration = parseInt(match[1]) * 60;
+                    } else {
+                        totalDuration = 300;
+                    }
+                } else {
+                    totalDuration = 300;
+                }
+                
                 playerDiv.innerHTML = `
-                    <div class="video-container">
-                        <iframe src="https://www.youtube.com/embed/${lesson.youtubeId}" frameborder="0" allowfullscreen></iframe>
+                    <div id="youtube-player" style="width: 100%; aspect-ratio: 16/9;"></div>
+                    <div class="watch-progress">
+                        <div class="watch-progress-bar-container">
+                            <div class="watch-progress-fill" id="watch-progress-fill"></div>
+                        </div>
+                        <div class="watch-progress-stats">
+                            <span class="watch-progress-label">Watch Progress</span>
+                            <span class="watch-progress-percent" id="watch-progress-percent">0%</span>
+                        </div>
                     </div>
                     <div style="margin-top: 20px;">
                         <p>${escapeHtml(lesson.title)}</p>
                         <p style="color: #9a9a9a; font-size: 0.85rem;">${lesson.duration || 'N/A'}</p>
                     </div>
                 `;
+                
+                // Load YouTube API if not already loaded
+                if (typeof YT === 'undefined') {
+                    const tag = document.createElement('script');
+                    tag.src = 'https://www.youtube.com/iframe_api';
+                    const firstScriptTag = document.getElementsByTagName('script')[0];
+                    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+                    
+                    window.onYouTubeIframeAPIReady = () => {
+                        createYouTubePlayer(lesson);
+                    };
+                } else {
+                    createYouTubePlayer(lesson);
+                }
             } else {
                 playerDiv.innerHTML = `<div style="padding: 40px; text-align: center;">Content type: ${lesson.contentType}</div>`;
+                markBtn.disabled = false;
+                markBtn.style.opacity = '1';
             }
             
             document.getElementById('courses-section').classList.add('hidden');
@@ -606,8 +668,75 @@
             document.getElementById('player-section').classList.remove('hidden');
         }
         
+        function createYouTubePlayer(lesson) {
+            youtubePlayer = new YT.Player('youtube-player', {
+                height: '100%',
+                width: '100%',
+                videoId: lesson.youtubeId,
+                playerVars: {
+                    controls: 1,
+                    modestbranding: 1,
+                    rel: 0,
+                    showinfo: 0
+                },
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange
+                }
+            });
+        }
+        
+        function onPlayerReady(event) {
+            totalDuration = event.target.getDuration();
+            console.log('Video duration:', totalDuration, 'seconds');
+        }
+        
+        function onPlayerStateChange(event) {
+            const markBtn = document.getElementById('mark-complete-btn');
+            
+            if (event.data === YT.PlayerState.PLAYING) {
+                if (!isTracking) {
+                    isTracking = true;
+                    watchInterval = setInterval(() => {
+                        if (youtubePlayer && typeof youtubePlayer.getCurrentTime === 'function') {
+                            const currentTime = youtubePlayer.getCurrentTime();
+                            watchedSeconds = currentTime;
+                            watchPercentage = (watchedSeconds / totalDuration) * 100;
+                            
+                            const progressFill = document.getElementById('watch-progress-fill');
+                            const percentSpan = document.getElementById('watch-progress-percent');
+                            
+                            if (progressFill) {
+                                progressFill.style.width = `${Math.min(watchPercentage, 100)}%`;
+                            }
+                            if (percentSpan) {
+                                percentSpan.textContent = `${Math.min(Math.floor(watchPercentage), 100)}%`;
+                            }
+                            
+                            if (watchPercentage >= 90 && markBtn) {
+                                markBtn.disabled = false;
+                                markBtn.style.opacity = '1';
+                                clearInterval(watchInterval);
+                                isTracking = false;
+                            }
+                        }
+                    }, 3000);
+                }
+            } else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
+                if (watchInterval) {
+                    clearInterval(watchInterval);
+                    isTracking = false;
+                }
+            }
+        }
+        
         document.getElementById('mark-complete-btn')?.addEventListener('click', async () => {
             if (!currentLesson) return;
+            
+            if (currentLesson.contentType === 'youtube' && watchPercentage < 90) {
+                alert('Please watch at least 90% of the video before marking complete.');
+                return;
+            }
             
             try {
                 const response = await fetch('/api/progress/mark-complete', {
@@ -616,7 +745,9 @@
                     body: JSON.stringify({
                         userId: userId,
                         lessonId: currentLesson.id,
-                        moduleId: currentCourse?.module_id || currentCourse?.moduleId
+                        moduleId: currentCourse?.module_id || currentCourse?.moduleId,
+                        timeSpent: Math.floor(watchedSeconds),
+                        watchPercentage: Math.floor(watchPercentage)
                     })
                 });
                 
@@ -629,9 +760,13 @@
                     if (currentCourse) {
                         showCourse(currentCourse);
                     }
+                } else {
+                    const error = await response.json();
+                    alert(error.error || 'Failed to mark complete. Please watch the video properly.');
                 }
             } catch (error) {
                 console.error('Error:', error);
+                alert('Error saving progress. Please try again.');
             }
         });
         
