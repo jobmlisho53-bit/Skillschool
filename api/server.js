@@ -1423,3 +1423,72 @@ app.get('/api/certificate/view/:certificateId', async (req, res) => {
         res.status(500).json({ error: 'Failed to view certificate' });
     }
 });
+
+// ============ SEGMENT-BASED WATCH VALIDATION ============
+
+// Validate that segments watched are contiguous and reasonable
+function validateWatchSegments(segmentsWatched, totalSegments, duration) {
+    if (!segmentsWatched || segmentsWatched.length === 0) {
+        return { valid: false, reason: 'No watch segments recorded' };
+    }
+    
+    // Check if segments are mostly contiguous (no large gaps)
+    const sortedSegments = [...segmentsWatched].sort((a, b) => a - b);
+    let gaps = 0;
+    let maxGap = 0;
+    
+    for (let i = 1; i < sortedSegments.length; i++) {
+        const gap = sortedSegments[i] - sortedSegments[i - 1];
+        if (gap > 2) { // Gap of more than 2 segments (20 seconds)
+            gaps++;
+            maxGap = Math.max(maxGap, gap);
+        }
+    }
+    
+    // Too many gaps indicates skipping
+    if (gaps > 3) {
+        return { valid: false, reason: 'Watch pattern shows skipping. Please watch continuously.' };
+    }
+    
+    // Check if segments cover the video properly
+    const uniquePercentage = (segmentsWatched.length / totalSegments) * 100;
+    if (uniquePercentage < 85) {
+        return { valid: false, reason: `Only ${Math.floor(uniquePercentage)}% of video uniquely watched. Need 85%.` };
+    }
+    
+    return { valid: true, uniquePercentage };
+}
+
+// Update mark-complete endpoint with segment validation
+app.post('/api/progress/mark-complete', async (req, res) => {
+    try {
+        const { 
+            userId, lessonId, moduleId, timeSpent, watchPercentage,
+            segmentsWatched, totalSegments, sessionId, deviceFingerprint, requestToken
+        } = req.body;
+        
+        // ... existing validation code ...
+        
+        // SOLUTION 1: Enhanced watch validation with segments
+        if (lesson.content_type === 'youtube') {
+            if (!segmentsWatched || !totalSegments) {
+                return res.status(400).json({ error: 'Watch segment data required' });
+            }
+            
+            const segmentValidation = validateWatchSegments(segmentsWatched, totalSegments, lesson.duration);
+            if (!segmentValidation.valid) {
+                return res.status(400).json({ error: segmentValidation.reason });
+            }
+            
+            // Also check regular watch percentage
+            if (watchPercentage < 90) {
+                return res.status(400).json({ error: `Please watch at least 90% of the video without skipping.` });
+            }
+        }
+        
+        // ... rest of existing code ...
+        
+    } catch (error) {
+        // ... error handling ...
+    }
+});

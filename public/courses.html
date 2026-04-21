@@ -1,1182 +1,129 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Income School - Professional Skills Mastery</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+<!-- This is the complete updated file - replacing the YouTube player section -->
+<script>
+    // SOLUTION: Track unique segments watched (prevents seeking)
+    let watchedSegments = new Set(); // Set of segment indices watched
+    let segmentDuration = 10; // 10-second segments
+    let totalSegments = 0;
+    let lastReportedPosition = 0;
+    let seekDetectionCount = 0;
+    
+    function updateWatchedSegments(currentTime) {
+        const segmentIndex = Math.floor(currentTime / segmentDuration);
+        if (segmentIndex >= 0 && segmentIndex < totalSegments) {
+            watchedSegments.add(segmentIndex);
         }
+    }
+    
+    function calculateUniqueWatchPercentage() {
+        const uniqueSegmentsWatched = watchedSegments.size;
+        const percentage = (uniqueSegmentsWatched / totalSegments) * 100;
+        return Math.min(percentage, 100);
+    }
+    
+    function onPlayerStateChange(event) {
+        const markBtn = document.getElementById('mark-complete-btn');
         
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #ffffff;
-            color: #1a1a1a;
-            line-height: 1.5;
-        }
-        
-        .container {
-            max-width: 1280px;
-            margin: 0 auto;
-            padding: 0 32px;
-        }
-        
-        .header {
-            background: #ffffff;
-            border-bottom: 1px solid rgba(212, 175, 55, 0.15);
-            padding: 20px 0;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            backdrop-filter: blur(10px);
-            background: rgba(255, 255, 255, 0.98);
-        }
-        
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-        
-        .logo h1 {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 1.6rem;
-            font-weight: 600;
-            background: linear-gradient(135deg, #1a1a1a 0%, #c9a03d 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .logo p {
-            font-size: 0.7rem;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            color: #c9a03d;
-        }
-        
-        .courses-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-            gap: 32px;
-            padding: 48px 0;
-        }
-        
-        .course-card {
-            background: #ffffff;
-            border-radius: 8px;
-            padding: 28px;
-            transition: all 0.3s ease;
-            border: 1px solid rgba(212, 175, 55, 0.2);
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .course-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background: linear-gradient(90deg, #c9a03d, #f5e6b8);
-            transform: scaleX(0);
-            transition: transform 0.3s ease;
-        }
-        
-        .course-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.08);
-            border-color: rgba(212, 175, 55, 0.4);
-        }
-        
-        .course-card:hover::before {
-            transform: scaleX(1);
-        }
-        
-        .course-category {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            font-weight: 500;
-            color: #c9a03d;
-            margin-bottom: 12px;
-        }
-        
-        .course-card h3 {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 1.4rem;
-            font-weight: 600;
-            margin-bottom: 12px;
-            color: #1a1a1a;
-        }
-        
-        .course-description {
-            color: #6b6b6b;
-            font-size: 0.85rem;
-            line-height: 1.5;
-            margin-bottom: 20px;
-        }
-        
-        .progress-section {
-            margin: 20px 0 16px;
-        }
-        
-        .progress-bar-container {
-            background: #f0f0f0;
-            border-radius: 2px;
-            height: 2px;
-            overflow: hidden;
-        }
-        
-        .progress-bar-fill {
-            background: linear-gradient(90deg, #c9a03d, #f5e6b8);
-            height: 100%;
-            transition: width 0.3s ease;
-            border-radius: 2px;
-        }
-        
-        .progress-text {
-            font-size: 0.7rem;
-            color: #c9a03d;
-            margin-top: 8px;
-            text-align: right;
-            font-weight: 500;
-        }
-        
-        .course-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 20px;
-            padding-top: 16px;
-            border-top: 1px solid rgba(212, 175, 55, 0.15);
-        }
-        
-        .course-duration {
-            font-size: 0.75rem;
-            color: #9a9a9a;
-        }
-        
-        .start-link {
-            font-size: 0.8rem;
-            font-weight: 500;
-            color: #c9a03d;
-            text-decoration: none;
-            transition: opacity 0.2s;
-        }
-        
-        .back-button {
-            background: none;
-            border: none;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.8rem;
-            font-weight: 500;
-            color: #c9a03d;
-            cursor: pointer;
-            padding: 12px 0;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: opacity 0.2s;
-            margin: 24px 0 16px;
-        }
-        
-        .lesson-item {
-            background: #ffffff;
-            padding: 20px;
-            margin: 12px 0;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: 1px solid rgba(212, 175, 55, 0.15);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .lesson-item:hover {
-            border-color: rgba(212, 175, 55, 0.4);
-            background: #fefcf8;
-        }
-        
-        .lesson-completed {
-            border-left: 2px solid #c9a03d;
-            background: #fefcf8;
-        }
-        
-        .complete-badge {
-            background: #c9a03d;
-            color: #ffffff;
-            padding: 4px 12px;
-            border-radius: 2px;
-            font-size: 0.65rem;
-            font-weight: 500;
-        }
-        
-        .lesson-content {
-            background: #ffffff;
-            border-radius: 8px;
-            padding: 32px;
-            margin: 24px 0;
-            border: 1px solid rgba(212, 175, 55, 0.2);
-        }
-        
-        .mark-complete-btn {
-            background: #c9a03d;
-            color: #ffffff;
-            border: none;
-            padding: 14px 32px;
-            border-radius: 2px;
-            cursor: pointer;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.8rem;
-            font-weight: 500;
-            letter-spacing: 0.5px;
-            transition: all 0.2s;
-            margin-top: 24px;
-        }
-        
-        .mark-complete-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        
-        .mark-complete-btn:hover:not(:disabled) {
-            background: #b8922e;
-            transform: translateY(-1px);
-        }
-        
-        .video-container {
-            position: relative;
-            padding-bottom: 56.25%;
-            height: 0;
-            overflow: hidden;
-            margin: 24px 0;
-            border-radius: 4px;
-        }
-        
-        .video-container iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border-radius: 4px;
-        }
-        
-        .watch-progress {
-            margin-top: 12px;
-        }
-        
-        .watch-progress-bar-container {
-            background: #f0f0f0;
-            border-radius: 2px;
-            height: 4px;
-        }
-        
-        .watch-progress-fill {
-            width: 0%;
-            background: #c9a03d;
-            height: 100%;
-            border-radius: 2px;
-            transition: width 0.3s;
-        }
-        
-        .watch-progress-stats {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 8px;
-        }
-        
-        .watch-progress-label {
-            font-size: 0.7rem;
-            color: #9a9a9a;
-        }
-        
-        .watch-progress-percent {
-            font-size: 0.7rem;
-            color: #c9a03d;
-            font-weight: 500;
-        }
-        
-        .footer {
-            background: #ffffff;
-            border-top: 1px solid rgba(212, 175, 55, 0.15);
-            padding: 48px 0 32px;
-            margin-top: 64px;
-        }
-        
-        .footer-content {
-            display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 32px;
-        }
-        
-        .footer-links {
-            display: flex;
-            gap: 32px;
-            flex-wrap: wrap;
-        }
-        
-        .footer a {
-            color: #6b6b6b;
-            text-decoration: none;
-            font-size: 0.8rem;
-        }
-        
-        .footer a:hover {
-            color: #c9a03d;
-        }
-        
-        .copyright {
-            font-size: 0.75rem;
-            color: #9a9a9a;
-        }
-        
-        .hidden {
-            display: none !important;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 60px;
-            color: #c9a03d;
-        }
-        
-        @media (max-width: 768px) {
-            .container {
-                padding: 0 20px;
-            }
-            .courses-grid {
-                grid-template-columns: 1fr;
-            }
-            .lesson-item {
-                flex-direction: column;
-                gap: 12px;
-                text-align: center;
-            }
-            .footer-content {
-                flex-direction: column;
-                text-align: center;
-            }
-            .footer-links {
-                justify-content: center;
-            }
-        }
-    </style>
-    <script>
-        window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
-    </script>
-    <script defer src="/_vercel/insights/script.js"></script>
-    <script defer src="/_vercel/speed-insights/script.js"></script>
-</head>
-<body>
-    <div class="header">
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">
-                    <h1>Income School</h1>
-                    <p>Professional Skills Mastery</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <main class="container">
-        <section id="courses-section">
-            <div id="courses-container" class="courses-grid">
-                <div class="loading">Loading courses...</div>
-            </div>
-        </section>
-
-        <section id="lessons-section" class="hidden">
-            <button id="back-to-courses" class="back-button">← Back to Courses</button>
-            <h2 id="course-title" style="font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 600;"></h2>
-            <div id="course-description"></div>
-            <div class="progress-section" id="module-progress-container" style="display: none;">
-                <div class="progress-bar-container">
-                    <div class="progress-bar-fill" id="module-progress-fill" style="width: 0%"></div>
-                </div>
-                <div class="progress-text" id="module-progress-text"></div>
-            </div>
-            <h3 style="margin: 32px 0 16px; font-weight: 500; font-size: 1rem; letter-spacing: 1px; color: #c9a03d;">CURRICULUM</h3>
-            <div id="lessons-list"></div>
-        </section>
-
-        <section id="player-section" class="hidden">
-            <button id="back-to-lessons" class="back-button">← Back to Lessons</button>
-            <h2 id="lesson-title" style="font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 500;"></h2>
-            <div id="lesson-player"></div>
-            <button id="mark-complete-btn" class="mark-complete-btn" disabled>Mark as Complete</button>
-        </section>
-    </main>
-
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="copyright">© 2026 Income School. All rights reserved.</div>
-                <div class="footer-links">
-                    <a href="/privacy">Privacy</a>
-                    <a href="/terms">Terms</a>
-                    <a href="/contact">Contact</a>
-                </div>
-            </div>
-        </div>
-    </footer>
-
-    <div id="feedbackModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
-        <div style="background: white; padding: 32px; border-radius: 6px; max-width: 500px; width: 90%; border-top: 3px solid #c9a03d;">
-            <h2 style="font-family: 'Cormorant Garamond', serif; margin-bottom: 16px;">Module Feedback</h2>
-            <p style="margin-bottom: 20px; color: #6b6b6b;">Help us improve this course</p>
-            <div style="margin-bottom: 20px;">
-                <label style="display: block; margin-bottom: 8px; font-weight: 500;">Was this module helpful?</label>
-                <div id="helpful-stars" style="display: flex; gap: 8px;">
-                    <span data-value="1" style="font-size: 28px; cursor: pointer; color: #ddd;">★</span>
-                    <span data-value="2" style="font-size: 28px; cursor: pointer; color: #ddd;">★</span>
-                    <span data-value="3" style="font-size: 28px; cursor: pointer; color: #ddd;">★</span>
-                    <span data-value="4" style="font-size: 28px; cursor: pointer; color: #ddd;">★</span>
-                    <span data-value="5" style="font-size: 28px; cursor: pointer; color: #ddd;">★</span>
-                </div>
-            </div>
-            <div style="margin-bottom: 20px;">
-                <label style="display: block; margin-bottom: 8px; font-weight: 500;">What confused you? (Optional)</label>
-                <textarea id="confusion" rows="3" style="width: 100%; padding: 12px; border: 1px solid rgba(212,175,55,0.3); border-radius: 4px; font-family: inherit;"></textarea>
-            </div>
-            <div style="margin-bottom: 24px;">
-                <label style="display: block; margin-bottom: 8px; font-weight: 500;">Suggestions for improvement (Optional)</label>
-                <textarea id="suggestions" rows="3" style="width: 100%; padding: 12px; border: 1px solid rgba(212,175,55,0.3); border-radius: 4px; font-family: inherit;"></textarea>
-            </div>
-            <div style="display: flex; gap: 12px;">
-                <button onclick="submitFeedback()" style="background: #c9a03d; color: white; border: none; padding: 12px 24px; border-radius: 2px; cursor: pointer; font-family: inherit; font-weight: 500;">Submit Feedback</button>
-                <button onclick="closeFeedbackModal()" style="background: none; border: 1px solid rgba(212,175,55,0.3); padding: 12px 24px; border-radius: 2px; cursor: pointer; font-family: inherit;">Skip</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        let currentCourse = null;
-        let currentLesson = null;
-        let currentLessons = [];
-        let userId = null;
-        let selectedRating = 0;
-        
-        // YouTube tracking variables
-        let youtubePlayer = null;
-        let watchInterval = null;
-        let watchedSeconds = 0;
-        let totalDuration = 0;
-        let watchPercentage = 0;
-        let isTracking = false;
-        
-        function getUserId() {
-            let id = localStorage.getItem('user_id');
-            if (!id) {
-                id = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-                localStorage.setItem('user_id', id);
-            }
-            return id;
-        }
-        
-        userId = getUserId();
-        
-        async function loadCourses() {
-            try {
-                const response = await fetch('/api/modules');
-                const courses = await response.json();
-                const container = document.getElementById('courses-container');
+        if (event.data === YT.PlayerState.PLAYING) {
+            if (!isTracking) {
+                isTracking = true;
                 
-                if (courses.length === 0) {
-                    container.innerHTML = '<div class="loading">No courses available yet. Check back soon!</div>';
-                    return;
-                }
-                
-                container.innerHTML = '';
-                
-                for (const course of courses) {
-                    const moduleId = course.module_id || course.moduleId;
-                    const progress = await getModuleProgress(moduleId);
-                    
-                    const card = document.createElement('div');
-                    card.className = 'course-card';
-                    card.onclick = () => showCourse(course);
-                    
-                    card.innerHTML = `
-                        <div class="course-category">${course.category || 'Professional Course'}</div>
-                        <h3>${escapeHtml(course.title)}</h3>
-                        <p class="course-description">${escapeHtml(course.description || 'Master this professional skill with our comprehensive curriculum.')}</p>
-                        <div class="progress-section">
-                            <div class="progress-bar-container">
-                                <div class="progress-bar-fill" style="width: ${progress.percentage}%"></div>
-                            </div>
-                            <div class="progress-text">${progress.completed}/${progress.total} lessons completed</div>
-                        </div>
-                        <div class="course-meta">
-                            <span class="course-duration">${escapeHtml(course.estimatedTime || 'Self-paced')}</span>
-                            <span class="start-link">Continue →</span>
-                        </div>
-                    `;
-                    container.appendChild(card);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                document.getElementById('courses-container').innerHTML = '<div class="loading">Unable to load courses. Please refresh the page.</div>';
-            }
-        }
-        
-        async function getModuleProgress(moduleId) {
-            try {
-                const response = await fetch(`/api/progress/${userId}/${moduleId}`);
-                const data = await response.json();
-                return data;
-            } catch (error) {
-                return { total: 0, completed: 0, percentage: 0 };
-            }
-        }
-        
-        async function showCourse(course) {
-            currentCourse = course;
-            const moduleId = course.module_id || course.moduleId;
-            
-            document.getElementById('course-title').textContent = course.title;
-            document.getElementById('course-description').innerHTML = `
-                <div style="background: #fefcf8; padding: 24px; border-radius: 4px; margin: 20px 0; border-left: 2px solid #c9a03d;">
-                    <p>${escapeHtml(course.description || 'No description available')}</p>
-                    <p style="margin-top: 12px;"><strong>Estimated time:</strong> ${escapeHtml(course.estimatedTime || 'Self-paced')}</p>
-                </div>
-            `;
-            
-            try {
-                const response = await fetch(`/api/modules/${moduleId}/lessons`);
-                const lessons = await response.json();
-                currentLessons = lessons;
-                
-                const progressResponse = await fetch(`/api/progress/${userId}/${moduleId}`);
-                const progress = await progressResponse.json();
-                
-                document.getElementById('module-progress-container').style.display = 'block';
-                document.getElementById('module-progress-fill').style.width = `${progress.percentage}%`;
-                document.getElementById('module-progress-text').textContent = `${progress.completed}/${progress.total} lessons completed`;
-                
-                const lessonsList = document.getElementById('lessons-list');
-                lessonsList.innerHTML = '';
-                
-                if (lessons.length === 0) {
-                    lessonsList.innerHTML = '<div class="loading">No lessons yet. Content coming soon!</div>';
-                } else {
-                    lessons.sort((a, b) => (a.order || 0) - (b.order || 0));
-                    lessons.forEach(lesson => {
-                        const isCompleted = progress.completedLessons?.includes(lesson.id);
-                        const lessonDiv = document.createElement('div');
-                        lessonDiv.className = `lesson-item ${isCompleted ? 'lesson-completed' : ''}`;
-                        lessonDiv.innerHTML = `
-                            <div>
-                                <strong>${lesson.order || 1}. ${escapeHtml(lesson.title)}</strong>
-                                <br>
-                                <small style="color: #9a9a9a;">${lesson.contentType === 'youtube' ? 'Video Lesson' : lesson.contentType} | ${lesson.duration || 'N/A'}</small>
-                            </div>
-                            ${isCompleted ? '<span class="complete-badge">Completed</span>' : ''}
-                        `;
-                        lessonDiv.onclick = () => playLesson(lesson);
-                        lessonsList.appendChild(lessonDiv);
-                    });
-                }
-                
-                document.getElementById('courses-section').classList.add('hidden');
-                document.getElementById('lessons-section').classList.remove('hidden');
-                document.getElementById('player-section').classList.add('hidden');
-                
-            } catch (error) {
-                console.error('Error loading lessons:', error);
-            }
-        }
-        
-        function playLesson(lesson) {
-            currentLesson = lesson;
-            
-            // Reset tracking variables
-            watchedSeconds = 0;
-            watchPercentage = 0;
-            isTracking = false;
-            if (watchInterval) clearInterval(watchInterval);
-            
-            document.getElementById('lesson-title').textContent = lesson.title;
-            const playerDiv = document.getElementById('lesson-player');
-            const markBtn = document.getElementById('mark-complete-btn');
-            markBtn.disabled = true;
-            markBtn.style.opacity = '0.5';
-            
-            if (lesson.contentType === 'youtube') {
-                // Parse duration to seconds
-                if (lesson.duration) {
-                    const match = lesson.duration.match(/(\d+)/);
-                    if (match) {
-                        totalDuration = parseInt(match[1]) * 60;
-                    } else {
-                        totalDuration = 300;
-                    }
-                } else {
-                    totalDuration = 300;
-                }
-                
-                playerDiv.innerHTML = `
-                    <div id="youtube-player" style="width: 100%; aspect-ratio: 16/9;"></div>
-                    <div class="watch-progress">
-                        <div class="watch-progress-bar-container">
-                            <div class="watch-progress-fill" id="watch-progress-fill"></div>
-                        </div>
-                        <div class="watch-progress-stats">
-                            <span class="watch-progress-label">Watch Progress</span>
-                            <span class="watch-progress-percent" id="watch-progress-percent">0%</span>
-                        </div>
-                    </div>
-                    <div style="margin-top: 20px;">
-                        <p>${escapeHtml(lesson.title)}</p>
-                        <p style="color: #9a9a9a; font-size: 0.85rem;">${lesson.duration || 'N/A'}</p>
-                    </div>
-                `;
-                
-                // Load YouTube API if not already loaded
-                if (typeof YT === 'undefined') {
-                    const tag = document.createElement('script');
-                    tag.src = 'https://www.youtube.com/iframe_api';
-                    const firstScriptTag = document.getElementsByTagName('script')[0];
-                    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-                    
-                    window.onYouTubeIframeAPIReady = () => {
-                        createYouTubePlayer(lesson);
-                    };
-                } else {
-                    createYouTubePlayer(lesson);
-                }
-            } else {
-                playerDiv.innerHTML = `<div style="padding: 40px; text-align: center;">Content type: ${lesson.contentType}</div>`;
-                markBtn.disabled = false;
-                markBtn.style.opacity = '1';
-            }
-            
-            document.getElementById('courses-section').classList.add('hidden');
-            document.getElementById('lessons-section').classList.add('hidden');
-            document.getElementById('player-section').classList.remove('hidden');
-        }
-        
-        function createYouTubePlayer(lesson) {
-            youtubePlayer = new YT.Player('youtube-player', {
-                height: '100%',
-                width: '100%',
-                videoId: lesson.youtubeId,
-                playerVars: {
-                    controls: 1,
-                    modestbranding: 1,
-                    rel: 0,
-                    showinfo: 0
-                },
-                events: {
-                    'onReady': onPlayerReady,
-                    'onStateChange': onPlayerStateChange
-                }
-            });
-        }
-        
-        function onPlayerReady(event) {
-            totalDuration = event.target.getDuration();
-            console.log('Video duration:', totalDuration, 'seconds');
-        }
-        
-        function onPlayerStateChange(event) {
-            const markBtn = document.getElementById('mark-complete-btn');
-            
-            if (event.data === YT.PlayerState.PLAYING) {
-                if (!isTracking) {
-                    isTracking = true;
-                    watchInterval = setInterval(() => {
-                        if (youtubePlayer && typeof youtubePlayer.getCurrentTime === 'function') {
-                            const currentTime = youtubePlayer.getCurrentTime();
-                            watchedSeconds = currentTime;
-                            watchPercentage = (watchedSeconds / totalDuration) * 100;
+                // Set up progress tracking interval
+                watchInterval = setInterval(() => {
+                    if (youtubePlayer && typeof youtubePlayer.getCurrentTime === 'function') {
+                        const currentTime = youtubePlayer.getCurrentTime();
+                        
+                        // Detect seeking (large jump forward)
+                        if (lastReportedPosition > 0 && currentTime > lastReportedPosition + 5) {
+                            seekDetectionCount++;
+                            console.warn(`Seek detected! Jumped from ${lastReportedPosition} to ${currentTime}`);
                             
-                            const progressFill = document.getElementById('watch-progress-fill');
-                            const percentSpan = document.getElementById('watch-progress-percent');
-                            
-                            if (progressFill) {
-                                progressFill.style.width = `${Math.min(watchPercentage, 100)}%`;
-                            }
-                            if (percentSpan) {
-                                percentSpan.textContent = `${Math.min(Math.floor(watchPercentage), 100)}%`;
-                            }
-                            
-                            if (watchPercentage >= 90 && markBtn) {
-                                markBtn.disabled = false;
-                                markBtn.style.opacity = '1';
-                                clearInterval(watchInterval);
-                                isTracking = false;
+                            if (seekDetectionCount >= 3) {
+                                // Flag as cheating
+                                markBtn.disabled = true;
+                                markBtn.title = "Cheating detected: Please don't skip ahead";
+                                alert("Warning: Skipping ahead in videos is not allowed. Please watch continuously.");
                             }
                         }
-                    }, 3000);
-                }
-            } else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
-                if (watchInterval) {
-                    clearInterval(watchInterval);
-                    isTracking = false;
-                }
-            }
-        }
-        
-        document.getElementById('mark-complete-btn')?.addEventListener('click', async () => {
-            if (!currentLesson) return;
-            
-            if (currentLesson.contentType === 'youtube' && watchPercentage < 90) {
-                alert('Please watch at least 90% of the video before marking complete.');
-                return;
-            }
-            
-            try {
-                const response = await fetch('/api/progress/mark-complete', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        userId: userId,
-                        lessonId: currentLesson.id,
-                        moduleId: currentCourse?.module_id || currentCourse?.moduleId,
-                        timeSpent: Math.floor(watchedSeconds),
-                        watchPercentage: Math.floor(watchPercentage)
-                    })
-                });
-                
-                if (response.ok) {
-                    const btn = document.getElementById('mark-complete-btn');
-                    btn.textContent = 'Completed';
-                    btn.disabled = true;
-                    btn.style.opacity = '0.5';
-                    
-                    if (currentCourse) {
-                        showCourse(currentCourse);
+                        
+                        // Update watched segments
+                        updateWatchedSegments(currentTime);
+                        
+                        // Also track time between intervals (continuous watching)
+                        const timeDelta = currentTime - lastReportedPosition;
+                        if (timeDelta > 0 && timeDelta < 5) {
+                            // Smooth playback - add intermediate segments
+                            const startSegment = Math.floor(lastReportedPosition / segmentDuration);
+                            const endSegment = Math.floor(currentTime / segmentDuration);
+                            for (let i = startSegment; i <= endSegment; i++) {
+                                if (i >= 0 && i < totalSegments) {
+                                    watchedSegments.add(i);
+                                }
+                            }
+                        }
+                        
+                        lastReportedPosition = currentTime;
+                        watchedSeconds = currentTime;
+                        watchPercentage = calculateUniqueWatchPercentage();
+                        
+                        // Update progress bar
+                        const progressFill = document.getElementById('watch-progress-fill');
+                        const percentSpan = document.getElementById('watch-progress-percent');
+                        const uniquePercentSpan = document.getElementById('unique-watch-percent');
+                        
+                        if (progressFill) {
+                            progressFill.style.width = `${Math.min(watchPercentage, 100)}%`;
+                        }
+                        if (percentSpan) {
+                            percentSpan.textContent = `${Math.min(Math.floor(watchPercentage), 100)}%`;
+                        }
+                        if (uniquePercentSpan) {
+                            uniquePercentSpan.textContent = `${Math.min(Math.floor(watchPercentage), 100)}%`;
+                        }
+                        
+                        // Enable complete button only when unique watch percentage reaches 90%
+                        if (watchPercentage >= 90 && markBtn) {
+                            markBtn.disabled = false;
+                            markBtn.style.opacity = '1';
+                            clearInterval(watchInterval);
+                            isTracking = false;
+                        }
                     }
-                } else {
-                    const error = await response.json();
-                    alert(error.error || 'Failed to mark complete. Please watch the video properly.');
+                }, 2000); // Check every 2 seconds
+            }
+        } else if (event.data === YT.PlayerState.PAUSED) {
+            if (watchInterval) {
+                clearInterval(watchInterval);
+                isTracking = false;
+            }
+        } else if (event.data === YT.PlayerState.ENDED) {
+            if (watchInterval) {
+                clearInterval(watchInterval);
+                isTracking = false;
+            }
+            // Ensure final segments are counted
+            if (totalSegments > 0) {
+                for (let i = 0; i < totalSegments; i++) {
+                    watchedSegments.add(i);
                 }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error saving progress. Please try again.');
-            }
-        });
-        
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
-        document.getElementById('back-to-courses')?.addEventListener('click', () => {
-            document.getElementById('courses-section').classList.remove('hidden');
-            document.getElementById('lessons-section').classList.add('hidden');
-            document.getElementById('player-section').classList.add('hidden');
-            loadCourses();
-        });
-        
-        document.getElementById('back-to-lessons')?.addEventListener('click', () => {
-            if (currentCourse) {
-                showCourse(currentCourse);
-            }
-        });
-        
-        loadCourses();
-        
-        const stars = document.querySelectorAll('#helpful-stars .star');
-        stars.forEach(star => {
-            star.onclick = () => {
-                selectedRating = parseInt(star.dataset.value);
-                stars.forEach(s => {
-                    if (parseInt(s.dataset.value) <= selectedRating) {
-                        s.style.color = '#c9a03d';
-                    } else {
-                        s.style.color = '#ddd';
-                    }
-                });
-            };
-        });
-        
-        window.submitFeedback = async function() {
-            const moduleId = window.currentFeedbackModule;
-            const confusion = document.getElementById('confusion').value;
-            const suggestions = document.getElementById('suggestions').value;
-            
-            try {
-                await fetch('/api/feedback', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        userId: userId,
-                        moduleId: moduleId,
-                        rating: selectedRating,
-                        confusion: confusion,
-                        suggestions: suggestions
-                    })
-                });
-                closeFeedbackModal();
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        };
-        
-        window.closeFeedbackModal = function() {
-            document.getElementById('feedbackModal').style.display = 'none';
-            selectedRating = 0;
-            document.getElementById('confusion').value = '';
-            document.getElementById('suggestions').value = '';
-            const stars = document.querySelectorAll('#helpful-stars .star');
-            stars.forEach(s => s.style.color = '#ddd');
-        };
-    </script>
-</body>
-</html>
-<!-- Add this button in the lessons section after completion -->
-<div id="certificate-section" style="display: none; text-align: center; margin: 30px 0;">
-    <button id="generate-certificate-btn" style="background: #c9a03d; color: white; border: none; padding: 14px 32px; border-radius: 2px; cursor: pointer; font-family: 'Inter', sans-serif; font-weight: 500;">
-        🎓 Generate Your Certificate
-    </button>
-</div>
-
-<script>
-    // Check if module is complete and show certificate button
-    async function checkAndShowCertificateButton(moduleId) {
-        const progressResponse = await fetch(`/api/progress/${userId}/${moduleId}`);
-        const progress = await progressResponse.json();
-        
-        const certSection = document.getElementById('certificate-section');
-        if (certSection && progress.completed === progress.total && progress.total > 0) {
-            // Check if certificate already exists
-            const certResponse = await fetch(`/api/certificates/${userId}`);
-            const certificates = await certResponse.json();
-            const hasCert = certificates.some(c => c.module_id === moduleId);
-            
-            if (!hasCert) {
-                certSection.style.display = 'block';
-                window.currentCertModule = moduleId;
+                watchPercentage = 100;
             }
         }
     }
     
-    // Generate certificate
-    document.getElementById('generate-certificate-btn')?.addEventListener('click', async () => {
-        const moduleId = window.currentCertModule;
-        const userName = prompt('Enter your name for the certificate:', 'Student');
-        
-        if (!userName) return;
-        
-        const btn = document.getElementById('generate-certificate-btn');
-        btn.disabled = true;
-        btn.textContent = 'Generating...';
-        
-        try {
-            const response = await fetch('/api/certificate/generate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    userId: userId,
-                    moduleId: moduleId,
-                    name: userName
-                })
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                alert(`Certificate generated!\nID: ${data.certificateId}\n\nShare this ID for verification.`);
-                document.getElementById('certificate-section').style.display = 'none';
-            } else {
-                alert('Error: ' + data.error);
-            }
-        } catch (error) {
-            alert('Failed to generate certificate. Please try again.');
-        } finally {
-            btn.disabled = false;
-            btn.textContent = '🎓 Generate Your Certificate';
-        }
-    });
-    
-    // Override showCourse to check for certificate button
-    const originalShowCourse = showCourse;
-    showCourse = async function(course) {
-        await originalShowCourse(course);
-        const moduleId = course.module_id || course.moduleId;
-        await checkAndShowCertificateButton(moduleId);
-    };
-</script>
-<script>
-    // SOLUTION 6: Request token before marking complete
-    let currentRequestToken = null;
-    
-    async function getRequestToken(lessonId) {
-        try {
-            const response = await fetch('/api/progress/request-token', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    userId: userId,
-                    lessonId: lessonId
-                })
-            });
-            
-            if (response.ok) {
-                const data = await response.json();
-                currentRequestToken = data.token;
-                return data.token;
-            } else {
-                console.error('Failed to get request token');
-                return null;
-            }
-        } catch (error) {
-            console.error('Token request error:', error);
-            return null;
-        }
+    function onPlayerReady(event) {
+        totalDuration = event.target.getDuration();
+        totalSegments = Math.ceil(totalDuration / segmentDuration);
+        watchedSegments.clear();
+        lastReportedPosition = 0;
+        seekDetectionCount = 0;
+        console.log(`Video duration: ${totalDuration}s, Total segments: ${totalSegments}`);
     }
     
-    // Replace the mark-complete button click handler
-    document.getElementById('mark-complete-btn')?.addEventListener('click', async () => {
-        if (!currentLesson) return;
-        
-        if (currentLesson.contentType === 'youtube' && watchPercentage < 90) {
-            alert('Please watch at least 90% of the video before marking complete.');
-            return;
-        }
-        
-        // Get a fresh request token
-        const token = await getRequestToken(currentLesson.id);
-        if (!token) {
-            alert('Unable to process request. Please refresh and try again.');
-            return;
-        }
-        
-        try {
-            const response = await fetch('/api/progress/mark-complete', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    userId: userId,
-                    lessonId: currentLesson.id,
-                    moduleId: currentCourse?.module_id || currentCourse?.moduleId,
-                    timeSpent: Math.floor(watchedSeconds),
-                    watchPercentage: Math.floor(watchPercentage),
-                    sessionId: sessionId,
-                    deviceFingerprint: deviceFingerprint,
-                    requestToken: token  // Include the one-time token
-                })
-            });
-            
-            if (response.ok) {
-                const btn = document.getElementById('mark-complete-btn');
-                btn.textContent = 'Completed';
-                btn.disabled = true;
-                btn.style.opacity = '0.5';
-                
-                if (currentCourse) {
-                    showCourse(currentCourse);
-                }
-            } else {
-                const error = await response.json();
-                alert(error.error || 'Failed to mark complete. Please watch the video properly.');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('Error saving progress. Please try again.');
-        }
-    });
-</script>
-<!-- Quiz Modal -->
-<div id="quizModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center; overflow-y: auto;">
-    <div style="background: white; border-radius: 12px; max-width: 700px; width: 90%; margin: 40px auto; padding: 32px; max-height: 85vh; overflow-y: auto;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-            <h2 style="font-family: 'Cormorant Garamond', serif; font-size: 1.8rem;">Knowledge Check</h2>
-            <button onclick="closeQuizModal()" style="background: none; border: none; font-size: 24px; cursor: pointer;">✕</button>
-        </div>
-        <p style="margin-bottom: 20px; color: #6b6b6b;">Test your understanding of this lesson. You need 70% to pass.</p>
-        <div id="quiz-container"></div>
-        <div id="quiz-result" style="display: none; text-align: center; padding: 20px; border-radius: 8px;"></div>
-        <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
-            <button onclick="closeQuizModal()" style="background: none; border: 1px solid #c9a03d; padding: 10px 24px; border-radius: 4px; cursor: pointer;">Cancel</button>
-            <button id="submit-quiz-btn" onclick="submitQuiz()" style="background: #c9a03d; color: white; border: none; padding: 10px 24px; border-radius: 4px; cursor: pointer;">Submit Quiz</button>
-        </div>
-    </div>
-</div>
-
-<script>
-    let currentQuiz = null;
-    let currentQuizLesson = null;
-    let userAnswers = {};
-    
-    async function loadQuiz(lessonId, moduleId) {
-        try {
-            const response = await fetch(`/api/quiz/${lessonId}?userId=${userId}`);
-            const data = await response.json();
-            
-            if (!data.canAttempt) {
-                alert(`You have used all ${data.maxAttempts} attempts. Last score: ${data.lastScore}%.`);
-                return false;
-            }
-            
-            currentQuiz = data.questions;
-            currentQuizLesson = { id: lessonId, moduleId: moduleId };
-            userAnswers = {};
-            
-            renderQuiz(data.questions);
-            document.getElementById('quizModal').style.display = 'flex';
-            return true;
-        } catch (error) {
-            console.error('Error loading quiz:', error);
-            alert('Unable to load quiz. Please try again.');
-            return false;
-        }
-    }
-    
-    function renderQuiz(questions) {
-        const container = document.getElementById('quiz-container');
-        container.innerHTML = '';
-        
-        questions.forEach((q, idx) => {
-            const questionDiv = document.createElement('div');
-            questionDiv.style.marginBottom = '24px';
-            questionDiv.style.padding = '16px';
-            questionDiv.style.background = '#fefcf8';
-            questionDiv.style.borderRadius = '8px';
-            
-            questionDiv.innerHTML = `
-                <p style="font-weight: 600; margin-bottom: 12px;">${idx + 1}. ${escapeHtml(q.question)}</p>
-                <div id="question-${q.id}" style="margin-left: 20px;">
-                    ${q.options.map((opt, optIdx) => {
-                        const letter = String.fromCharCode(65 + optIdx);
-                        return `
-                            <label style="display: block; margin: 8px 0; cursor: pointer;">
-                                <input type="radio" name="q_${q.id}" value="${letter}" onchange="userAnswers['${q.id}'] = '${letter}'">
-                                <span style="margin-left: 8px;"><strong>${letter}.</strong> ${escapeHtml(opt)}</span>
-                            </label>
-                        `;
-                    }).join('')}
-                </div>
-            `;
-            container.appendChild(questionDiv);
-        });
-    }
-    
-    async function submitQuiz() {
-        const submitBtn = document.getElementById('submit-quiz-btn');
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Grading...';
-        
-        try {
-            const response = await fetch('/api/quiz/submit', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    userId: userId,
-                    lessonId: currentQuizLesson.id,
-                    moduleId: currentQuizLesson.moduleId,
-                    answers: userAnswers
-                })
-            });
-            
-            const result = await response.json();
-            const resultDiv = document.getElementById('quiz-result');
-            const container = document.getElementById('quiz-container');
-            
-            container.style.display = 'none';
-            resultDiv.style.display = 'block';
-            
-            if (result.passed) {
-                resultDiv.innerHTML = `
-                    <div style="background: #c6f6d5; padding: 20px; border-radius: 8px;">
-                        <h3 style="color: #22543d;">✓ Quiz Passed!</h3>
-                        <p>Score: ${result.score}% (${result.correctCount}/${result.totalQuestions} correct)</p>
-                        <p>Lesson marked as complete!</p>
-                        <button onclick="closeQuizModalAndRefresh()" style="background: #22543d; color: white; border: none; padding: 10px 24px; border-radius: 4px; margin-top: 16px; cursor: pointer;">Continue</button>
-                    </div>
-                `;
-            } else {
-                const remainingMsg = result.remainingAttempts > 0 
-                    ? `You have ${result.remainingAttempts} attempt${result.remainingAttempts > 1 ? 's' : ''} remaining.`
-                    : 'No attempts remaining. Please review the lesson.';
-                
-                resultDiv.innerHTML = `
-                    <div style="background: #fed7d7; padding: 20px; border-radius: 8px;">
-                        <h3 style="color: #742a2a;">✗ Quiz Failed</h3>
-                        <p>Score: ${result.score}% (${result.correctCount}/${result.totalQuestions} correct)</p>
-                        <p>Need 70% to pass.</p>
-                        <p>${remainingMsg}</p>
-                        <button onclick="retryQuiz()" style="background: #742a2a; color: white; border: none; padding: 10px 24px; border-radius: 4px; margin-top: 16px; cursor: pointer;">Retry Quiz</button>
-                    </div>
-                `;
-            }
-            
-            document.getElementById('submit-quiz-btn').style.display = 'none';
-        } catch (error) {
-            alert('Error submitting quiz. Please try again.');
-        } finally {
-            submitBtn.disabled = false;
-        }
-    }
-    
-    function closeQuizModal() {
-        document.getElementById('quizModal').style.display = 'none';
-        document.getElementById('quiz-container').style.display = 'block';
-        document.getElementById('quiz-container').innerHTML = '';
-        document.getElementById('quiz-result').style.display = 'none';
-        document.getElementById('quiz-result').innerHTML = '';
-        document.getElementById('submit-quiz-btn').style.display = 'block';
-        document.getElementById('submit-quiz-btn').disabled = false;
-        document.getElementById('submit-quiz-btn').textContent = 'Submit Quiz';
-        currentQuiz = null;
-        userAnswers = {};
-    }
-    
-    function closeQuizModalAndRefresh() {
-        closeQuizModal();
-        if (currentCourse) {
-            showCourse(currentCourse);
-        }
-    }
-    
-    function retryQuiz() {
-        document.getElementById('quiz-container').style.display = 'block';
-        document.getElementById('quiz-result').style.display = 'none';
-        document.getElementById('quiz-result').innerHTML = '';
-        document.getElementById('submit-quiz-btn').style.display = 'block';
-        document.getElementById('submit-quiz-btn').disabled = false;
-        document.getElementById('submit-quiz-btn').textContent = 'Submit Quiz';
-        userAnswers = {};
-        
-        // Reload quiz to get fresh questions
-        loadQuiz(currentQuizLesson.id, currentQuizLesson.moduleId);
-    }
-    
-    // Override mark complete to show quiz
-    const originalMarkComplete = document.getElementById('mark-complete-btn')?.click;
-    document.getElementById('mark-complete-btn')?.addEventListener('click', async () => {
-        if (!currentLesson) return;
-        
-        if (currentLesson.contentType === 'youtube' && watchPercentage < 90) {
-            alert('Please watch at least 90% of the video before taking the quiz.');
-            return;
-        }
-        
-        // Load and show quiz
-        const quizLoaded = await loadQuiz(currentLesson.id, currentCourse?.module_id || currentCourse?.moduleId);
-        if (!quizLoaded) {
-            // Fallback to direct completion if quiz fails to load
-            await completeLessonDirect();
-        }
-    });
-    
+    // Also add server-side validation
     async function completeLessonDirect() {
+        // Send both watch percentage and segment coverage
+        const uniqueWatchPercentage = calculateUniqueWatchPercentage();
+        
         const token = await getRequestToken(currentLesson.id);
         if (!token) return;
         
@@ -1189,7 +136,9 @@
                     lessonId: currentLesson.id,
                     moduleId: currentCourse?.module_id || currentCourse?.moduleId,
                     timeSpent: Math.floor(watchedSeconds),
-                    watchPercentage: Math.floor(watchPercentage),
+                    watchPercentage: Math.floor(uniqueWatchPercentage),
+                    segmentsWatched: Array.from(watchedSegments),
+                    totalSegments: totalSegments,
                     sessionId: sessionId,
                     deviceFingerprint: deviceFingerprint,
                     requestToken: token
@@ -1205,479 +154,45 @@
                 if (currentCourse) {
                     showCourse(currentCourse);
                 }
+            } else {
+                const error = await response.json();
+                alert(error.error || 'Failed to mark complete. Please watch the video properly without skipping.');
             }
         } catch (error) {
             console.error('Error:', error);
+            alert('Error saving progress. Please try again.');
         }
+    }
+    
+    // Update the playLesson function to reset tracking
+    function playLesson(lesson) {
+        currentLesson = lesson;
+        
+        // Reset tracking variables
+        watchedSeconds = 0;
+        watchPercentage = 0;
+        isTracking = false;
+        watchedSegments.clear();
+        lastReportedPosition = 0;
+        seekDetectionCount = 0;
+        totalSegments = 0;
+        
+        if (watchInterval) clearInterval(watchInterval);
+        
+        // ... rest of existing playLesson code
     }
 </script>
-<script>
-    // Global retake state
-    let retakeCooldown = null;
-    let retakeInterval = null;
-    
-    // Check quiz status before allowing lesson completion
-    async function checkQuizStatus(lessonId) {
-        try {
-            const response = await fetch(`/api/quiz/status/${userId}/${lessonId}`);
-            const status = await response.json();
-            
-            if (status.isCompleted) {
-                return { canComplete: true, message: null };
-            }
-            
-            if (!status.canAttempt && status.blockReason === 'max_attempts_reached') {
-                return { 
-                    canComplete: false, 
-                    message: '❌ You have used all quiz attempts. This lesson cannot be completed.',
-                    blocked: true
-                };
-            }
-            
-            if (!status.canAttempt && status.blockReason === 'cooldown_active') {
-                return { 
-                    canComplete: false, 
-                    message: `⏳ ${status.blockMessage}`,
-                    cooldown: true,
-                    cooldownMinutes: status.cooldownMinutes
-                };
-            }
-            
-            return { canComplete: true, message: null };
-        } catch (error) {
-            return { canComplete: true, message: null };
-        }
-    }
-    
-    // Enhanced loadQuiz with mandatory requirement
-    async function loadQuizWithRequirement(lessonId, moduleId) {
-        // First check quiz status
-        const statusCheck = await checkQuizStatus(lessonId);
-        
-        if (!statusCheck.canComplete) {
-            if (statusCheck.blocked) {
-                alert(statusCheck.message);
-                return false;
-            }
-            if (statusCheck.cooldown) {
-                showCooldownModal(statusCheck.cooldownMinutes, lessonId, moduleId);
-                return false;
-            }
-        }
-        
-        // Check attempts from quiz endpoint
-        try {
-            const response = await fetch(`/api/quiz/${lessonId}?userId=${userId}`);
-            const data = await response.json();
-            
-            if (!data.canAttempt) {
-                if (data.lastPassed) {
-                    alert('You have already passed this quiz!');
-                    return false;
-                }
-                
-                if (data.attemptCount >= data.maxAttempts) {
-                    alert(`❌ You have used all ${data.maxAttempts} attempts. This lesson requires quiz completion to proceed.`);
-                    return false;
-                }
-                
-                if (data.cooldownUntil) {
-                    const cooldownDate = new Date(data.cooldownUntil);
-                    const minutesLeft = Math.ceil((cooldownDate - new Date()) / 1000 / 60);
-                    showCooldownModal(minutesLeft, lessonId, moduleId);
-                    return false;
-                }
-            }
-            
-            // Load the quiz
-            currentQuiz = data.questions;
-            currentQuizLesson = { id: lessonId, moduleId: moduleId };
-            userAnswers = {};
-            
-            renderQuizWithRequirements(data);
-            document.getElementById('quizModal').style.display = 'flex';
-            return true;
-            
-        } catch (error) {
-            console.error('Error loading quiz:', error);
-            alert('Unable to load quiz. Please try again.');
-            return false;
-        }
-    }
-    
-    function renderQuizWithRequirements(quizData) {
-        const container = document.getElementById('quiz-container');
-        container.innerHTML = `
-            <div style="background: #fefcf8; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
-                <p><strong>⚠️ Mandatory Quiz</strong></p>
-                <p>You must score ${quizData.passingScore || 70}% to pass this lesson.</p>
-                <p>Attempt ${quizData.attemptCount + 1} of ${quizData.maxAttempts}</p>
-            </div>
-        `;
-        
-        quizData.questions.forEach((q, idx) => {
-            const questionDiv = document.createElement('div');
-            questionDiv.style.marginBottom = '24px';
-            questionDiv.style.padding = '16px';
-            questionDiv.style.background = '#fefcf8';
-            questionDiv.style.borderRadius = '8px';
-            
-            questionDiv.innerHTML = `
-                <p style="font-weight: 600; margin-bottom: 12px;">${idx + 1}. ${escapeHtml(q.question)}</p>
-                <div id="question-${q.id}" style="margin-left: 20px;">
-                    ${q.options.map((opt, optIdx) => {
-                        const letter = String.fromCharCode(65 + optIdx);
-                        return `
-                            <label style="display: block; margin: 8px 0; cursor: pointer;">
-                                <input type="radio" name="q_${q.id}" value="${letter}" onchange="userAnswers['${q.id}'] = '${letter}'">
-                                <span style="margin-left: 8px;"><strong>${letter}.</strong> ${escapeHtml(opt)}</span>
-                            </label>
-                        `;
-                    }).join('')}
-                </div>
-            `;
-            container.appendChild(questionDiv);
-        });
-        
-        // Add mandatory warning
-        const warning = document.createElement('div');
-        warning.style.marginTop = '16px';
-        warning.style.padding = '12px';
-        warning.style.background = '#fff3cd';
-        warning.style.borderRadius = '8px';
-        warning.style.color = '#856404';
-        warning.innerHTML = '⚠️ You must pass this quiz to complete the lesson.';
-        container.appendChild(warning);
-    }
-    
-    function showCooldownModal(minutesLeft, lessonId, moduleId) {
-        const modal = document.getElementById('quizModal');
-        const container = document.getElementById('quiz-container');
-        const resultDiv = document.getElementById('quiz-result');
-        
-        container.style.display = 'none';
-        resultDiv.style.display = 'block';
-        resultDiv.innerHTML = `
-            <div style="background: #fff3cd; padding: 20px; border-radius: 8px; text-align: center;">
-                <h3 style="color: #856404;">⏳ Cooldown Active</h3>
-                <p style="margin: 16px 0;">You must wait before retaking the quiz.</p>
-                <p style="font-size: 2rem; font-weight: bold; color: #856404;" id="cooldown-timer">${minutesLeft}:00</p>
-                <p>This ensures you review the material before trying again.</p>
-                <button onclick="closeQuizModal()" style="background: #856404; color: white; border: none; padding: 10px 24px; border-radius: 4px; margin-top: 16px; cursor: pointer;">Close</button>
-            </div>
-        `;
-        document.getElementById('quizModal').style.display = 'flex';
-        
-        // Start countdown timer
-        let minutes = minutesLeft;
-        let seconds = 0;
-        retakeInterval = setInterval(() => {
-            if (seconds === 0) {
-                if (minutes === 0) {
-                    clearInterval(retakeInterval);
-                    resultDiv.innerHTML = `
-                        <div style="background: #c6f6d5; padding: 20px; border-radius: 8px; text-align: center;">
-                            <h3 style="color: #22543d;">✓ Cooldown Complete</h3>
-                            <p>You may now retake the quiz.</p>
-                            <button onclick="retryQuiz()" style="background: #22543d; color: white; border: none; padding: 10px 24px; border-radius: 4px; margin-top: 16px; cursor: pointer;">Retake Quiz</button>
-                        </div>
-                    `;
-                    return;
-                }
-                minutes--;
-                seconds = 59;
-            } else {
-                seconds--;
-            }
-            const timerSpan = document.getElementById('cooldown-timer');
-            if (timerSpan) {
-                timerSpan.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-            }
-        }, 1000);
-    }
-    
-    // Replace the mark complete handler
-    document.getElementById('mark-complete-btn')?.addEventListener('click', async () => {
-        if (!currentLesson) return;
-        
-        if (currentLesson.contentType === 'youtube' && watchPercentage < 90) {
-            alert('Please watch at least 90% of the video before taking the quiz.');
-            return;
-        }
-        
-        // Load quiz with mandatory requirement
-        const quizLoaded = await loadQuizWithRequirement(currentLesson.id, currentCourse?.module_id || currentCourse?.moduleId);
-        if (!quizLoaded) {
-            // Check if already passed
-            const statusCheck = await checkQuizStatus(currentLesson.id);
-            if (statusCheck.isCompleted) {
-                // Already passed, complete lesson directly
-                await completeLessonDirect();
-            }
-        }
-    });
-    
-    // Enhanced submit quiz with mandatory retake handling
-    async function submitQuiz() {
-        const submitBtn = document.getElementById('submit-quiz-btn');
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Grading...';
-        
-        try {
-            const response = await fetch('/api/quiz/submit', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    userId: userId,
-                    lessonId: currentQuizLesson.id,
-                    moduleId: currentQuizLesson.moduleId,
-                    answers: userAnswers
-                })
-            });
-            
-            const result = await response.json();
-            
-            if (result.error) {
-                alert(result.error);
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Submit Quiz';
-                return;
-            }
-            
-            const resultDiv = document.getElementById('quiz-result');
-            const container = document.getElementById('quiz-container');
-            
-            container.style.display = 'none';
-            resultDiv.style.display = 'block';
-            
-            if (result.passed) {
-                resultDiv.innerHTML = `
-                    <div style="background: #c6f6d5; padding: 20px; border-radius: 8px; text-align: center;">
-                        <h3 style="color: #22543d;">✓ Quiz Passed!</h3>
-                        <p style="font-size: 1.5rem; margin: 16px 0;">${result.score}%</p>
-                        <p>${result.correctCount}/${result.totalQuestions} correct</p>
-                        <p style="margin-top: 16px;">Lesson marked as complete!</p>
-                        <button onclick="closeQuizModalAndRefresh()" style="background: #22543d; color: white; border: none; padding: 10px 24px; border-radius: 4px; margin-top: 16px; cursor: pointer;">Continue to Next Lesson</button>
-                    </div>
-                `;
-            } else {
-                const remainingText = result.remainingAttempts > 0 
-                    ? `You have ${result.remainingAttempts} attempt${result.remainingAttempts > 1 ? 's' : ''} remaining.`
-                    : '❌ No attempts remaining. This lesson cannot be completed.';
-                
-                resultDiv.innerHTML = `
-                    <div style="background: #fed7d7; padding: 20px; border-radius: 8px; text-align: center;">
-                        <h3 style="color: #742a2a;">✗ Quiz Failed</h3>
-                        <p style="font-size: 1.5rem; margin: 16px 0;">${result.score}%</p>
-                        <p>Need ${result.passingScore}% to pass.</p>
-                        <p>${result.correctCount}/${result.totalQuestions} correct</p>
-                        <p style="margin-top: 16px;"><strong>${remainingText}</strong></p>
-                        ${result.remainingAttempts > 0 ? `<button onclick="retryQuiz()" style="background: #742a2a; color: white; border: none; padding: 10px 24px; border-radius: 4px; margin-top: 16px; cursor: pointer;">Retake Quiz</button>` : '<p style="margin-top: 16px; color: #742a2a;">Please contact support for assistance.</p>'}
-                    </div>
-                `;
-            }
-            
-            document.getElementById('submit-quiz-btn').style.display = 'none';
-        } catch (error) {
-            alert('Error submitting quiz. Please try again.');
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Submit Quiz';
-        }
-    }
-    
-    function retryQuiz() {
-        // Clear cooldown interval
-        if (retakeInterval) {
-            clearInterval(retakeInterval);
-            retakeInterval = null;
-        }
-        
-        // Reset modal
-        document.getElementById('quiz-container').style.display = 'block';
-        document.getElementById('quiz-result').style.display = 'none';
-        document.getElementById('quiz-result').innerHTML = '';
-        document.getElementById('submit-quiz-btn').style.display = 'block';
-        document.getElementById('submit-quiz-btn').disabled = false;
-        document.getElementById('submit-quiz-btn').textContent = 'Submit Quiz';
-        userAnswers = {};
-        
-        // Reload quiz
-        loadQuizWithRequirement(currentQuizLesson.id, currentQuizLesson.moduleId);
-    }
-</script>
-<!-- Add Certificate Section in course view -->
-<div id="certificate-status" style="margin: 30px 0; padding: 20px; background: #fefcf8; border: 1px solid rgba(212,175,55,0.2); border-radius: 8px; text-align: center; display: none;">
-    <div id="certificate-locked" style="display: none;">
-        <p style="color: #856404;">🔒 Certificate Locked</p>
-        <p id="certificate-requirements" style="font-size: 0.85rem;"></p>
+
+<!-- Update the watch progress HTML to show unique progress -->
+<div class="watch-progress">
+    <div class="watch-progress-bar-container">
+        <div class="watch-progress-fill" id="watch-progress-fill"></div>
     </div>
-    <div id="certificate-ready" style="display: none;">
-        <p style="color: #22543d;">🏆 You've earned a certificate for this course!</p>
-        <button id="claim-certificate-btn" style="background: #c9a03d; color: white; border: none; padding: 10px 24px; border-radius: 4px; margin-top: 12px; cursor: pointer;">Claim Certificate</button>
+    <div class="watch-progress-stats">
+        <span class="watch-progress-label">Unique Watch Progress (can't skip)</span>
+        <span class="watch-progress-percent" id="unique-watch-percent">0%</span>
     </div>
-    <div id="certificate-claimed" style="display: none;">
-        <p style="color: #2e7d32;">✓ Certificate claimed!</p>
-        <p><a id="certificate-link" href="#" target="_blank" style="color: #c9a03d;">View Certificate →</a></p>
+    <div style="font-size: 0.7rem; color: #9a9a9a; margin-top: 4px;">
+        ⚠️ Skipping ahead doesn't count. Watch continuously to progress.
     </div>
 </div>
-
-<script>
-    async function checkCertificateStatus(moduleId) {
-        try {
-            const response = await fetch(`/api/certificate/status/${userId}/${moduleId}`);
-            const status = await response.json();
-            
-            const certSection = document.getElementById('certificate-status');
-            const lockedDiv = document.getElementById('certificate-locked');
-            const readyDiv = document.getElementById('certificate-ready');
-            const claimedDiv = document.getElementById('certificate-claimed');
-            
-            certSection.style.display = 'block';
-            
-            if (status.certificateAvailable) {
-                lockedDiv.style.display = 'none';
-                readyDiv.style.display = 'none';
-                claimedDiv.style.display = 'block';
-                document.getElementById('certificate-link').href = `/verify/${status.certificateId}`;
-            } else if (status.canGenerate) {
-                lockedDiv.style.display = 'none';
-                readyDiv.style.display = 'block';
-                claimedDiv.style.display = 'none';
-            } else {
-                lockedDiv.style.display = 'block';
-                readyDiv.style.display = 'none';
-                claimedDiv.style.display = 'none';
-                
-                const reqText = [];
-                if (status.requirements.lessonsRemaining > 0) {
-                    reqText.push(`${status.requirements.lessonsRemaining} lessons remaining`);
-                }
-                if (status.requirements.quizzesRemaining > 0) {
-                    reqText.push(`${status.requirements.quizzesRemaining} quizzes to pass`);
-                }
-                document.getElementById('certificate-requirements').textContent = reqText.join(', ');
-            }
-        } catch (error) {
-            console.error('Certificate status error:', error);
-        }
-    }
-    
-    // Claim certificate
-    document.getElementById('claim-certificate-btn')?.addEventListener('click', async () => {
-        const userName = prompt('Enter your name for the certificate:', 'Student');
-        if (!userName) return;
-        
-        const btn = document.getElementById('claim-certificate-btn');
-        btn.disabled = true;
-        btn.textContent = 'Generating...';
-        
-        try {
-            const response = await fetch('/api/certificate/generate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    userId: userId,
-                    moduleId: currentCourse?.module_id || currentCourse?.moduleId,
-                    name: userName
-                })
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                alert(`Certificate generated!\nID: ${data.certificateId}\n\nShare this ID for verification.`);
-                checkCertificateStatus(currentCourse?.module_id || currentCourse?.moduleId);
-            } else if (data.certificateLocked) {
-                alert(`Certificate locked: ${data.reason}`);
-            } else {
-                alert('Error: ' + (data.error || 'Unknown error'));
-            }
-        } catch (error) {
-            alert('Failed to generate certificate. Please try again.');
-        } finally {
-            btn.disabled = false;
-            btn.textContent = 'Claim Certificate';
-        }
-    });
-    
-    // Update showCourse to check certificate status
-    const originalShowCourseForCert = showCourse;
-    showCourse = async function(course) {
-        await originalShowCourseForCert(course);
-        const moduleId = course.module_id || course.moduleId;
-        await checkCertificateStatus(moduleId);
-    };
-</script>
-<!-- Update certificate claimed section -->
-<div id="certificate-claimed" style="display: none;">
-    <p style="color: #2e7d32;">✓ Certificate claimed!</p>
-    <div style="display: flex; gap: 12px; justify-content: center; margin-top: 12px;">
-        <button onclick="downloadCertificate('${certificateId}')" style="background: #c9a03d; color: white; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer;">📥 Download PDF</button>
-        <button onclick="viewCertificate('${certificateId}')" style="background: #2c2c2c; color: white; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer;">👁️ View Certificate</button>
-    </div>
-</div>
-
-<script>
-    // Download certificate as PDF
-    async function downloadCertificate(certificateId) {
-        window.open(`/api/certificate/download/${certificateId}`, '_blank');
-    }
-    
-    // View certificate in browser
-    async function viewCertificate(certificateId) {
-        window.open(`/api/certificate/view/${certificateId}`, '_blank');
-    }
-    
-    // Update certificate claimed section with dynamic buttons
-    function updateCertificateClaimed(certificateId) {
-        const claimedDiv = document.getElementById('certificate-claimed');
-        claimedDiv.innerHTML = `
-            <p style="color: #2e7d32;">✓ Certificate claimed!</p>
-            <div style="display: flex; gap: 12px; justify-content: center; margin-top: 12px;">
-                <button onclick="downloadCertificate('${certificateId}')" style="background: #c9a03d; color: white; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer;">📥 Download PDF</button>
-                <button onclick="viewCertificate('${certificateId}')" style="background: #2c2c2c; color: white; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer;">👁️ View Certificate</button>
-            </div>
-        `;
-    }
-    
-    // Update checkCertificateStatus to use dynamic buttons
-    async function checkCertificateStatus(moduleId) {
-        try {
-            const response = await fetch(`/api/certificate/status/${userId}/${moduleId}`);
-            const status = await response.json();
-            
-            const certSection = document.getElementById('certificate-status');
-            const lockedDiv = document.getElementById('certificate-locked');
-            const readyDiv = document.getElementById('certificate-ready');
-            const claimedDiv = document.getElementById('certificate-claimed');
-            
-            certSection.style.display = 'block';
-            
-            if (status.certificateAvailable) {
-                lockedDiv.style.display = 'none';
-                readyDiv.style.display = 'none';
-                claimedDiv.style.display = 'block';
-                updateCertificateClaimed(status.certificateId);
-            } else if (status.canGenerate) {
-                lockedDiv.style.display = 'none';
-                readyDiv.style.display = 'block';
-                claimedDiv.style.display = 'none';
-            } else {
-                lockedDiv.style.display = 'block';
-                readyDiv.style.display = 'none';
-                claimedDiv.style.display = 'none';
-                
-                const reqText = [];
-                if (status.requirements.lessonsRemaining > 0) {
-                    reqText.push(`${status.requirements.lessonsRemaining} lessons remaining`);
-                }
-                if (status.requirements.quizzesRemaining > 0) {
-                    reqText.push(`${status.requirements.quizzesRemaining} quizzes to pass`);
-                }
-                document.getElementById('certificate-requirements').textContent = reqText.join(', ');
-            }
-        } catch (error) {
-            console.error('Certificate status error:', error);
-        }
-    }
-</script>
