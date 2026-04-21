@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Income School - Learn Skills That Pay</title>
+    <title>Course Library - Skill to Income</title>
     <style>
         * {
             margin: 0;
@@ -12,347 +12,207 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: #f5f5f5;
-            color: #333;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f8fafc;
+            color: #1a1a2e;
+            line-height: 1.6;
         }
         
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 0 20px;
+            padding: 0 24px;
         }
         
-        header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 60px 0;
+        /* Header */
+        .header {
+            background: white;
+            border-bottom: 1px solid #eaeaea;
+            padding: 60px 0 40px;
             text-align: center;
         }
         
-        header h1 {
+        .header h1 {
             font-size: 2.5rem;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
+            font-weight: 700;
+            letter-spacing: -0.01em;
         }
         
-        .skills-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 25px;
-            padding: 40px 0;
+        .header p {
+            color: #4a5568;
+            font-size: 1.1rem;
         }
         
-        .skill-card {
+        /* Navigation */
+        .top-nav {
             background: white;
-            border-radius: 12px;
-            padding: 25px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            position: relative;
+            padding: 16px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid #eaeaea;
         }
         
-        .skill-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 25px rgba(0,0,0,0.15);
-        }
-        
-        .progress-bar-container {
-            background: #e0e0e0;
-            border-radius: 10px;
-            height: 8px;
-            margin: 15px 0;
-            overflow: hidden;
-        }
-        
-        .progress-bar-fill {
-            background: #48bb78;
-            height: 100%;
-            transition: width 0.3s ease;
-            border-radius: 10px;
-        }
-        
-        .progress-text {
-            font-size: 0.8rem;
-            color: #666;
-            text-align: right;
-        }
-        
-        .skill-card h3 {
-            color: #667eea;
-            margin-bottom: 10px;
-            font-size: 1.3rem;
-        }
-        
-        .back-button {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 20px 0;
-            font-size: 1rem;
-        }
-        
-        .back-button:hover {
-            background: #5a67d8;
-        }
-        
-        .lesson-item {
-            background: white;
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background 0.3s;
-            border-left: 4px solid #667eea;
+        .nav-links {
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
         
-        .lesson-item:hover {
-            background: #f9f9f9;
+        .logo {
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: #1a1a2e;
         }
         
-        .lesson-completed {
-            border-left-color: #48bb78;
-            background: #f0fff4;
+        .nav-link {
+            color: #4a5568;
+            text-decoration: none;
+            margin-left: 24px;
+            font-weight: 500;
         }
         
-        .complete-badge {
-            background: #48bb78;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            font-weight: bold;
+        .nav-link:hover {
+            color: #2563eb;
         }
         
-        .mark-complete-btn {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 5px;
+        /* Course Grid */
+        .courses-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 30px;
+            padding: 60px 0;
+        }
+        
+        .course-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            transition: all 0.2s;
+            border: 1px solid #eaeaea;
             cursor: pointer;
-            font-size: 0.8rem;
-            margin-top: 15px;
         }
         
-        .mark-complete-btn:hover {
-            background: #5a67d8;
+        .course-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.08);
+            border-color: #cbd5e1;
         }
         
-        .video-container {
-            position: relative;
-            padding-bottom: 56.25%;
-            height: 0;
+        .course-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 12px;
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+        
+        .course-card p {
+            color: #6b7280;
+            margin-bottom: 16px;
+            font-size: 0.9rem;
+        }
+        
+        .progress-container {
+            background: #e5e7eb;
+            border-radius: 8px;
+            height: 6px;
+            margin: 16px 0;
             overflow: hidden;
-            margin: 20px 0;
         }
         
-        .video-container iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
+        .progress-fill {
+            background: #2563eb;
             height: 100%;
+            transition: width 0.3s;
             border-radius: 8px;
         }
         
-        /* Feedback Modal */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
+        .progress-text {
+            font-size: 0.75rem;
+            color: #6b7280;
+            text-align: right;
         }
         
-        .modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            max-width: 500px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-        
-        .rating-stars {
+        .course-meta {
             display: flex;
-            gap: 10px;
-            margin: 15px 0;
+            justify-content: space-between;
+            margin-top: 16px;
+            font-size: 0.8rem;
+            color: #9ca3af;
         }
         
-        .star {
-            font-size: 2rem;
-            cursor: pointer;
-            color: #ddd;
-            transition: color 0.3s;
-        }
-        
-        .star.active {
-            color: #ffc107;
-        }
-        
-        textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            margin: 10px 0;
-            font-family: inherit;
-        }
-        
-        .feedback-btn {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 10px 5px;
-        }
-        
-        .feedback-btn:hover {
-            background: #5a67d8;
-        }
-        
-        footer {
-            background: #333;
-            color: white;
+        .footer {
+            background: #1a1a2e;
+            color: #9ca3af;
             text-align: center;
-            padding: 20px 0;
+            padding: 40px 0;
             margin-top: 40px;
         }
         
-        footer a {
-            color: white;
+        .footer a {
+            color: #9ca3af;
             text-decoration: none;
-        }
-        
-        .hidden {
-            display: none !important;
+            margin: 0 12px;
         }
         
         .loading {
             text-align: center;
-            padding: 40px;
-            font-size: 1.2rem;
-            color: #666;
+            padding: 60px;
+            color: #6b7280;
         }
         
         @media (max-width: 768px) {
-            .lesson-item {
-                flex-direction: column;
-                gap: 10px;
-                text-align: center;
+            .courses-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
             }
         }
     </style>
-    
-    <!-- Vercel Analytics -->
-    <script>
-        window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
-    </script>
-    <script defer src="/_vercel/insights/script.js"></script>
-    <script defer src="/_vercel/speed-insights/script.js"></script>
 </head>
 <body>
-    <header>
+    <div class="top-nav">
         <div class="container">
-            <h1>🎓 Income School</h1>
-            <p>Learn skills that help you earn $1000+/month within 6 months</p>
-        </div>
-    </header>
-
-    <main class="container">
-        <!-- Courses Section -->
-        <section id="courses-section">
-            <h2>Choose Your Path to Financial Freedom</h2>
-            <div id="courses-container" class="skills-grid">
-                <div class="loading">Loading courses...</div>
-            </div>
-        </section>
-
-        <!-- Lessons Section -->
-        <section id="lessons-section" class="hidden">
-            <button id="back-to-courses" class="back-button">← Back to Courses</button>
-            <h2 id="course-title"></h2>
-            <div id="course-description"></div>
-            <div class="progress-bar-container" id="module-progress-container" style="display: none;">
-                <div class="progress-bar-fill" id="module-progress-fill" style="width: 0%"></div>
-            </div>
-            <div class="progress-text" id="module-progress-text"></div>
-            <h3>Course Lessons</h3>
-            <div id="lessons-list"></div>
-        </section>
-
-        <!-- Lesson Player Section -->
-        <section id="player-section" class="hidden">
-            <button id="back-to-lessons" class="back-button">← Back to Lessons</button>
-            <h2 id="lesson-title"></h2>
-            <div id="lesson-player"></div>
-            <button id="mark-complete-btn" class="mark-complete-btn">✅ Mark as Complete</button>
-        </section>
-    </main>
-
-    <!-- Feedback Modal -->
-    <div id="feedbackModal" class="modal">
-        <div class="modal-content">
-            <h2>📝 Module Feedback</h2>
-            <p>Help us improve this course!</p>
-            
-            <div class="form-group">
-                <label>Was this module helpful?</label>
-                <div class="rating-stars" id="helpful-stars">
-                    <span class="star" data-value="1">★</span>
-                    <span class="star" data-value="2">★</span>
-                    <span class="star" data-value="3">★</span>
-                    <span class="star" data-value="4">★</span>
-                    <span class="star" data-value="5">★</span>
+            <div class="nav-links">
+                <div class="logo">Skill to Income</div>
+                <div>
+                    <a href="/" class="nav-link">Home</a>
+                    <a href="/courses" class="nav-link">Courses</a>
                 </div>
             </div>
-            
-            <div class="form-group">
-                <label>What confused you? (Optional)</label>
-                <textarea id="confusion" rows="3" placeholder="Any topics that were unclear?"></textarea>
-            </div>
-            
-            <div class="form-group">
-                <label>Suggestions for improvement (Optional)</label>
-                <textarea id="suggestions" rows="3" placeholder="What would make this course better?"></textarea>
-            </div>
-            
-            <button class="feedback-btn" onclick="submitFeedback()">Submit Feedback</button>
-            <button class="feedback-btn" onclick="closeFeedbackModal()">Skip</button>
         </div>
     </div>
 
-    <footer>
+    <div class="header">
         <div class="container">
-            <p>© 2026 Income School - Free Education Platform</p>
-            <p><a href="/privacy">Privacy Policy</a> | <a href="/terms">Terms of Use</a> | <a href="/contact">Contact</a></p>
+            <h1>Course Library</h1>
+            <p>Professional skills training. Self-paced. Completely free.</p>
         </div>
-    </footer>
+    </div>
+
+    <div class="container">
+        <div id="courses-container" class="courses-grid">
+            <div class="loading">Loading courses...</div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="container">
+            <p>© 2026 Skill to Income. Professional skills training.</p>
+            <p style="margin-top: 16px;">
+                <a href="/privacy">Privacy</a> | 
+                <a href="/terms">Terms</a> | 
+                <a href="/contact">Contact</a>
+            </p>
+        </div>
+    </div>
 
     <script>
-        let currentCourse = null;
-        let currentLesson = null;
-        let currentLessons = [];
         let userId = null;
-        let completedLessons = new Set();
-        let selectedRating = 0;
         
-        // Generate or get user ID from localStorage
         function getUserId() {
             let id = localStorage.getItem('user_id');
             if (!id) {
@@ -364,7 +224,6 @@
         
         userId = getUserId();
         
-        // Load courses on page load
         async function loadCourses() {
             try {
                 const response = await fetch('/api/modules');
@@ -373,7 +232,7 @@
                 const container = document.getElementById('courses-container');
                 
                 if (courses.length === 0) {
-                    container.innerHTML = '<div class="loading">No courses available yet. Check back soon!</div>';
+                    container.innerHTML = '<div class="loading">No courses available yet. Check back soon.</div>';
                     return;
                 }
                 
@@ -381,276 +240,32 @@
                 
                 for (const course of courses) {
                     const moduleId = course.module_id || course.moduleId;
-                    const progress = await getModuleProgress(moduleId);
+                    const progressResponse = await fetch(`/api/progress/${userId}/${moduleId}`);
+                    const progress = await progressResponse.json();
                     
                     const card = document.createElement('div');
-                    card.className = 'skill-card';
-                    card.onclick = () => showCourse(course);
-                    
-                    let emoji = '📚';
-                    if (course.title.includes('Web')) emoji = '💻';
-                    else if (course.title.includes('AI')) emoji = '🤖';
-                    else if (course.title.includes('Crypto')) emoji = '💰';
-                    else if (course.title.includes('Copywriting')) emoji = '✍️';
-                    else if (course.title.includes('YouTube')) emoji = '🎥';
-                    else if (course.title.includes('Business')) emoji = '🏢';
-                    else if (course.title.includes('Trading')) emoji = '📈';
-                    else if (course.title.includes('Editing')) emoji = '🎬';
+                    card.className = 'course-card';
+                    card.onclick = () => {
+                        window.location.href = `/courses?module=${moduleId}`;
+                    };
                     
                     card.innerHTML = `
-                        <div style="font-size: 3rem; margin-bottom: 10px;">${emoji}</div>
                         <h3>${escapeHtml(course.title)}</h3>
-                        <p style="color: #666; margin: 10px 0;">${escapeHtml(course.description || 'Learn this valuable skill')}</p>
-                        <div class="progress-bar-container">
-                            <div class="progress-bar-fill" style="width: ${progress.percentage}%"></div>
+                        <p>${escapeHtml(course.description || 'Comprehensive professional training.')}</p>
+                        <div class="progress-container">
+                            <div class="progress-fill" style="width: ${progress.percentage}%"></div>
                         </div>
-                        <div class="progress-text">${progress.completed}/${progress.total} lessons completed (${progress.percentage}%)</div>
-                        <div style="display: flex; justify-content: space-between; margin-top: 15px;">
-                            <small style="color: #999;">⏱️ ${escapeHtml(course.estimatedTime || 'Self-paced')}</small>
-                            <small style="color: #48bb78;">▶️ Continue Learning</small>
+                        <div class="progress-text">${progress.completed}/${progress.total} lessons completed</div>
+                        <div class="course-meta">
+                            <span>⏱️ ${escapeHtml(course.estimatedTime || 'Self-paced')}</span>
+                            <span>${progress.percentage}% complete</span>
                         </div>
                     `;
                     container.appendChild(card);
                 }
-                
-                console.log(`Loaded ${courses.length} courses`);
             } catch (error) {
                 console.error('Error:', error);
-                document.getElementById('courses-container').innerHTML = 
-                    '<div class="loading" style="color: red;">Error loading courses. Make sure server is running.</div>';
-            }
-        }
-        
-        // Get module progress
-        async function getModuleProgress(moduleId) {
-            try {
-                const response = await fetch(`/api/progress/${userId}/${moduleId}`);
-                const data = await response.json();
-                return data;
-            } catch (error) {
-                return { total: 0, completed: 0, percentage: 0 };
-            }
-        }
-        
-        // Show course lessons
-        async function showCourse(course) {
-            currentCourse = course;
-            const moduleId = course.module_id || course.moduleId;
-            
-            document.getElementById('course-title').textContent = course.title;
-            document.getElementById('course-description').innerHTML = `
-                <div style="background: #f0f0f0; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                    <p>${escapeHtml(course.description || 'No description available')}</p>
-                    <p><strong>⏱️ Estimated time:</strong> ${escapeHtml(course.estimatedTime || 'Self-paced')}</p>
-                </div>
-            `;
-            
-            try {
-                const response = await fetch(`/api/modules/${moduleId}/lessons`);
-                const lessons = await response.json();
-                currentLessons = lessons;
-                
-                // Get user progress
-                const progressResponse = await fetch(`/api/progress/${userId}/${moduleId}`);
-                const progress = await progressResponse.json();
-                
-                // Update progress bar
-                document.getElementById('module-progress-container').style.display = 'block';
-                document.getElementById('module-progress-fill').style.width = `${progress.percentage}%`;
-                document.getElementById('module-progress-text').textContent = `${progress.completed}/${progress.total} lessons completed (${progress.percentage}%)`;
-                
-                const lessonsList = document.getElementById('lessons-list');
-                lessonsList.innerHTML = '';
-                
-                if (lessons.length === 0) {
-                    lessonsList.innerHTML = '<div class="loading">No lessons yet. Content coming soon!</div>';
-                } else {
-                    lessons.sort((a, b) => (a.order || 0) - (b.order || 0));
-                    lessons.forEach(lesson => {
-                        const isCompleted = progress.completedLessons?.includes(lesson.id);
-                        const lessonItem = document.createElement('div');
-                        lessonItem.className = `lesson-item ${isCompleted ? 'lesson-completed' : ''}`;
-                        const icon = lesson.contentType === 'youtube' ? '▶️' : (lesson.contentType === 'video' ? '🎥' : '📄');
-                        lessonItem.innerHTML = `
-                            <div>
-                                <strong>${lesson.order || 1}. ${escapeHtml(lesson.title)}</strong>
-                                <br>
-                                <small>${icon} ${lesson.contentType === 'youtube' ? 'YouTube Video' : lesson.contentType} | ⏱️ ${lesson.duration || 'N/A'}</small>
-                            </div>
-                            ${isCompleted ? '<span class="complete-badge">✓ Completed</span>' : ''}
-                        `;
-                        lessonItem.onclick = () => playLesson(lesson);
-                        lessonsList.appendChild(lessonItem);
-                    });
-                }
-                
-                // Switch views
-                document.getElementById('courses-section').classList.add('hidden');
-                document.getElementById('lessons-section').classList.remove('hidden');
-                document.getElementById('player-section').classList.add('hidden');
-                
-            } catch (error) {
-                console.error('Error loading lessons:', error);
-            }
-        }
-        
-        // Play lesson
-        function playLesson(lesson) {
-            currentLesson = lesson;
-            
-            document.getElementById('lesson-title').textContent = lesson.title;
-            const playerDiv = document.getElementById('lesson-player');
-            
-            if (lesson.contentType === 'youtube') {
-                playerDiv.innerHTML = `
-                    <div class="video-container">
-                        <iframe src="https://www.youtube.com/embed/${lesson.youtubeId}" 
-                                frameborder="0" 
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                                allowfullscreen>
-                        </iframe>
-                    </div>
-                    <div style="margin-top: 20px;">
-                        <p><strong>Lesson:</strong> ${escapeHtml(lesson.title)}</p>
-                        <p><strong>Duration:</strong> ${lesson.duration || 'N/A'}</p>
-                        <p><a href="${lesson.youtubeUrl}" target="_blank" style="color: #667eea;">Open on YouTube ↗</a></p>
-                    </div>
-                `;
-            } else if (lesson.contentType === 'video' && lesson.fileUrl) {
-                playerDiv.innerHTML = `
-                    <video controls style="width: 100%; max-width: 800px; margin: 20px auto; display: block;">
-                        <source src="${lesson.fileUrl}" type="video/mp4">
-                        Your browser does not support the video tag.
-                    </video>
-                    <div style="margin-top: 20px;">
-                        <p><strong>Lesson:</strong> ${escapeHtml(lesson.title)}</p>
-                        <p><strong>Duration:</strong> ${lesson.duration || 'N/A'}</p>
-                    </div>
-                `;
-            } else {
-                playerDiv.innerHTML = `
-                    <div style="text-align: center; padding: 40px;">
-                        <p>Content type: ${lesson.contentType}</p>
-                        ${lesson.fileUrl ? `<a href="${lesson.fileUrl}" target="_blank" style="display: inline-block; padding: 10px 20px; background: #667eea; color: white; text-decoration: none; border-radius: 5px;">View Content</a>` : ''}
-                    </div>
-                `;
-            }
-            
-            // Check if already completed
-            const markBtn = document.getElementById('mark-complete-btn');
-            markBtn.textContent = '✅ Mark as Complete';
-            markBtn.style.background = '#667eea';
-            
-            // Switch views
-            document.getElementById('courses-section').classList.add('hidden');
-            document.getElementById('lessons-section').classList.add('hidden');
-            document.getElementById('player-section').classList.remove('hidden');
-        }
-        
-        // Mark lesson as complete
-        document.getElementById('mark-complete-btn')?.addEventListener('click', async () => {
-            if (!currentLesson) return;
-            
-            try {
-                const response = await fetch('/api/progress/mark-complete', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        userId: userId,
-                        lessonId: currentLesson.id,
-                        moduleId: currentCourse?.module_id || currentCourse?.moduleId
-                    })
-                });
-                
-                if (response.ok) {
-                    const markBtn = document.getElementById('mark-complete-btn');
-                    markBtn.textContent = '✅ Completed!';
-                    markBtn.style.background = '#48bb78';
-                    markBtn.disabled = true;
-                    
-                    // Show feedback modal after completing all lessons in module
-                    const moduleId = currentCourse?.module_id || currentCourse?.moduleId;
-                    const progressResponse = await fetch(`/api/progress/${userId}/${moduleId}`);
-                    const progress = await progressResponse.json();
-                    
-                    if (progress.completed === progress.total && progress.total > 0) {
-                        // Check if already gave feedback for this module
-                        const feedbackGiven = localStorage.getItem(`feedback_${moduleId}_${userId}`);
-                        if (!feedbackGiven) {
-                            showFeedbackModal(moduleId);
-                        }
-                    }
-                    
-                    // Refresh course view
-                    if (currentCourse) {
-                        showCourse(currentCourse);
-                    }
-                } else {
-                    alert('Failed to mark as complete. Please try again.');
-                }
-            } catch (error) {
-                console.error('Error marking complete:', error);
-                alert('Error saving progress.');
-            }
-        });
-        
-        // Show feedback modal
-        function showFeedbackModal(moduleId) {
-            const modal = document.getElementById('feedbackModal');
-            modal.style.display = 'flex';
-            
-            // Setup star rating
-            const stars = document.querySelectorAll('#helpful-stars .star');
-            stars.forEach(star => {
-                star.onclick = () => {
-                    selectedRating = parseInt(star.dataset.value);
-                    stars.forEach(s => {
-                        if (parseInt(s.dataset.value) <= selectedRating) {
-                            s.classList.add('active');
-                        } else {
-                            s.classList.remove('active');
-                        }
-                    });
-                };
-            });
-            
-            window.currentFeedbackModule = moduleId;
-        }
-        
-        function closeFeedbackModal() {
-            document.getElementById('feedbackModal').style.display = 'none';
-            selectedRating = 0;
-            document.getElementById('confusion').value = '';
-            document.getElementById('suggestions').value = '';
-            const stars = document.querySelectorAll('#helpful-stars .star');
-            stars.forEach(s => s.classList.remove('active'));
-        }
-        
-        async function submitFeedback() {
-            const moduleId = window.currentFeedbackModule;
-            const confusion = document.getElementById('confusion').value;
-            const suggestions = document.getElementById('suggestions').value;
-            
-            try {
-                const response = await fetch('/api/feedback', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        userId: userId,
-                        moduleId: moduleId,
-                        rating: selectedRating,
-                        confusion: confusion,
-                        suggestions: suggestions
-                    })
-                });
-                
-                if (response.ok) {
-                    localStorage.setItem(`feedback_${moduleId}_${userId}`, 'true');
-                    alert('Thank you for your feedback! 🙏');
-                    closeFeedbackModal();
-                }
-            } catch (error) {
-                console.error('Error submitting feedback:', error);
+                document.getElementById('courses-container').innerHTML = '<div class="loading">Unable to load courses. Please try again.</div>';
             }
         }
         
@@ -661,21 +276,6 @@
             return div.innerHTML;
         }
         
-        // Setup navigation
-        document.getElementById('back-to-courses')?.addEventListener('click', () => {
-            document.getElementById('courses-section').classList.remove('hidden');
-            document.getElementById('lessons-section').classList.add('hidden');
-            document.getElementById('player-section').classList.add('hidden');
-            loadCourses(); // Refresh to show updated progress
-        });
-        
-        document.getElementById('back-to-lessons')?.addEventListener('click', () => {
-            if (currentCourse) {
-                showCourse(currentCourse);
-            }
-        });
-        
-        // Load everything
         loadCourses();
     </script>
 </body>
