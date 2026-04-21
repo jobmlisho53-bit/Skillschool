@@ -1505,3 +1505,106 @@
         loadQuizWithRequirement(currentQuizLesson.id, currentQuizLesson.moduleId);
     }
 </script>
+<!-- Add Certificate Section in course view -->
+<div id="certificate-status" style="margin: 30px 0; padding: 20px; background: #fefcf8; border: 1px solid rgba(212,175,55,0.2); border-radius: 8px; text-align: center; display: none;">
+    <div id="certificate-locked" style="display: none;">
+        <p style="color: #856404;">🔒 Certificate Locked</p>
+        <p id="certificate-requirements" style="font-size: 0.85rem;"></p>
+    </div>
+    <div id="certificate-ready" style="display: none;">
+        <p style="color: #22543d;">🏆 You've earned a certificate for this course!</p>
+        <button id="claim-certificate-btn" style="background: #c9a03d; color: white; border: none; padding: 10px 24px; border-radius: 4px; margin-top: 12px; cursor: pointer;">Claim Certificate</button>
+    </div>
+    <div id="certificate-claimed" style="display: none;">
+        <p style="color: #2e7d32;">✓ Certificate claimed!</p>
+        <p><a id="certificate-link" href="#" target="_blank" style="color: #c9a03d;">View Certificate →</a></p>
+    </div>
+</div>
+
+<script>
+    async function checkCertificateStatus(moduleId) {
+        try {
+            const response = await fetch(`/api/certificate/status/${userId}/${moduleId}`);
+            const status = await response.json();
+            
+            const certSection = document.getElementById('certificate-status');
+            const lockedDiv = document.getElementById('certificate-locked');
+            const readyDiv = document.getElementById('certificate-ready');
+            const claimedDiv = document.getElementById('certificate-claimed');
+            
+            certSection.style.display = 'block';
+            
+            if (status.certificateAvailable) {
+                lockedDiv.style.display = 'none';
+                readyDiv.style.display = 'none';
+                claimedDiv.style.display = 'block';
+                document.getElementById('certificate-link').href = `/verify/${status.certificateId}`;
+            } else if (status.canGenerate) {
+                lockedDiv.style.display = 'none';
+                readyDiv.style.display = 'block';
+                claimedDiv.style.display = 'none';
+            } else {
+                lockedDiv.style.display = 'block';
+                readyDiv.style.display = 'none';
+                claimedDiv.style.display = 'none';
+                
+                const reqText = [];
+                if (status.requirements.lessonsRemaining > 0) {
+                    reqText.push(`${status.requirements.lessonsRemaining} lessons remaining`);
+                }
+                if (status.requirements.quizzesRemaining > 0) {
+                    reqText.push(`${status.requirements.quizzesRemaining} quizzes to pass`);
+                }
+                document.getElementById('certificate-requirements').textContent = reqText.join(', ');
+            }
+        } catch (error) {
+            console.error('Certificate status error:', error);
+        }
+    }
+    
+    // Claim certificate
+    document.getElementById('claim-certificate-btn')?.addEventListener('click', async () => {
+        const userName = prompt('Enter your name for the certificate:', 'Student');
+        if (!userName) return;
+        
+        const btn = document.getElementById('claim-certificate-btn');
+        btn.disabled = true;
+        btn.textContent = 'Generating...';
+        
+        try {
+            const response = await fetch('/api/certificate/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: userId,
+                    moduleId: currentCourse?.module_id || currentCourse?.moduleId,
+                    name: userName
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                alert(`Certificate generated!\nID: ${data.certificateId}\n\nShare this ID for verification.`);
+                checkCertificateStatus(currentCourse?.module_id || currentCourse?.moduleId);
+            } else if (data.certificateLocked) {
+                alert(`Certificate locked: ${data.reason}`);
+            } else {
+                alert('Error: ' + (data.error || 'Unknown error'));
+            }
+        } catch (error) {
+            alert('Failed to generate certificate. Please try again.');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Claim Certificate';
+        }
+    });
+    
+    // Update showCourse to check certificate status
+    const originalShowCourseForCert = showCourse;
+    showCourse = async function(course) {
+        await originalShowCourseForCert(course);
+        const moduleId = course.module_id || course.moduleId;
+        await checkCertificateStatus(moduleId);
+    };
+</script>

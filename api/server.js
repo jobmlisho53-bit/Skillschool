@@ -1093,3 +1093,259 @@ app.get('/api/quiz/status/:userId/:lessonId', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+// ============ CERTIFICATE LOCKING SYSTEM ============
+
+// Check if user is eligible for course certificate
+async function checkCertificateEligibility(userId, moduleId) {
+    // Get course requirements
+    const { data: requirements, error: reqError } = await supabase
+        .from('course_completion_requirements')
+        .select('*')
+        .eq('module_id', moduleId)
+        .single();
+    
+    if (reqError || !requirements) {
+        return { eligible: false, reason: 'Course requirements not configured' };
+    }
+    
+    // Check 1: All lessons completed
+    const { data: lessons, error: lessonsError } = await supabase
+        .from('lessons')
+        .select('id')
+        .eq('module_id', moduleId);
+    
+    if (lessonsError) throw lessonsError;
+    
+    const { data: completedLessons, error: progressError } = await supabase
+        .from('user_progress')
+        .select('lesson_id')
+        .eq('user_id', userId)
+        .eq('module_id', moduleId)
+        .eq('completed', true);
+    
+    if (progressError) throw progressError;
+    
+    const allLessonsCompleted = lessons.length === completedLessons.length;
+    
+    if (!allLessonsCompleted && requirements.require_all_lessons) {
+        return { 
+            eligible: false, 
+            reason: `Complete all ${lessons.length} lessons first. You have completed ${completedLessons.length}.` 
+        };
+    }
+    
+    // Check 2: All quizzes passed
+    if (requirements.require_all_quizzes_passed) {
+        const { data: quizAttempts, error: quizError } = await supabase
+            .from('quiz_attempts')
+            .select('lesson_id, passed, score')
+            .eq('user_id', userId)
+            .in('lesson_id', lessons.map(l => l.id));
+        
+        if (quizError) throw quizError;
+        
+        // Group by lesson to get latest attempt per lesson
+        const lessonPassed = new Map();
+        quizAttempts.forEach(attempt => {
+            const existing = lessonPassed.get(attempt.lesson_id);
+            if (!existing || (attempt.passed && !existing.passed)) {
+                lessonPassed.set(attempt.lesson_id, { passed: attempt.passed, score: attempt.score });
+            }
+        });
+        
+        const allQuizzesPassed = lessons.every(lesson => {
+            const passed = lessonPassed.get(lesson.id);
+            return passed && passed.passed === true;
+        });
+        
+        if (!allQuizzesPassed) {
+            const failedLessons = lessons.filter(lesson => {
+                const passed = lessonPassed.get(lesson.id);
+                return !passed || !passed.passed;
+            });
+            return { 
+                eligible: false, 
+                reason: `Pass all quizzes. Failed lessons: ${failedLessons.length}` 
+            };
+        }
+    }
+    
+    return { eligible: true };
+}
+
+// Enhanced certificate generation with lock check
+app.post('/api/certificate/generate', async (req, res) => {
+    try {
+        const { userId, moduleId, name } = req.body;
+        
+        if (!userId || !moduleId) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+        
+        // Check eligibility
+        const eligibility = await checkCertificateEligibility(userId, moduleId);
+        if (!eligibility.eligible) {
+            return res.status(403).json({ 
+                error: 'Certificate locked', 
+                reason: eligibility.reason,
+                certificateLocked: true
+            });
+        }
+        
+        // Check if certificate already issued
+        const { data: existingCert } = await supabase
+            .from('certificates')
+            .select('id, certificate_id, is_locked')
+            .eq('user_id', userId)
+            .eq('module_id', moduleId)
+            .single();
+        
+        if (existingCert) {
+            if (existingCert.is_locked) {
+                return res.status(403).json({ 
+                    error: 'Certificate is locked', 
+                    reason: 'Previous certificate was locked due to requirement changes.' 
+                });
+            }
+            return res.json({ 
+                success: true, 
+                certificateId: existingCert.certificate_id,
+                message: 'Certificate already issued' 
+            });
+        }
+        
+        // Get module details
+        const { data: module, error: moduleError } = await supabase
+            .from('modules')
+            .select('title, module_id')
+            .eq('module_id', moduleId)
+            .single();
+        
+        if (moduleError) throw moduleError;
+        
+        // Get completion date
+        const { data: lastCompletion } = await supabase
+            .from('user_progress')
+            .select('completed_at')
+            .eq('user_id', userId)
+            .eq('module_id', moduleId)
+            .eq('completed', true)
+            .order('completed_at', { ascending: false })
+            .limit(1)
+            .single();
+        
+        const completedAt = lastCompletion?.completed_at || new Date().toISOString();
+        const certificateId = generateCertificateId(userId, moduleId, completedAt);
+        
+        // Store certificate (unlocked)
+        const { data: certificate, error: insertError } = await supabase
+            .from('certificates')
+            .insert([{
+                user_id: userId,
+                module_id: moduleId,
+                module_title: module.title,
+                certificate_id: certificateId,
+                issued_at: new Date().toISOString(),
+                completed_at: completedAt,
+                user_name: name || 'Anonymous Learner',
+                verification_count: 0,
+                is_locked: false,
+                unlocked_at: new Date().toISOString(),
+                all_lessons_completed: true,
+                quiz_requirement_met: true
+            }])
+            .select()
+            .single();
+        
+        if (insertError) throw insertError;
+        
+        res.json({ 
+            success: true, 
+            certificateId: certificateId,
+            issuedAt: certificate.issued_at,
+            moduleTitle: module.title
+        });
+        
+    } catch (error) {
+        console.error('Certificate generation error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get certificate status for a course
+app.get('/api/certificate/status/:userId/:moduleId', async (req, res) => {
+    try {
+        const { userId, moduleId } = req.params;
+        
+        // Get course requirements
+        const { data: requirements } = await supabase
+            .from('course_completion_requirements')
+            .select('*')
+            .eq('module_id', moduleId)
+            .single();
+        
+        // Get lessons
+        const { data: lessons } = await supabase
+            .from('lessons')
+            .select('id')
+            .eq('module_id', moduleId);
+        
+        // Get completed lessons
+        const { data: completedLessons } = await supabase
+            .from('user_progress')
+            .select('lesson_id')
+            .eq('user_id', userId)
+            .eq('module_id', moduleId)
+            .eq('completed', true);
+        
+        // Get quiz results
+        const { data: quizAttempts } = await supabase
+            .from('quiz_attempts')
+            .select('lesson_id, passed')
+            .eq('user_id', userId)
+            .in('lesson_id', lessons?.map(l => l.id) || []);
+        
+        const lessonPassed = new Map();
+        quizAttempts?.forEach(attempt => {
+            if (attempt.passed && !lessonPassed.has(attempt.lesson_id)) {
+                lessonPassed.set(attempt.lesson_id, true);
+            }
+        });
+        
+        const totalLessons = lessons?.length || 0;
+        const completedCount = completedLessons?.length || 0;
+        const passedQuizzes = lessons?.filter(l => lessonPassed.get(l.id)).length || 0;
+        
+        const allLessonsComplete = completedCount === totalLessons;
+        const allQuizzesPassed = passedQuizzes === totalLessons;
+        
+        // Check if certificate exists
+        const { data: existingCert } = await supabase
+            .from('certificates')
+            .select('certificate_id, issued_at')
+            .eq('user_id', userId)
+            .eq('module_id', moduleId)
+            .single();
+        
+        res.json({
+            certificateAvailable: !!existingCert,
+            certificateId: existingCert?.certificate_id,
+            issuedAt: existingCert?.issued_at,
+            requirements: {
+                totalLessons,
+                completedLessons: completedCount,
+                lessonsRemaining: totalLessons - completedCount,
+                quizzesPassed: passedQuizzes,
+                quizzesRemaining: totalLessons - passedQuizzes,
+                allLessonsComplete,
+                allQuizzesPassed
+            },
+            canGenerate: allLessonsComplete && allQuizzesPassed && !existingCert,
+            lockedReason: !allLessonsComplete ? 'Complete all lessons' : (!allQuizzesPassed ? 'Pass all quizzes' : null)
+        });
+    } catch (error) {
+        console.error('Certificate status error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
