@@ -1211,3 +1211,297 @@
         }
     }
 </script>
+<script>
+    // Global retake state
+    let retakeCooldown = null;
+    let retakeInterval = null;
+    
+    // Check quiz status before allowing lesson completion
+    async function checkQuizStatus(lessonId) {
+        try {
+            const response = await fetch(`/api/quiz/status/${userId}/${lessonId}`);
+            const status = await response.json();
+            
+            if (status.isCompleted) {
+                return { canComplete: true, message: null };
+            }
+            
+            if (!status.canAttempt && status.blockReason === 'max_attempts_reached') {
+                return { 
+                    canComplete: false, 
+                    message: '❌ You have used all quiz attempts. This lesson cannot be completed.',
+                    blocked: true
+                };
+            }
+            
+            if (!status.canAttempt && status.blockReason === 'cooldown_active') {
+                return { 
+                    canComplete: false, 
+                    message: `⏳ ${status.blockMessage}`,
+                    cooldown: true,
+                    cooldownMinutes: status.cooldownMinutes
+                };
+            }
+            
+            return { canComplete: true, message: null };
+        } catch (error) {
+            return { canComplete: true, message: null };
+        }
+    }
+    
+    // Enhanced loadQuiz with mandatory requirement
+    async function loadQuizWithRequirement(lessonId, moduleId) {
+        // First check quiz status
+        const statusCheck = await checkQuizStatus(lessonId);
+        
+        if (!statusCheck.canComplete) {
+            if (statusCheck.blocked) {
+                alert(statusCheck.message);
+                return false;
+            }
+            if (statusCheck.cooldown) {
+                showCooldownModal(statusCheck.cooldownMinutes, lessonId, moduleId);
+                return false;
+            }
+        }
+        
+        // Check attempts from quiz endpoint
+        try {
+            const response = await fetch(`/api/quiz/${lessonId}?userId=${userId}`);
+            const data = await response.json();
+            
+            if (!data.canAttempt) {
+                if (data.lastPassed) {
+                    alert('You have already passed this quiz!');
+                    return false;
+                }
+                
+                if (data.attemptCount >= data.maxAttempts) {
+                    alert(`❌ You have used all ${data.maxAttempts} attempts. This lesson requires quiz completion to proceed.`);
+                    return false;
+                }
+                
+                if (data.cooldownUntil) {
+                    const cooldownDate = new Date(data.cooldownUntil);
+                    const minutesLeft = Math.ceil((cooldownDate - new Date()) / 1000 / 60);
+                    showCooldownModal(minutesLeft, lessonId, moduleId);
+                    return false;
+                }
+            }
+            
+            // Load the quiz
+            currentQuiz = data.questions;
+            currentQuizLesson = { id: lessonId, moduleId: moduleId };
+            userAnswers = {};
+            
+            renderQuizWithRequirements(data);
+            document.getElementById('quizModal').style.display = 'flex';
+            return true;
+            
+        } catch (error) {
+            console.error('Error loading quiz:', error);
+            alert('Unable to load quiz. Please try again.');
+            return false;
+        }
+    }
+    
+    function renderQuizWithRequirements(quizData) {
+        const container = document.getElementById('quiz-container');
+        container.innerHTML = `
+            <div style="background: #fefcf8; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+                <p><strong>⚠️ Mandatory Quiz</strong></p>
+                <p>You must score ${quizData.passingScore || 70}% to pass this lesson.</p>
+                <p>Attempt ${quizData.attemptCount + 1} of ${quizData.maxAttempts}</p>
+            </div>
+        `;
+        
+        quizData.questions.forEach((q, idx) => {
+            const questionDiv = document.createElement('div');
+            questionDiv.style.marginBottom = '24px';
+            questionDiv.style.padding = '16px';
+            questionDiv.style.background = '#fefcf8';
+            questionDiv.style.borderRadius = '8px';
+            
+            questionDiv.innerHTML = `
+                <p style="font-weight: 600; margin-bottom: 12px;">${idx + 1}. ${escapeHtml(q.question)}</p>
+                <div id="question-${q.id}" style="margin-left: 20px;">
+                    ${q.options.map((opt, optIdx) => {
+                        const letter = String.fromCharCode(65 + optIdx);
+                        return `
+                            <label style="display: block; margin: 8px 0; cursor: pointer;">
+                                <input type="radio" name="q_${q.id}" value="${letter}" onchange="userAnswers['${q.id}'] = '${letter}'">
+                                <span style="margin-left: 8px;"><strong>${letter}.</strong> ${escapeHtml(opt)}</span>
+                            </label>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+            container.appendChild(questionDiv);
+        });
+        
+        // Add mandatory warning
+        const warning = document.createElement('div');
+        warning.style.marginTop = '16px';
+        warning.style.padding = '12px';
+        warning.style.background = '#fff3cd';
+        warning.style.borderRadius = '8px';
+        warning.style.color = '#856404';
+        warning.innerHTML = '⚠️ You must pass this quiz to complete the lesson.';
+        container.appendChild(warning);
+    }
+    
+    function showCooldownModal(minutesLeft, lessonId, moduleId) {
+        const modal = document.getElementById('quizModal');
+        const container = document.getElementById('quiz-container');
+        const resultDiv = document.getElementById('quiz-result');
+        
+        container.style.display = 'none';
+        resultDiv.style.display = 'block';
+        resultDiv.innerHTML = `
+            <div style="background: #fff3cd; padding: 20px; border-radius: 8px; text-align: center;">
+                <h3 style="color: #856404;">⏳ Cooldown Active</h3>
+                <p style="margin: 16px 0;">You must wait before retaking the quiz.</p>
+                <p style="font-size: 2rem; font-weight: bold; color: #856404;" id="cooldown-timer">${minutesLeft}:00</p>
+                <p>This ensures you review the material before trying again.</p>
+                <button onclick="closeQuizModal()" style="background: #856404; color: white; border: none; padding: 10px 24px; border-radius: 4px; margin-top: 16px; cursor: pointer;">Close</button>
+            </div>
+        `;
+        document.getElementById('quizModal').style.display = 'flex';
+        
+        // Start countdown timer
+        let minutes = minutesLeft;
+        let seconds = 0;
+        retakeInterval = setInterval(() => {
+            if (seconds === 0) {
+                if (minutes === 0) {
+                    clearInterval(retakeInterval);
+                    resultDiv.innerHTML = `
+                        <div style="background: #c6f6d5; padding: 20px; border-radius: 8px; text-align: center;">
+                            <h3 style="color: #22543d;">✓ Cooldown Complete</h3>
+                            <p>You may now retake the quiz.</p>
+                            <button onclick="retryQuiz()" style="background: #22543d; color: white; border: none; padding: 10px 24px; border-radius: 4px; margin-top: 16px; cursor: pointer;">Retake Quiz</button>
+                        </div>
+                    `;
+                    return;
+                }
+                minutes--;
+                seconds = 59;
+            } else {
+                seconds--;
+            }
+            const timerSpan = document.getElementById('cooldown-timer');
+            if (timerSpan) {
+                timerSpan.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }
+        }, 1000);
+    }
+    
+    // Replace the mark complete handler
+    document.getElementById('mark-complete-btn')?.addEventListener('click', async () => {
+        if (!currentLesson) return;
+        
+        if (currentLesson.contentType === 'youtube' && watchPercentage < 90) {
+            alert('Please watch at least 90% of the video before taking the quiz.');
+            return;
+        }
+        
+        // Load quiz with mandatory requirement
+        const quizLoaded = await loadQuizWithRequirement(currentLesson.id, currentCourse?.module_id || currentCourse?.moduleId);
+        if (!quizLoaded) {
+            // Check if already passed
+            const statusCheck = await checkQuizStatus(currentLesson.id);
+            if (statusCheck.isCompleted) {
+                // Already passed, complete lesson directly
+                await completeLessonDirect();
+            }
+        }
+    });
+    
+    // Enhanced submit quiz with mandatory retake handling
+    async function submitQuiz() {
+        const submitBtn = document.getElementById('submit-quiz-btn');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Grading...';
+        
+        try {
+            const response = await fetch('/api/quiz/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: userId,
+                    lessonId: currentQuizLesson.id,
+                    moduleId: currentQuizLesson.moduleId,
+                    answers: userAnswers
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.error) {
+                alert(result.error);
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Quiz';
+                return;
+            }
+            
+            const resultDiv = document.getElementById('quiz-result');
+            const container = document.getElementById('quiz-container');
+            
+            container.style.display = 'none';
+            resultDiv.style.display = 'block';
+            
+            if (result.passed) {
+                resultDiv.innerHTML = `
+                    <div style="background: #c6f6d5; padding: 20px; border-radius: 8px; text-align: center;">
+                        <h3 style="color: #22543d;">✓ Quiz Passed!</h3>
+                        <p style="font-size: 1.5rem; margin: 16px 0;">${result.score}%</p>
+                        <p>${result.correctCount}/${result.totalQuestions} correct</p>
+                        <p style="margin-top: 16px;">Lesson marked as complete!</p>
+                        <button onclick="closeQuizModalAndRefresh()" style="background: #22543d; color: white; border: none; padding: 10px 24px; border-radius: 4px; margin-top: 16px; cursor: pointer;">Continue to Next Lesson</button>
+                    </div>
+                `;
+            } else {
+                const remainingText = result.remainingAttempts > 0 
+                    ? `You have ${result.remainingAttempts} attempt${result.remainingAttempts > 1 ? 's' : ''} remaining.`
+                    : '❌ No attempts remaining. This lesson cannot be completed.';
+                
+                resultDiv.innerHTML = `
+                    <div style="background: #fed7d7; padding: 20px; border-radius: 8px; text-align: center;">
+                        <h3 style="color: #742a2a;">✗ Quiz Failed</h3>
+                        <p style="font-size: 1.5rem; margin: 16px 0;">${result.score}%</p>
+                        <p>Need ${result.passingScore}% to pass.</p>
+                        <p>${result.correctCount}/${result.totalQuestions} correct</p>
+                        <p style="margin-top: 16px;"><strong>${remainingText}</strong></p>
+                        ${result.remainingAttempts > 0 ? `<button onclick="retryQuiz()" style="background: #742a2a; color: white; border: none; padding: 10px 24px; border-radius: 4px; margin-top: 16px; cursor: pointer;">Retake Quiz</button>` : '<p style="margin-top: 16px; color: #742a2a;">Please contact support for assistance.</p>'}
+                    </div>
+                `;
+            }
+            
+            document.getElementById('submit-quiz-btn').style.display = 'none';
+        } catch (error) {
+            alert('Error submitting quiz. Please try again.');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Submit Quiz';
+        }
+    }
+    
+    function retryQuiz() {
+        // Clear cooldown interval
+        if (retakeInterval) {
+            clearInterval(retakeInterval);
+            retakeInterval = null;
+        }
+        
+        // Reset modal
+        document.getElementById('quiz-container').style.display = 'block';
+        document.getElementById('quiz-result').style.display = 'none';
+        document.getElementById('quiz-result').innerHTML = '';
+        document.getElementById('submit-quiz-btn').style.display = 'block';
+        document.getElementById('submit-quiz-btn').disabled = false;
+        document.getElementById('submit-quiz-btn').textContent = 'Submit Quiz';
+        userAnswers = {};
+        
+        // Reload quiz
+        loadQuizWithRequirement(currentQuizLesson.id, currentQuizLesson.moduleId);
+    }
+</script>

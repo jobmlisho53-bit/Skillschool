@@ -854,3 +854,242 @@ function shuffleArray(array) {
     }
     return array;
 }
+
+// ============ MANDATORY RETAKE & REQUIREMENTS SYSTEM ============
+
+// Get lesson requirements (quiz needed, passing score, etc.)
+async function getLessonRequirements(lessonId) {
+    const { data, error } = await supabase
+        .from('lesson_requirements')
+        .select('*')
+        .eq('lesson_id', lessonId)
+        .single();
+    
+    if (error || !data) {
+        // Default requirements
+        return {
+            requires_quiz_pass: true,
+            requires_min_score: 70,
+            max_attempts: 3,
+            cooldown_hours: 1
+        };
+    }
+    return data;
+}
+
+// Check if user can attempt quiz
+async function canAttemptQuiz(userId, lessonId) {
+    const requirements = await getLessonRequirements(lessonId);
+    
+    // Get user's attempts
+    const { data: attempts, error } = await supabase
+        .from('quiz_attempts')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('lesson_id', lessonId)
+        .order('attempt_number', { ascending: false });
+    
+    if (error) throw error;
+    
+    const attemptCount = attempts?.length || 0;
+    const lastAttempt = attempts?.[0];
+    
+    // Check if already passed
+    if (lastAttempt?.passed) {
+        return { canAttempt: false, reason: 'already_passed', message: 'You have already passed this quiz.' };
+    }
+    
+    // Check max attempts
+    if (attemptCount >= requirements.max_attempts) {
+        return { 
+            canAttempt: false, 
+            reason: 'max_attempts_reached', 
+            message: `You have used all ${requirements.max_attempts} attempts. This lesson requires quiz completion to proceed.` 
+        };
+    }
+    
+    // Check cooldown period
+    if (lastAttempt?.cooldown_until) {
+        const cooldownEnd = new Date(lastAttempt.cooldown_until);
+        if (cooldownEnd > new Date()) {
+            const minutesLeft = Math.ceil((cooldownEnd - new Date()) / 1000 / 60);
+            return { 
+                canAttempt: false, 
+                reason: 'cooldown_active', 
+                message: `Please wait ${minutesLeft} minutes before retaking the quiz.`,
+                cooldownMinutes: minutesLeft
+            };
+        }
+    }
+    
+    return { 
+        canAttempt: true, 
+        attemptNumber: attemptCount + 1,
+        maxAttempts: requirements.max_attempts,
+        passingScore: requirements.requires_min_score
+    };
+}
+
+// Enhanced quiz submission with mandatory retake
+app.post('/api/quiz/submit', async (req, res) => {
+    try {
+        const { userId, lessonId, answers } = req.body;
+        
+        // Check if user can attempt
+        const canAttempt = await canAttemptQuiz(userId, lessonId);
+        if (!canAttempt.canAttempt) {
+            return res.status(403).json({ 
+                error: canAttempt.message,
+                reason: canAttempt.reason,
+                mandatoryRetake: true
+            });
+        }
+        
+        // Get correct answers
+        const { data: questions, error: qError } = await supabase
+            .from('quiz_questions')
+            .select('id, correct_answer')
+            .eq('lesson_id', lessonId);
+        
+        if (qError) throw qError;
+        
+        // Calculate score
+        let correctCount = 0;
+        const answerMap = new Map();
+        
+        for (const [questionId, userAnswer] of Object.entries(answers)) {
+            const question = questions.find(q => q.id == questionId);
+            if (question && userAnswer === question.correct_answer) {
+                correctCount++;
+            }
+            answerMap.set(questionId, userAnswer);
+        }
+        
+        const requirements = await getLessonRequirements(lessonId);
+        const score = Math.round((correctCount / questions.length) * 100);
+        const passed = score >= requirements.requires_min_score;
+        
+        // Get existing attempts
+        const { data: existingAttempts } = await supabase
+            .from('quiz_attempts')
+            .select('attempt_number')
+            .eq('user_id', userId)
+            .eq('lesson_id', lessonId)
+            .order('attempt_number', { ascending: false });
+        
+        const attemptNumber = (existingAttempts?.length || 0) + 1;
+        
+        // Set cooldown if failed
+        let cooldownUntil = null;
+        let retakeRequired = !passed;
+        
+        if (!passed) {
+            cooldownUntil = new Date(Date.now() + requirements.cooldown_hours * 60 * 60 * 1000);
+        }
+        
+        // Save attempt
+        const { error: insertError } = await supabase
+            .from('quiz_attempts')
+            .insert([{
+                user_id: userId,
+                lesson_id: lessonId,
+                score: score,
+                passed: passed,
+                answers: Object.fromEntries(answerMap),
+                attempt_number: attemptNumber,
+                retake_required: retakeRequired,
+                cooldown_until: cooldownUntil
+            }]);
+        
+        if (insertError) throw insertError;
+        
+        // If passed, mark lesson as complete
+        if (passed) {
+            // Check if already completed
+            const { data: existingProgress } = await supabase
+                .from('user_progress')
+                .select('id')
+                .eq('user_id', userId)
+                .eq('lesson_id', lessonId)
+                .single();
+            
+            if (!existingProgress) {
+                await supabase
+                    .from('user_progress')
+                    .insert([{
+                        user_id: userId,
+                        lesson_id: lessonId,
+                        module_id: req.body.moduleId,
+                        completed: true,
+                        completed_at: new Date().toISOString(),
+                        quiz_passed: true,
+                        quiz_score: score
+                    }]);
+            }
+        }
+        
+        // Get next attempt info
+        const nextAttemptNumber = attemptNumber + 1;
+        const remainingAttempts = requirements.max_attempts - attemptNumber;
+        
+        res.json({
+            success: true,
+            score: score,
+            passed: passed,
+            attemptNumber: attemptNumber,
+            totalAttempts: requirements.max_attempts,
+            remainingAttempts: remainingAttempts,
+            correctCount: correctCount,
+            totalQuestions: questions.length,
+            passingScore: requirements.requires_min_score,
+            retakeRequired: !passed,
+            cooldownUntil: cooldownUntil,
+            mandatoryMessage: !passed ? `You must pass this quiz (${requirements.requires_min_score}%) to continue. ${remainingAttempts} attempt${remainingAttempts !== 1 ? 's' : ''} remaining.` : null
+        });
+        
+    } catch (error) {
+        console.error('Quiz submit error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get quiz status for a lesson (checks if user can access next lesson)
+app.get('/api/quiz/status/:userId/:lessonId', async (req, res) => {
+    try {
+        const { userId, lessonId } = req.params;
+        
+        const canAttempt = await canAttemptQuiz(userId, lessonId);
+        const requirements = await getLessonRequirements(lessonId);
+        
+        // Check if lesson is already completed
+        const { data: progress } = await supabase
+            .from('user_progress')
+            .select('completed, quiz_passed, quiz_score')
+            .eq('user_id', userId)
+            .eq('lesson_id', lessonId)
+            .single();
+        
+        const isCompleted = progress?.completed === true;
+        const quizPassed = progress?.quiz_passed === true;
+        
+        res.json({
+            canAttempt: canAttempt.canAttempt,
+            isCompleted: isCompleted,
+            quizPassed: quizPassed,
+            attemptInfo: canAttempt.canAttempt ? {
+                attemptNumber: canAttempt.attemptNumber,
+                maxAttempts: canAttempt.maxAttempts,
+                passingScore: canAttempt.passingScore
+            } : null,
+            blockReason: !canAttempt.canAttempt ? canAttempt.reason : null,
+            blockMessage: !canAttempt.canAttempt ? canAttempt.message : null,
+            requirements: {
+                requiresQuizPass: requirements.requires_quiz_pass,
+                passingScore: requirements.requires_min_score,
+                maxAttempts: requirements.max_attempts
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
