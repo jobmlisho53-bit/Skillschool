@@ -840,3 +840,76 @@
     </script>
 </body>
 </html>
+<!-- Add this button in the lessons section after completion -->
+<div id="certificate-section" style="display: none; text-align: center; margin: 30px 0;">
+    <button id="generate-certificate-btn" style="background: #c9a03d; color: white; border: none; padding: 14px 32px; border-radius: 2px; cursor: pointer; font-family: 'Inter', sans-serif; font-weight: 500;">
+        🎓 Generate Your Certificate
+    </button>
+</div>
+
+<script>
+    // Check if module is complete and show certificate button
+    async function checkAndShowCertificateButton(moduleId) {
+        const progressResponse = await fetch(`/api/progress/${userId}/${moduleId}`);
+        const progress = await progressResponse.json();
+        
+        const certSection = document.getElementById('certificate-section');
+        if (certSection && progress.completed === progress.total && progress.total > 0) {
+            // Check if certificate already exists
+            const certResponse = await fetch(`/api/certificates/${userId}`);
+            const certificates = await certResponse.json();
+            const hasCert = certificates.some(c => c.module_id === moduleId);
+            
+            if (!hasCert) {
+                certSection.style.display = 'block';
+                window.currentCertModule = moduleId;
+            }
+        }
+    }
+    
+    // Generate certificate
+    document.getElementById('generate-certificate-btn')?.addEventListener('click', async () => {
+        const moduleId = window.currentCertModule;
+        const userName = prompt('Enter your name for the certificate:', 'Student');
+        
+        if (!userName) return;
+        
+        const btn = document.getElementById('generate-certificate-btn');
+        btn.disabled = true;
+        btn.textContent = 'Generating...';
+        
+        try {
+            const response = await fetch('/api/certificate/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: userId,
+                    moduleId: moduleId,
+                    name: userName
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                alert(`Certificate generated!\nID: ${data.certificateId}\n\nShare this ID for verification.`);
+                document.getElementById('certificate-section').style.display = 'none';
+            } else {
+                alert('Error: ' + data.error);
+            }
+        } catch (error) {
+            alert('Failed to generate certificate. Please try again.');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = '🎓 Generate Your Certificate';
+        }
+    });
+    
+    // Override showCourse to check for certificate button
+    const originalShowCourse = showCourse;
+    showCourse = async function(course) {
+        await originalShowCourse(course);
+        const moduleId = course.module_id || course.moduleId;
+        await checkAndShowCertificateButton(moduleId);
+    };
+</script>

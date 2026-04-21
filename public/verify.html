@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Certificate - Skill to Income</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #ffffff; color: #1a1a1a; }
+        .container { max-width: 800px; margin: 0 auto; padding: 40px 20px; }
+        .header { text-align: center; margin-bottom: 40px; }
+        .header h1 { font-family: 'Cormorant Garamond', serif; font-size: 2.5rem; background: linear-gradient(135deg, #1a1a1a 0%, #c9a03d 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .verify-box { background: #fefcf8; border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 8px; padding: 32px; text-align: center; }
+        input { width: 100%; padding: 14px; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 4px; font-size: 1rem; margin: 20px 0; }
+        button { background: #c9a03d; color: white; border: none; padding: 14px 32px; border-radius: 4px; cursor: pointer; font-weight: 500; }
+        .result { margin-top: 30px; padding: 20px; border-radius: 8px; display: none; }
+        .valid { background: rgba(76, 175, 80, 0.1); border: 1px solid #4caf50; color: #2e7d32; }
+        .invalid { background: rgba(244, 67, 54, 0.1); border: 1px solid #f44336; color: #c62828; }
+        .back-link { display: inline-block; margin-top: 20px; color: #c9a03d; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Certificate Verification</h1>
+            <p>Enter a certificate ID to verify its authenticity</p>
+        </div>
+        <div class="verify-box">
+            <input type="text" id="certificateId" placeholder="Enter Certificate ID (e.g., CERT-20260115-abc123-def456)">
+            <button onclick="verifyCertificate()">Verify Certificate</button>
+            <div id="result" class="result"></div>
+        </div>
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="/" class="back-link">← Back to Home</a>
+        </div>
+    </div>
+    <script>
+        async function verifyCertificate() {
+            const certificateId = document.getElementById('certificateId').value.trim();
+            const resultDiv = document.getElementById('result');
+            
+            if (!certificateId) {
+                resultDiv.className = 'result invalid';
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = 'Please enter a certificate ID';
+                return;
+            }
+            
+            resultDiv.innerHTML = 'Verifying...';
+            resultDiv.style.display = 'block';
+            
+            try {
+                const response = await fetch(`/api/certificate/verify/${certificateId}`);
+                const data = await response.json();
+                
+                if (data.valid) {
+                    resultDiv.className = 'result valid';
+                    resultDiv.innerHTML = `
+                        <strong>✓ VALID CERTIFICATE</strong><br><br>
+                        <strong>Certificate ID:</strong> ${data.certificateId}<br>
+                        <strong>Issued to:</strong> ${data.userName}<br>
+                        <strong>Course:</strong> ${data.courseName}<br>
+                        <strong>Issued on:</strong> ${new Date(data.issuedAt).toLocaleDateString()}<br>
+                        <strong>Completed on:</strong> ${new Date(data.completedAt).toLocaleDateString()}<br>
+                        <strong>Verifications:</strong> ${data.verifications}
+                    `;
+                } else {
+                    resultDiv.className = 'result invalid';
+                    resultDiv.innerHTML = `✗ INVALID CERTIFICATE<br><br>${data.message || 'No matching certificate found'}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result invalid';
+                resultDiv.innerHTML = 'Error verifying certificate. Please try again.';
+            }
+        }
+    </script>
+</body>
+</html>
