@@ -6,53 +6,235 @@
     <title>Income School - Professional Skills Mastery</title>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: #ffffff; color: #1a1a1a; line-height: 1.5; }
-        .container { max-width: 1280px; margin: 0 auto; padding: 0 32px; }
-        .header { background: #ffffff; border-bottom: 1px solid rgba(212, 175, 55, 0.15); padding: 20px 0; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px); background: rgba(255, 255, 255, 0.98); }
-        .header-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
-        .logo h1 { font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; font-weight: 600; background: linear-gradient(135deg, #1a1a1a 0%, #c9a03d 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .logo p { font-size: 0.7rem; letter-spacing: 1.5px; text-transform: uppercase; color: #c9a03d; }
+        /* CSS Variables for Theme Support */
+        :root {
+            /* Light Mode (Default) */
+            --bg-primary: #ffffff;
+            --bg-secondary: #fefcf8;
+            --bg-card: #ffffff;
+            --text-primary: #1a1a1a;
+            --text-secondary: #6b6b6b;
+            --text-muted: #9a9a9a;
+            --border-light: rgba(212, 175, 55, 0.15);
+            --border-medium: rgba(212, 175, 55, 0.3);
+            --gold: #c9a03d;
+            --gold-light: #f5e6b8;
+            --warning-bg: #fff3cd;
+            --warning-text: #856404;
+            --warning-border: #ffc107;
+            --success-bg: #c6f6d5;
+            --success-text: #22543d;
+            --error-bg: #fed7d7;
+            --error-text: #742a2a;
+            --progress-bg: #f0f0f0;
+            --overlay-bg: rgba(0,0,0,0.5);
+        }
+        
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-card: #0f3460;
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0b0;
+            --text-muted: #808080;
+            --border-light: rgba(212, 175, 55, 0.25);
+            --border-medium: rgba(212, 175, 55, 0.4);
+            --gold: #d4af37;
+            --gold-light: #f5e6b8;
+            --warning-bg: #2c2c1a;
+            --warning-text: #ffd966;
+            --warning-border: #ffc107;
+            --success-bg: #1a3a2a;
+            --success-text: #a5d6a5;
+            --error-bg: #3a1a1a;
+            --error-text: #ff9999;
+            --progress-bg: #2a2a3e;
+            --overlay-bg: rgba(0,0,0,0.7);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+        
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 32px;
+        }
+        
+        /* Theme Toggle Button */
+        .theme-toggle {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-medium);
+            border-radius: 40px;
+            padding: 8px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+            transition: all 0.3s;
+        }
+        
+        .theme-toggle:hover {
+            border-color: var(--gold);
+            transform: scale(1.02);
+        }
+        
+        .theme-icon {
+            font-size: 18px;
+        }
+        
+        .header {
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-light);
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            background: var(--bg-primary);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .logo h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.6rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .logo p {
+            font-size: 0.7rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--gold);
+        }
+        
+        /* Warning Banner (Non-Blocking) */
+        .warning-banner {
+            background: var(--warning-bg);
+            border-left: 4px solid var(--warning-border);
+            padding: 12px 20px;
+            margin: 16px 0;
+            border-radius: 6px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        
+        .warning-banner.show {
+            display: flex;
+        }
+        
+        .warning-text {
+            color: var(--warning-text);
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .warning-dismiss {
+            background: none;
+            border: 1px solid var(--warning-border);
+            color: var(--warning-text);
+            padding: 4px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        .warning-dismiss:hover {
+            background: var(--warning-border);
+            color: var(--bg-primary);
+        }
+        
+        /* Progress Slowdown Indicator */
+        .progress-slowdown {
+            font-size: 10px;
+            color: var(--warning-text);
+            margin-top: 4px;
+            display: none;
+        }
+        
+        .progress-slowdown.show {
+            display: block;
+        }
+        
+        /* Rest of existing styles with variables */
         .courses-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 32px; padding: 48px 0; }
-        .course-card { background: #ffffff; border-radius: 8px; padding: 28px; transition: all 0.3s ease; border: 1px solid rgba(212, 175, 55, 0.2); cursor: pointer; position: relative; overflow: hidden; }
-        .course-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: linear-gradient(90deg, #c9a03d, #f5e6b8); transform: scaleX(0); transition: transform 0.3s ease; }
-        .course-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.08); border-color: rgba(212, 175, 55, 0.4); }
+        .course-card { background: var(--bg-card); border-radius: 8px; padding: 28px; transition: all 0.3s ease; border: 1px solid var(--border-light); cursor: pointer; position: relative; overflow: hidden; }
+        .course-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: linear-gradient(90deg, var(--gold), var(--gold-light)); transform: scaleX(0); transition: transform 0.3s ease; }
+        .course-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.08); border-color: var(--border-medium); }
         .course-card:hover::before { transform: scaleX(1); }
-        .course-category { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; font-weight: 500; color: #c9a03d; margin-bottom: 12px; }
-        .course-card h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; font-weight: 600; margin-bottom: 12px; color: #1a1a1a; }
-        .course-description { color: #6b6b6b; font-size: 0.85rem; line-height: 1.5; margin-bottom: 20px; }
+        .course-category { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; font-weight: 500; color: var(--gold); margin-bottom: 12px; }
+        .course-card h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; font-weight: 600; margin-bottom: 12px; color: var(--text-primary); }
+        .course-description { color: var(--text-secondary); font-size: 0.85rem; line-height: 1.5; margin-bottom: 20px; }
         .progress-section { margin: 20px 0 16px; }
-        .progress-bar-container { background: #f0f0f0; border-radius: 2px; height: 2px; overflow: hidden; }
-        .progress-bar-fill { background: linear-gradient(90deg, #c9a03d, #f5e6b8); height: 100%; transition: width 0.3s ease; border-radius: 2px; }
-        .progress-text { font-size: 0.7rem; color: #c9a03d; margin-top: 8px; text-align: right; font-weight: 500; }
-        .course-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(212, 175, 55, 0.15); }
-        .course-duration { font-size: 0.75rem; color: #9a9a9a; }
-        .start-link { font-size: 0.8rem; font-weight: 500; color: #c9a03d; text-decoration: none; }
-        .back-button { background: none; border: none; font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 500; color: #c9a03d; cursor: pointer; padding: 12px 0; display: inline-flex; align-items: center; gap: 6px; margin: 24px 0 16px; }
-        .lesson-item { background: #ffffff; padding: 20px; margin: 12px 0; border-radius: 6px; cursor: pointer; transition: all 0.2s; border: 1px solid rgba(212, 175, 55, 0.15); display: flex; justify-content: space-between; align-items: center; }
-        .lesson-item:hover { border-color: rgba(212, 175, 55, 0.4); background: #fefcf8; }
-        .lesson-completed { border-left: 2px solid #c9a03d; background: #fefcf8; }
-        .complete-badge { background: #c9a03d; color: #ffffff; padding: 4px 12px; border-radius: 2px; font-size: 0.65rem; font-weight: 500; }
-        .lesson-content { background: #ffffff; border-radius: 8px; padding: 32px; margin: 24px 0; border: 1px solid rgba(212, 175, 55, 0.2); }
-        .mark-complete-btn { background: #c9a03d; color: #ffffff; border: none; padding: 14px 32px; border-radius: 2px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 500; letter-spacing: 0.5px; transition: all 0.2s; margin-top: 24px; }
+        .progress-bar-container { background: var(--progress-bg); border-radius: 2px; height: 2px; overflow: hidden; }
+        .progress-bar-fill { background: linear-gradient(90deg, var(--gold), var(--gold-light)); height: 100%; transition: width 0.3s ease; border-radius: 2px; }
+        .progress-text { font-size: 0.7rem; color: var(--gold); margin-top: 8px; text-align: right; font-weight: 500; }
+        .course-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-light); }
+        .course-duration { font-size: 0.75rem; color: var(--text-muted); }
+        .start-link { font-size: 0.8rem; font-weight: 500; color: var(--gold); text-decoration: none; }
+        .back-button { background: none; border: none; font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 500; color: var(--gold); cursor: pointer; padding: 12px 0; display: inline-flex; align-items: center; gap: 6px; margin: 24px 0 16px; }
+        .lesson-item { background: var(--bg-card); padding: 20px; margin: 12px 0; border-radius: 6px; cursor: pointer; transition: all 0.2s; border: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; }
+        .lesson-item:hover { border-color: var(--border-medium); background: var(--bg-secondary); }
+        .lesson-completed { border-left: 2px solid var(--gold); background: var(--bg-secondary); }
+        .complete-badge { background: var(--gold); color: #ffffff; padding: 4px 12px; border-radius: 2px; font-size: 0.65rem; font-weight: 500; }
+        .lesson-content { background: var(--bg-card); border-radius: 8px; padding: 32px; margin: 24px 0; border: 1px solid var(--border-light); }
+        .mark-complete-btn { background: var(--gold); color: #ffffff; border: none; padding: 14px 32px; border-radius: 2px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 500; letter-spacing: 0.5px; transition: all 0.2s; margin-top: 24px; }
         .mark-complete-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; margin: 24px 0; border-radius: 4px; }
         .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 4px; }
         .watch-progress { margin-top: 12px; }
-        .watch-progress-bar-container { background: #f0f0f0; border-radius: 2px; height: 4px; }
-        .watch-progress-fill { width: 0%; background: #c9a03d; height: 100%; border-radius: 2px; transition: width 0.3s; }
+        .watch-progress-bar-container { background: var(--progress-bg); border-radius: 2px; height: 4px; }
+        .watch-progress-fill { width: 0%; background: var(--gold); height: 100%; border-radius: 2px; transition: width 0.3s; }
         .watch-progress-stats { display: flex; justify-content: space-between; margin-top: 8px; }
-        .watch-progress-label { font-size: 0.7rem; color: #9a9a9a; }
-        .watch-progress-percent { font-size: 0.7rem; color: #c9a03d; font-weight: 500; }
-        .footer { background: #ffffff; border-top: 1px solid rgba(212, 175, 55, 0.15); padding: 48px 0 32px; margin-top: 64px; }
+        .watch-progress-label { font-size: 0.7rem; color: var(--text-muted); }
+        .watch-progress-percent { font-size: 0.7rem; color: var(--gold); font-weight: 500; }
+        .footer { background: var(--bg-primary); border-top: 1px solid var(--border-light); padding: 48px 0 32px; margin-top: 64px; }
         .footer-content { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 32px; }
         .footer-links { display: flex; gap: 32px; flex-wrap: wrap; }
-        .footer a { color: #6b6b6b; text-decoration: none; font-size: 0.8rem; }
-        .footer a:hover { color: #c9a03d; }
-        .copyright { font-size: 0.75rem; color: #9a9a9a; }
+        .footer a { color: var(--text-secondary); text-decoration: none; font-size: 0.8rem; }
+        .footer a:hover { color: var(--gold); }
+        .copyright { font-size: 0.75rem; color: var(--text-muted); }
         .hidden { display: none !important; }
-        .loading { text-align: center; padding: 60px; color: #c9a03d; }
-        @media (max-width: 768px) { .container { padding: 0 20px; } .courses-grid { grid-template-columns: 1fr; } .lesson-item { flex-direction: column; gap: 12px; text-align: center; } .footer-content { flex-direction: column; text-align: center; } .footer-links { justify-content: center; } }
+        .loading { text-align: center; padding: 60px; color: var(--gold); }
+        
+        @media (max-width: 768px) {
+            .container { padding: 0 20px; }
+            .courses-grid { grid-template-columns: 1fr; }
+            .lesson-item { flex-direction: column; gap: 12px; text-align: center; }
+            .footer-content { flex-direction: column; text-align: center; }
+            .footer-links { justify-content: center; }
+        }
     </style>
     <script> window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); }; </script>
     <script defer src="/_vercel/insights/script.js"></script>
@@ -66,11 +248,23 @@
                     <h1>Income School</h1>
                     <p>Professional Skills Mastery</p>
                 </div>
+                <button class="theme-toggle" id="themeToggle">
+                    <span class="theme-icon">🌙</span>
+                    <span id="theme-text">Dark Mode</span>
+                </button>
             </div>
         </div>
     </div>
 
     <main class="container">
+        <!-- Non-Blocking Warning Banner -->
+        <div id="warning-banner" class="warning-banner">
+            <div class="warning-text">
+                ⚠️ <span id="warning-message">Skipping detected. Watch continuously for accurate progress.</span>
+            </div>
+            <button class="warning-dismiss" onclick="dismissWarning()">Got it, I'll watch properly</button>
+        </div>
+
         <section id="courses-section">
             <div id="courses-container" class="courses-grid">
                 <div class="loading">Loading courses...</div>
@@ -87,7 +281,7 @@
                 </div>
                 <div class="progress-text" id="module-progress-text"></div>
             </div>
-            <h3 style="margin: 32px 0 16px; font-weight: 500; font-size: 1rem; letter-spacing: 1px; color: #c9a03d;">CURRICULUM</h3>
+            <h3 style="margin: 32px 0 16px; font-weight: 500; font-size: 1rem; letter-spacing: 1px; color: var(--gold);">CURRICULUM</h3>
             <div id="lessons-list"></div>
         </section>
 
@@ -95,6 +289,9 @@
             <button id="back-to-lessons" class="back-button">← Back to Lessons</button>
             <h2 id="lesson-title" style="font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 500;"></h2>
             <div id="lesson-player"></div>
+            <div id="progress-slowdown" class="progress-slowdown">
+                ⚡ Progress slowed due to skipping. Watch normally to restore full progress.
+            </div>
             <button id="mark-complete-btn" class="mark-complete-btn">Mark as Complete</button>
         </section>
     </main>
@@ -113,19 +310,105 @@
     </footer>
 
     <script>
-        // ============ MAIN APPLICATION SCRIPT ============
+        // ============ THEME MANAGEMENT ============
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const themeToggle = document.getElementById('themeToggle');
+            const themeText = document.getElementById('theme-text');
+            const themeIcon = document.querySelector('.theme-icon');
+            
+            if (savedTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                if (themeIcon) themeIcon.textContent = '☀️';
+                if (themeText) themeText.textContent = 'Light Mode';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+                if (themeIcon) themeIcon.textContent = '🌙';
+                if (themeText) themeText.textContent = 'Dark Mode';
+            }
+        }
+        
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const themeToggle = document.getElementById('themeToggle');
+            const themeText = document.getElementById('theme-text');
+            const themeIcon = document.querySelector('.theme-icon');
+            
+            if (currentTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+                if (themeIcon) themeIcon.textContent = '🌙';
+                if (themeText) themeText.textContent = 'Dark Mode';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                if (themeIcon) themeIcon.textContent = '☀️';
+                if (themeText) themeText.textContent = 'Light Mode';
+            }
+        }
+        
+        document.getElementById('themeToggle')?.addEventListener('click', toggleTheme);
+        initTheme();
+        
+        // ============ NON-BLOCKING CHEAT DETECTION ============
+        let seekCount = 0;
+        let progressMultiplier = 1.0;
+        let warningShown = false;
+        
+        function showWarning(message) {
+            const banner = document.getElementById('warning-banner');
+            const warningMsg = document.getElementById('warning-message');
+            if (banner && !warningShown) {
+                warningMsg.textContent = message || 'Skipping detected. Watch continuously for accurate progress.';
+                banner.classList.add('show');
+                warningShown = true;
+                
+                // Auto-hide after 8 seconds
+                setTimeout(() => {
+                    if (banner) banner.classList.remove('show');
+                    setTimeout(() => { warningShown = false; }, 1000);
+                }, 8000);
+            }
+        }
+        
+        function dismissWarning() {
+            const banner = document.getElementById('warning-banner');
+            if (banner) {
+                banner.classList.remove('show');
+                warningShown = false;
+            }
+            // Reset seek count after user acknowledges
+            seekCount = 0;
+            progressMultiplier = 1.0;
+            const slowdownDiv = document.getElementById('progress-slowdown');
+            if (slowdownDiv) slowdownDiv.classList.remove('show');
+        }
+        
+        function applyProgressSlowdown() {
+            progressMultiplier = 0.5;
+            const slowdownDiv = document.getElementById('progress-slowdown');
+            if (slowdownDiv) slowdownDiv.classList.add('show');
+        }
+        
+        function resetProgressMultiplier() {
+            progressMultiplier = 1.0;
+            const slowdownDiv = document.getElementById('progress-slowdown');
+            if (slowdownDiv) slowdownDiv.classList.remove('show');
+        }
+        
+        // ============ MAIN APPLICATION ============
         let currentCourse = null;
         let currentLesson = null;
         let currentLessons = [];
         let userId = null;
         
-        // YouTube tracking
         let youtubePlayer = null;
         let watchInterval = null;
         let watchedSeconds = 0;
         let totalDuration = 0;
         let watchPercentage = 0;
         let isTracking = false;
+        let lastPosition = 0;
         
         function getUserId() {
             let id = localStorage.getItem('user_id');
@@ -198,7 +481,7 @@
             
             document.getElementById('course-title').textContent = course.title;
             document.getElementById('course-description').innerHTML = `
-                <div style="background: #fefcf8; padding: 24px; border-radius: 4px; margin: 20px 0; border-left: 2px solid #c9a03d;">
+                <div style="background: var(--bg-secondary); padding: 24px; border-radius: 4px; margin: 20px 0; border-left: 2px solid var(--gold);">
                     <p>${escapeHtml(course.description || 'No description available')}</p>
                     <p style="margin-top: 12px;"><strong>Estimated time:</strong> ${escapeHtml(course.estimatedTime || 'Self-paced')}</p>
                 </div>
@@ -231,7 +514,7 @@
                             <div>
                                 <strong>${lesson.order || 1}. ${escapeHtml(lesson.title)}</strong>
                                 <br>
-                                <small style="color: #9a9a9a;">${lesson.contentType === 'youtube' ? 'Video Lesson' : lesson.contentType} | ${lesson.duration || 'N/A'}</small>
+                                <small style="color: var(--text-muted);">${lesson.contentType === 'youtube' ? 'Video Lesson' : lesson.contentType} | ${lesson.duration || 'N/A'}</small>
                             </div>
                             ${isCompleted ? '<span class="complete-badge">Completed</span>' : ''}
                         `;
@@ -255,6 +538,9 @@
             watchedSeconds = 0;
             watchPercentage = 0;
             isTracking = false;
+            lastPosition = 0;
+            seekCount = 0;
+            progressMultiplier = 1.0;
             if (watchInterval) clearInterval(watchInterval);
             
             document.getElementById('lesson-title').textContent = lesson.title;
@@ -288,7 +574,7 @@
                     </div>
                     <div style="margin-top: 20px;">
                         <p>${escapeHtml(lesson.title)}</p>
-                        <p style="color: #9a9a9a; font-size: 0.85rem;">${lesson.duration || 'N/A'}</p>
+                        <p style="color: var(--text-muted); font-size: 0.85rem;">${lesson.duration || 'N/A'}</p>
                     </div>
                 `;
                 
@@ -337,29 +623,52 @@
             if (event.data === YT.PlayerState.PLAYING) {
                 if (!isTracking) {
                     isTracking = true;
-                    let lastPosition = 0;
                     
                     watchInterval = setInterval(() => {
                         if (youtubePlayer && typeof youtubePlayer.getCurrentTime === 'function') {
                             const currentTime = youtubePlayer.getCurrentTime();
-                            watchedSeconds = currentTime;
-                            watchPercentage = (watchedSeconds / totalDuration) * 100;
+                            
+                            // NON-BLOCKING: Detect skipping but don't block
+                            if (lastPosition > 0 && currentTime > lastPosition + 10) {
+                                seekCount++;
+                                console.log(`Seek detected: ${lastPosition} → ${currentTime} (count: ${seekCount})`);
+                                
+                                if (seekCount >= 2 && progressMultiplier === 1.0) {
+                                    applyProgressSlowdown();
+                                    showWarning('Skipping detected. Progress will be slower until you watch normally.');
+                                }
+                            }
+                            
+                            // Gradually recover from slowdown if watching normally
+                            if (progressMultiplier < 1.0 && currentTime - lastPosition < 3 && currentTime > lastPosition) {
+                                seekCount = Math.max(0, seekCount - 0.5);
+                                if (seekCount < 1) {
+                                    resetProgressMultiplier();
+                                    showWarning('✓ Watching normally. Progress restored!', true);
+                                }
+                            }
+                            
+                            lastPosition = currentTime;
+                            
+                            // Calculate progress with multiplier (never zero, just slower)
+                            const rawProgress = (currentTime / totalDuration) * 100;
+                            const effectiveProgress = Math.min(rawProgress * progressMultiplier, 100);
+                            watchPercentage = effectiveProgress;
                             
                             const progressFill = document.getElementById('watch-progress-fill');
                             const percentSpan = document.getElementById('watch-progress-percent');
                             
                             if (progressFill) {
-                                progressFill.style.width = `${Math.min(watchPercentage, 100)}%`;
+                                progressFill.style.width = `${effectiveProgress}%`;
                             }
                             if (percentSpan) {
-                                percentSpan.textContent = `${Math.min(Math.floor(watchPercentage), 100)}%`;
+                                percentSpan.textContent = `${Math.floor(effectiveProgress)}%`;
                             }
                             
-                            if (watchPercentage >= 90 && markBtn) {
+                            // Enable at 90% - ALWAYS ENABLED regardless of cheating
+                            if (effectiveProgress >= 90 && markBtn) {
                                 markBtn.disabled = false;
                                 markBtn.style.opacity = '1';
-                                clearInterval(watchInterval);
-                                isTracking = false;
                             }
                         }
                     }, 2000);
