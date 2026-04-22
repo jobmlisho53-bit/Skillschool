@@ -1,1146 +1,433 @@
-<!-- This is the complete updated file - replacing the YouTube player section -->
-<script>
-    // SOLUTION: Track unique segments watched (prevents seeking)
-    let watchedSegments = new Set(); // Set of segment indices watched
-    let segmentDuration = 10; // 10-second segments
-    let totalSegments = 0;
-    let lastReportedPosition = 0;
-    let seekDetectionCount = 0;
-    
-    function updateWatchedSegments(currentTime) {
-        const segmentIndex = Math.floor(currentTime / segmentDuration);
-        if (segmentIndex >= 0 && segmentIndex < totalSegments) {
-            watchedSegments.add(segmentIndex);
-        }
-    }
-    
-    function calculateUniqueWatchPercentage() {
-        const uniqueSegmentsWatched = watchedSegments.size;
-        const percentage = (uniqueSegmentsWatched / totalSegments) * 100;
-        return Math.min(percentage, 100);
-    }
-    
-    function onPlayerStateChange(event) {
-        const markBtn = document.getElementById('mark-complete-btn');
-        
-        if (event.data === YT.PlayerState.PLAYING) {
-            if (!isTracking) {
-                isTracking = true;
-                
-                // Set up progress tracking interval
-                watchInterval = setInterval(() => {
-                    if (youtubePlayer && typeof youtubePlayer.getCurrentTime === 'function') {
-                        const currentTime = youtubePlayer.getCurrentTime();
-                        
-                        // Detect seeking (large jump forward)
-                        if (lastReportedPosition > 0 && currentTime > lastReportedPosition + 5) {
-                            seekDetectionCount++;
-                            console.warn(`Seek detected! Jumped from ${lastReportedPosition} to ${currentTime}`);
-                            
-                            if (seekDetectionCount >= 3) {
-                                // Flag as cheating
-                                markBtn.disabled = true;
-                                markBtn.title = "Cheating detected: Please don't skip ahead";
-                                alert("Warning: Skipping ahead in videos is not allowed. Please watch continuously.");
-                            }
-                        }
-                        
-                        // Update watched segments
-                        updateWatchedSegments(currentTime);
-                        
-                        // Also track time between intervals (continuous watching)
-                        const timeDelta = currentTime - lastReportedPosition;
-                        if (timeDelta > 0 && timeDelta < 5) {
-                            // Smooth playback - add intermediate segments
-                            const startSegment = Math.floor(lastReportedPosition / segmentDuration);
-                            const endSegment = Math.floor(currentTime / segmentDuration);
-                            for (let i = startSegment; i <= endSegment; i++) {
-                                if (i >= 0 && i < totalSegments) {
-                                    watchedSegments.add(i);
-                                }
-                            }
-                        }
-                        
-                        lastReportedPosition = currentTime;
-                        watchedSeconds = currentTime;
-                        watchPercentage = calculateUniqueWatchPercentage();
-                        
-                        // Update progress bar
-                        const progressFill = document.getElementById('watch-progress-fill');
-                        const percentSpan = document.getElementById('watch-progress-percent');
-                        const uniquePercentSpan = document.getElementById('unique-watch-percent');
-                        
-                        if (progressFill) {
-                            progressFill.style.width = `${Math.min(watchPercentage, 100)}%`;
-                        }
-                        if (percentSpan) {
-                            percentSpan.textContent = `${Math.min(Math.floor(watchPercentage), 100)}%`;
-                        }
-                        if (uniquePercentSpan) {
-                            uniquePercentSpan.textContent = `${Math.min(Math.floor(watchPercentage), 100)}%`;
-                        }
-                        
-                        // Enable complete button only when unique watch percentage reaches 90%
-                        if (watchPercentage >= 90 && markBtn) {
-                            markBtn.disabled = false;
-                            markBtn.style.opacity = '1';
-                            clearInterval(watchInterval);
-                            isTracking = false;
-                        }
-                    }
-                }, 2000); // Check every 2 seconds
-            }
-        } else if (event.data === YT.PlayerState.PAUSED) {
-            if (watchInterval) {
-                clearInterval(watchInterval);
-                isTracking = false;
-            }
-        } else if (event.data === YT.PlayerState.ENDED) {
-            if (watchInterval) {
-                clearInterval(watchInterval);
-                isTracking = false;
-            }
-            // Ensure final segments are counted
-            if (totalSegments > 0) {
-                for (let i = 0; i < totalSegments; i++) {
-                    watchedSegments.add(i);
-                }
-                watchPercentage = 100;
-            }
-        }
-    }
-    
-    function onPlayerReady(event) {
-        totalDuration = event.target.getDuration();
-        totalSegments = Math.ceil(totalDuration / segmentDuration);
-        watchedSegments.clear();
-        lastReportedPosition = 0;
-        seekDetectionCount = 0;
-        console.log(`Video duration: ${totalDuration}s, Total segments: ${totalSegments}`);
-    }
-    
-    // Also add server-side validation
-    async function completeLessonDirect() {
-        // Send both watch percentage and segment coverage
-        const uniqueWatchPercentage = calculateUniqueWatchPercentage();
-        
-        const token = await getRequestToken(currentLesson.id);
-        if (!token) return;
-        
-        try {
-            const response = await fetch('/api/progress/mark-complete', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    userId: userId,
-                    lessonId: currentLesson.id,
-                    moduleId: currentCourse?.module_id || currentCourse?.moduleId,
-                    timeSpent: Math.floor(watchedSeconds),
-                    watchPercentage: Math.floor(uniqueWatchPercentage),
-                    segmentsWatched: Array.from(watchedSegments),
-                    totalSegments: totalSegments,
-                    sessionId: sessionId,
-                    deviceFingerprint: deviceFingerprint,
-                    requestToken: token
-                })
-            });
-            
-            if (response.ok) {
-                const btn = document.getElementById('mark-complete-btn');
-                btn.textContent = 'Completed';
-                btn.disabled = true;
-                btn.style.opacity = '0.5';
-                
-                if (currentCourse) {
-                    showCourse(currentCourse);
-                }
-            } else {
-                const error = await response.json();
-                alert(error.error || 'Failed to mark complete. Please watch the video properly without skipping.');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('Error saving progress. Please try again.');
-        }
-    }
-    
-    // Update the playLesson function to reset tracking
-    function playLesson(lesson) {
-        currentLesson = lesson;
-        
-        // Reset tracking variables
-        watchedSeconds = 0;
-        watchPercentage = 0;
-        isTracking = false;
-        watchedSegments.clear();
-        lastReportedPosition = 0;
-        seekDetectionCount = 0;
-        totalSegments = 0;
-        
-        if (watchInterval) clearInterval(watchInterval);
-        
-        // ... rest of existing playLesson code
-    }
-</script>
-
-<!-- Update the watch progress HTML to show unique progress -->
-<div class="watch-progress">
-    <div class="watch-progress-bar-container">
-        <div class="watch-progress-fill" id="watch-progress-fill"></div>
-    </div>
-    <div class="watch-progress-stats">
-        <span class="watch-progress-label">Unique Watch Progress (can't skip)</span>
-        <span class="watch-progress-percent" id="unique-watch-percent">0%</span>
-    </div>
-    <div style="font-size: 0.7rem; color: #9a9a9a; margin-top: 4px;">
-        ⚠️ Skipping ahead doesn't count. Watch continuously to progress.
-    </div>
-</div>
-<!-- Add this after the lessons list, before the footer -->
-<div id="certificate-section" style="margin: 40px 0; padding: 30px; background: #1a1a1a; border-radius: 12px; position: relative; overflow: hidden;">
-    <div id="certificate-blur-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; backdrop-filter: blur(12px); background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; z-index: 10; transition: backdrop-filter 0.5s ease;">
-        <div style="text-align: center; color: white;">
-            <div id="certificate-lock-icon" style="font-size: 48px; margin-bottom: 16px;">🔒</div>
-            <div id="certificate-lock-text" style="font-size: 14px; font-weight: 500;">Certificate Locked</div>
-        </div>
-    </div>
-    
-    <!-- Certificate Content (blurred until unlocked) -->
-    <div style="text-align: center; padding: 40px; border: 2px solid rgba(212, 175, 55, 0.3); border-radius: 8px; background: linear-gradient(135deg, #fefcf8 0%, #fff8e7 100%);">
-        <div style="font-size: 12px; letter-spacing: 3px; color: #c9a03d; margin-bottom: 16px;">CERTIFICATE OF COMPLETION</div>
-        <div style="font-size: 28px; font-weight: 600; font-family: 'Cormorant Garamond', serif; color: #1a1a1a;">Skill to Income</div>
-        <div style="width: 80px; height: 2px; background: #c9a03d; margin: 20px auto;"></div>
-        <div style="font-size: 14px; color: #6b6b6b; margin-bottom: 20px;">This certificate is proudly presented to</div>
-        <div id="certificate-user-name" style="font-size: 24px; font-family: 'Cormorant Garamond', serif; color: #c9a03d; margin-bottom: 20px;">[Your Name]</div>
-        <div style="font-size: 14px; color: #6b6b6b; margin-bottom: 10px;">for successfully completing</div>
-        <div id="certificate-course-name" style="font-size: 18px; font-weight: 600; color: #1a1a1a; margin-bottom: 20px;">Course Name</div>
-        <div style="width: 60px; height: 1px; background: #ddd; margin: 20px auto;"></div>
-        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 30px;">
-            <div style="text-align: left;">
-                <div style="width: 150px; height: 1px; background: #1a1a1a; margin-bottom: 8px;"></div>
-                <div style="font-size: 10px; color: #6b6b6b;">Authorized Signature</div>
-            </div>
-            <div style="text-align: center;">
-                <div style="width: 60px; height: 60px; border-radius: 50%; border: 2px solid #c9a03d; margin: 0 auto 8px;"></div>
-                <div style="font-size: 10px; color: #6b6b6b;">Official Seal</div>
-            </div>
-            <div style="text-align: right;">
-                <div id="certificate-date" style="font-size: 11px; color: #6b6b6b; margin-bottom: 8px;">Date: [Completion Date]</div>
-                <div id="certificate-id" style="font-size: 9px; color: #999;">ID: [Certificate ID]</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Income School - Professional Skills Mastery</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #ffffff; color: #1a1a1a; line-height: 1.5; }
+        .container { max-width: 1280px; margin: 0 auto; padding: 0 32px; }
+        .header { background: #ffffff; border-bottom: 1px solid rgba(212, 175, 55, 0.15); padding: 20px 0; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px); background: rgba(255, 255, 255, 0.98); }
+        .header-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
+        .logo h1 { font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; font-weight: 600; background: linear-gradient(135deg, #1a1a1a 0%, #c9a03d 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .logo p { font-size: 0.7rem; letter-spacing: 1.5px; text-transform: uppercase; color: #c9a03d; }
+        .courses-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 32px; padding: 48px 0; }
+        .course-card { background: #ffffff; border-radius: 8px; padding: 28px; transition: all 0.3s ease; border: 1px solid rgba(212, 175, 55, 0.2); cursor: pointer; position: relative; overflow: hidden; }
+        .course-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: linear-gradient(90deg, #c9a03d, #f5e6b8); transform: scaleX(0); transition: transform 0.3s ease; }
+        .course-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.08); border-color: rgba(212, 175, 55, 0.4); }
+        .course-card:hover::before { transform: scaleX(1); }
+        .course-category { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; font-weight: 500; color: #c9a03d; margin-bottom: 12px; }
+        .course-card h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; font-weight: 600; margin-bottom: 12px; color: #1a1a1a; }
+        .course-description { color: #6b6b6b; font-size: 0.85rem; line-height: 1.5; margin-bottom: 20px; }
+        .progress-section { margin: 20px 0 16px; }
+        .progress-bar-container { background: #f0f0f0; border-radius: 2px; height: 2px; overflow: hidden; }
+        .progress-bar-fill { background: linear-gradient(90deg, #c9a03d, #f5e6b8); height: 100%; transition: width 0.3s ease; border-radius: 2px; }
+        .progress-text { font-size: 0.7rem; color: #c9a03d; margin-top: 8px; text-align: right; font-weight: 500; }
+        .course-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(212, 175, 55, 0.15); }
+        .course-duration { font-size: 0.75rem; color: #9a9a9a; }
+        .start-link { font-size: 0.8rem; font-weight: 500; color: #c9a03d; text-decoration: none; }
+        .back-button { background: none; border: none; font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 500; color: #c9a03d; cursor: pointer; padding: 12px 0; display: inline-flex; align-items: center; gap: 6px; margin: 24px 0 16px; }
+        .lesson-item { background: #ffffff; padding: 20px; margin: 12px 0; border-radius: 6px; cursor: pointer; transition: all 0.2s; border: 1px solid rgba(212, 175, 55, 0.15); display: flex; justify-content: space-between; align-items: center; }
+        .lesson-item:hover { border-color: rgba(212, 175, 55, 0.4); background: #fefcf8; }
+        .lesson-completed { border-left: 2px solid #c9a03d; background: #fefcf8; }
+        .complete-badge { background: #c9a03d; color: #ffffff; padding: 4px 12px; border-radius: 2px; font-size: 0.65rem; font-weight: 500; }
+        .lesson-content { background: #ffffff; border-radius: 8px; padding: 32px; margin: 24px 0; border: 1px solid rgba(212, 175, 55, 0.2); }
+        .mark-complete-btn { background: #c9a03d; color: #ffffff; border: none; padding: 14px 32px; border-radius: 2px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 500; letter-spacing: 0.5px; transition: all 0.2s; margin-top: 24px; }
+        .mark-complete-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; margin: 24px 0; border-radius: 4px; }
+        .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 4px; }
+        .watch-progress { margin-top: 12px; }
+        .watch-progress-bar-container { background: #f0f0f0; border-radius: 2px; height: 4px; }
+        .watch-progress-fill { width: 0%; background: #c9a03d; height: 100%; border-radius: 2px; transition: width 0.3s; }
+        .watch-progress-stats { display: flex; justify-content: space-between; margin-top: 8px; }
+        .watch-progress-label { font-size: 0.7rem; color: #9a9a9a; }
+        .watch-progress-percent { font-size: 0.7rem; color: #c9a03d; font-weight: 500; }
+        .footer { background: #ffffff; border-top: 1px solid rgba(212, 175, 55, 0.15); padding: 48px 0 32px; margin-top: 64px; }
+        .footer-content { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 32px; }
+        .footer-links { display: flex; gap: 32px; flex-wrap: wrap; }
+        .footer a { color: #6b6b6b; text-decoration: none; font-size: 0.8rem; }
+        .footer a:hover { color: #c9a03d; }
+        .copyright { font-size: 0.75rem; color: #9a9a9a; }
+        .hidden { display: none !important; }
+        .loading { text-align: center; padding: 60px; color: #c9a03d; }
+        @media (max-width: 768px) { .container { padding: 0 20px; } .courses-grid { grid-template-columns: 1fr; } .lesson-item { flex-direction: column; gap: 12px; text-align: center; } .footer-content { flex-direction: column; text-align: center; } .footer-links { justify-content: center; } }
+    </style>
+    <script> window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); }; </script>
+    <script defer src="/_vercel/insights/script.js"></script>
+    <script defer src="/_vercel/speed-insights/script.js"></script>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <h1>Income School</h1>
+                    <p>Professional Skills Mastery</p>
+                </div>
             </div>
         </div>
     </div>
-    
-    <!-- Progress Bar to Unlock -->
-    <div style="margin-top: 20px; text-align: center;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 12px;">
-            <span style="color: #c9a03d;">🔒 LOCKED</span>
-            <span id="unlock-percentage" style="color: #c9a03d; font-weight: bold;">0%</span>
-            <span style="color: #c9a03d;">🔓 UNLOCKED</span>
-        </div>
-        <div style="background: #e0e0e0; border-radius: 10px; height: 8px; overflow: hidden;">
-            <div id="unlock-progress-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #c9a03d, #f5e6b8); border-radius: 10px; transition: width 0.3s ease;"></div>
-        </div>
-        <div id="unlock-status-text" style="font-size: 11px; color: #6b6b6b; margin-top: 12px;"></div>
-    </div>
-</div>
 
-<script>
-    let currentModuleId = null;
-    let certificateUnlocked = false;
-    
-    async function updateCertificateProgress(moduleId) {
-        try {
-            const response = await fetch(`/api/certificate/status/${userId}/${moduleId}`);
-            const status = await response.json();
-            
-            const blurOverlay = document.getElementById('certificate-blur-overlay');
-            const unlockProgress = document.getElementById('unlock-progress-bar');
-            const unlockPercentage = document.getElementById('unlock-percentage');
-            const unlockStatusText = document.getElementById('unlock-status-text');
-            const lockIcon = document.getElementById('certificate-lock-icon');
-            const lockText = document.getElementById('certificate-lock-text');
-            const courseNameEl = document.getElementById('certificate-course-name');
-            const userNameEl = document.getElementById('certificate-user-name');
-            
-            // Calculate overall progress (50% lessons + 50% quizzes)
-            const totalRequirements = status.requirements.totalLessons * 2; // lessons + quizzes
-            let metRequirements = status.requirements.completedLessons + status.requirements.quizzesPassed;
-            const progressPercent = Math.min(Math.floor((metRequirements / totalRequirements) * 100), 100);
-            
-            // Update progress bar
-            unlockProgress.style.width = `${progressPercent}%`;
-            unlockPercentage.textContent = `${progressPercent}%`;
-            
-            // Update course name
-            courseNameEl.textContent = currentCourse?.title || 'Course Name';
-            
-            // Update status text
-            if (status.certificateAvailable) {
-                // Certificate already claimed
-                unlockStatusText.innerHTML = '✓ Certificate already claimed!';
-                if (blurOverlay) blurOverlay.style.display = 'none';
-                if (lockIcon) lockIcon.innerHTML = '🏆';
-                if (lockText) lockText.innerHTML = 'Certificate Earned!';
-                certificateUnlocked = true;
-                
-                // Update certificate with actual data
-                userNameEl.textContent = status.userName || '[Your Name]';
-                document.getElementById('certificate-date').textContent = `Date: ${new Date(status.issuedAt).toLocaleDateString()}`;
-                document.getElementById('certificate-id').textContent = `ID: ${status.certificateId?.substring(0, 20)}...`;
-            } 
-            else if (status.canGenerate) {
-                // Ready to claim
-                unlockStatusText.innerHTML = '🎉 Congratulations! You can now claim your certificate! 🎉';
-                if (blurOverlay) {
-                    blurOverlay.style.display = 'flex';
-                    blurOverlay.style.backdropFilter = 'blur(4px)';
-                    lockIcon.innerHTML = '🏆';
-                    lockText.innerHTML = 'Certificate Ready! Click to Claim';
-                    lockText.style.color = '#c9a03d';
-                }
-                certificateUnlocked = true;
-            }
-            else {
-                // Still locked - show requirements
-                const lessonsRemaining = status.requirements.lessonsRemaining;
-                const quizzesRemaining = status.requirements.quizzesRemaining;
-                
-                let requirementText = [];
-                if (lessonsRemaining > 0) requirementText.push(`${lessonsRemaining} lesson${lessonsRemaining > 1 ? 's' : ''} remaining`);
-                if (quizzesRemaining > 0) requirementText.push(`${quizzesRemaining} quiz${quizzesRemaining > 1 ? 'zes' : ''} to pass`);
-                
-                unlockStatusText.innerHTML = `🔒 Complete ${requirementText.join(' and ')} to unlock certificate`;
-                
-                // Update blur intensity based on progress
-                const blurIntensity = Math.max(2, 12 - (progressPercent / 10));
-                if (blurOverlay) {
-                    blurOverlay.style.backdropFilter = `blur(${blurIntensity}px)`;
-                    lockIcon.innerHTML = '🔒';
-                    lockText.innerHTML = `${progressPercent}% Complete`;
-                }
-                
-                // Update certificate preview with placeholder name
-                userNameEl.textContent = '[Your Name]';
-                document.getElementById('certificate-date').textContent = `Date: [Completion Date]`;
-                document.getElementById('certificate-id').textContent = `ID: [Locked - Complete Course]`;
-                certificateUnlocked = false;
-            }
-        } catch (error) {
-            console.error('Certificate progress error:', error);
-        }
-    }
-    
-    // Claim certificate function
-    async function claimCertificate() {
-        if (!certificateUnlocked) {
-            alert('Complete all lessons and quizzes first!');
-            return;
-        }
-        
-        const userName = prompt('Enter your name for the certificate:', 'Student');
-        if (!userName) return;
-        
-        const btn = document.querySelector('#certificate-section button');
-        if (btn) {
-            btn.disabled = true;
-            btn.textContent = 'Generating...';
-        }
-        
-        try {
-            const response = await fetch('/api/certificate/generate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    userId: userId,
-                    moduleId: currentModuleId,
-                    name: userName
-                })
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                // Update UI
-                const userNameEl = document.getElementById('certificate-user-name');
-                userNameEl.textContent = userName;
-                document.getElementById('certificate-date').textContent = `Date: ${new Date().toLocaleDateString()}`;
-                document.getElementById('certificate-id').textContent = `ID: ${data.certificateId.substring(0, 20)}...`;
-                
-                // Show download buttons
-                const blurOverlay = document.getElementById('certificate-blur-overlay');
-                blurOverlay.style.display = 'none';
-                
-                // Add action buttons
-                const actionDiv = document.createElement('div');
-                actionDiv.style.marginTop = '20px';
-                actionDiv.style.display = 'flex';
-                actionDiv.style.gap = '12px';
-                actionDiv.style.justifyContent = 'center';
-                actionDiv.innerHTML = `
-                    <button onclick="downloadCertificate('${data.certificateId}')" style="background: #c9a03d; color: white; border: none; padding: 10px 24px; border-radius: 4px; cursor: pointer;">📥 Download PDF</button>
-                    <button onclick="viewCertificate('${data.certificateId}')" style="background: #2c2c2c; color: white; border: none; padding: 10px 24px; border-radius: 4px; cursor: pointer;">👁️ View Certificate</button>
-                `;
-                document.getElementById('certificate-section').appendChild(actionDiv);
-                
-                alert('🎉 Certificate generated successfully!');
-            } else if (data.certificateLocked) {
-                alert(`Certificate locked: ${data.reason}`);
-            } else {
-                alert('Error: ' + (data.error || 'Unknown error'));
-            }
-        } catch (error) {
-            alert('Failed to generate certificate. Please try again.');
-        } finally {
-            if (btn) {
-                btn.disabled = false;
-                btn.textContent = 'Claim Certificate';
-            }
-        }
-    }
-    
-    // Download certificate
-    async function downloadCertificate(certificateId) {
-        window.open(`/api/certificate/download/${certificateId}`, '_blank');
-    }
-    
-    // View certificate
-    async function viewCertificate(certificateId) {
-        window.open(`/api/certificate/view/${certificateId}`, '_blank');
-    }
-    
-    // Add claim button if ready
-    function addClaimButtonIfReady() {
-        const existingBtn = document.querySelector('#claim-certificate-action');
-        if (!existingBtn && certificateUnlocked && document.getElementById('certificate-blur-overlay')?.style.display !== 'none') {
-            const btn = document.createElement('button');
-            btn.id = 'claim-certificate-action';
-            btn.textContent = '🏆 Claim Your Certificate Now 🏆';
-            btn.style.cssText = 'background: #c9a03d; color: white; border: none; padding: 12px 24px; border-radius: 4px; cursor: pointer; margin-top: 16px; font-weight: bold;';
-            btn.onclick = claimCertificate;
-            document.getElementById('certificate-section').appendChild(btn);
-        }
-    }
-    
-    // Override showCourse to update certificate progress
-    const originalShowCourseForCert = showCourse;
-    showCourse = async function(course) {
-        await originalShowCourseForCert(course);
-        currentModuleId = course.module_id || course.moduleId;
-        await updateCertificateProgress(currentModuleId);
-        addClaimButtonIfReady();
-    };
-</script>
-<script>
-    // Make sure certificate progress updates when lessons are completed
-    async function refreshCertificateProgress() {
-        if (currentModuleId) {
-            await updateCertificateProgress(currentModuleId);
-            addClaimButtonIfReady();
-        }
-    }
-    
-    // Override the existing showCourse function to ensure certificate loads
-    if (typeof window.originalShowCourse === 'undefined') {
-        window.originalShowCourse = window.showCourse;
-    }
-    
-    window.showCourse = async function(course) {
-        currentModuleId = course.module_id || course.moduleId;
-        currentCourse = course;
-        
-        // Call original showCourse function
-        if (window.originalShowCourse) {
-            await window.originalShowCourse(course);
-        }
-        
-        // Update certificate progress after course loads
-        setTimeout(async () => {
-            await updateCertificateProgress(currentModuleId);
-            addClaimButtonIfReady();
-        }, 500);
-    };
-    
-    // Also refresh when marking lessons complete
-    const originalMarkComplete = window.markCompleteHandler;
-    window.markCompleteHandler = async function() {
-        if (originalMarkComplete) {
-            await originalMarkComplete();
-        }
-        await refreshCertificateProgress();
-    };
-    
-    // Initial check when page loads
-    document.addEventListener('DOMContentLoaded', async () => {
-        if (currentModuleId) {
-            await updateCertificateProgress(currentModuleId);
-        }
-    });
-</script>
-<!-- Add refresh button near certificate -->
-<div style="text-align: right; margin-bottom: 10px;">
-    <button onclick="refreshCertificateProgress()" style="background: none; border: none; color: #c9a03d; cursor: pointer; font-size: 12px;">
-        🔄 Refresh Progress
-    </button>
-</div>
-<!-- Add this near the video player -->
-<div id="cheating-warning" style="display: none; background: #fed7d7; border-left: 4px solid #dc3545; padding: 16px; margin: 16px 0; border-radius: 4px;">
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
-        <div>
-            <strong style="color: #742a2a;">⚠️ Cheating Detected</strong>
-            <p style="margin: 4px 0 0; font-size: 13px; color: #742a2a;">Skipping ahead in videos is not allowed. Reset your progress to continue.</p>
-        </div>
-        <button id="reset-lesson-btn" style="background: #dc3545; color: white; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-weight: 500;">
-            🔄 Reset This Lesson
-        </button>
-    </div>
-</div>
+    <main class="container">
+        <section id="courses-section">
+            <div id="courses-container" class="courses-grid">
+                <div class="loading">Loading courses...</div>
+            </div>
+        </section>
 
-<script>
-    let cheatDetected = false;
-    
-    function showCheatingWarning() {
-        const warningDiv = document.getElementById('cheating-warning');
-        if (warningDiv) {
-            warningDiv.style.display = 'block';
-            cheatDetected = true;
-            
-            // Disable mark complete button
-            const markBtn = document.getElementById('mark-complete-btn');
-            if (markBtn) {
-                markBtn.disabled = true;
-                markBtn.style.opacity = '0.5';
-                markBtn.title = 'Cheating detected. Reset lesson to continue.';
+        <section id="lessons-section" class="hidden">
+            <button id="back-to-courses" class="back-button">← Back to Courses</button>
+            <h2 id="course-title" style="font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 600;"></h2>
+            <div id="course-description"></div>
+            <div class="progress-section" id="module-progress-container" style="display: none;">
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" id="module-progress-fill" style="width: 0%"></div>
+                </div>
+                <div class="progress-text" id="module-progress-text"></div>
+            </div>
+            <h3 style="margin: 32px 0 16px; font-weight: 500; font-size: 1rem; letter-spacing: 1px; color: #c9a03d;">CURRICULUM</h3>
+            <div id="lessons-list"></div>
+        </section>
+
+        <section id="player-section" class="hidden">
+            <button id="back-to-lessons" class="back-button">← Back to Lessons</button>
+            <h2 id="lesson-title" style="font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 500;"></h2>
+            <div id="lesson-player"></div>
+            <button id="mark-complete-btn" class="mark-complete-btn">Mark as Complete</button>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="copyright">© 2026 Income School. All rights reserved.</div>
+                <div class="footer-links">
+                    <a href="/privacy">Privacy</a>
+                    <a href="/terms">Terms</a>
+                    <a href="/contact">Contact</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // ============ MAIN APPLICATION SCRIPT ============
+        let currentCourse = null;
+        let currentLesson = null;
+        let currentLessons = [];
+        let userId = null;
+        
+        // YouTube tracking
+        let youtubePlayer = null;
+        let watchInterval = null;
+        let watchedSeconds = 0;
+        let totalDuration = 0;
+        let watchPercentage = 0;
+        let isTracking = false;
+        
+        function getUserId() {
+            let id = localStorage.getItem('user_id');
+            if (!id) {
+                id = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('user_id', id);
             }
-        }
-    }
-    
-    async function resetLesson(lessonId, moduleId) {
-        if (!confirm('⚠️ This will reset ALL progress for this lesson.\n\nYou will need to watch the video again properly.\n\nAre you sure?')) {
-            return;
+            return id;
         }
         
-        try {
-            const response = await fetch('/api/progress/reset-lesson', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    userId: userId,
-                    lessonId: lessonId,
-                    moduleId: moduleId
-                })
-            });
-            
-            if (response.ok) {
-                alert('✅ Lesson reset successfully! You can now watch the video properly.');
-                
-                // Hide warning
-                document.getElementById('cheating-warning').style.display = 'none';
-                cheatDetected = false;
-                
-                // Reset tracking variables
-                watchedSegments.clear();
-                watchedSeconds = 0;
-                watchPercentage = 0;
-                lastReportedPosition = 0;
-                seekDetectionCount = 0;
-                
-                // Reset YouTube player if exists
-                if (youtubePlayer && typeof youtubePlayer.seekTo === 'function') {
-                    youtubePlayer.seekTo(0);
-                    youtubePlayer.playVideo();
-                }
-                
-                // Re-enable tracking
-                isTracking = false;
-                if (watchInterval) clearInterval(watchInterval);
-                
-                // Restart tracking
-                if (youtubePlayer && typeof youtubePlayer.getCurrentTime === 'function') {
-                    startTracking();
-                }
-                
-                // Refresh the page to reset UI
-                setTimeout(() => {
-                    location.reload();
-                }, 1000);
-            } else {
-                const error = await response.json();
-                alert('Failed to reset: ' + (error.error || 'Unknown error'));
-            }
-        } catch (error) {
-            console.error('Reset error:', error);
-            alert('Error resetting lesson. Please refresh the page and try again.');
-        }
-    }
-    
-    function startTracking() {
-        if (watchInterval) clearInterval(watchInterval);
+        userId = getUserId();
         
-        watchInterval = setInterval(() => {
-            if (youtubePlayer && typeof youtubePlayer.getCurrentTime === 'function') {
-                const currentTime = youtubePlayer.getCurrentTime();
+        async function loadCourses() {
+            try {
+                const response = await fetch('/api/modules');
+                const courses = await response.json();
+                const container = document.getElementById('courses-container');
                 
-                // Detect seeking (large jump forward)
-                if (lastReportedPosition > 0 && currentTime > lastReportedPosition + 5) {
-                    seekDetectionCount++;
-                    console.warn(`Seek detected! Jumped from ${lastReportedPosition} to ${currentTime}`);
+                if (courses.length === 0) {
+                    container.innerHTML = '<div class="loading">No courses available yet. Check back soon!</div>';
+                    return;
+                }
+                
+                container.innerHTML = '';
+                
+                for (const course of courses) {
+                    const moduleId = course.module_id || course.moduleId;
+                    const progress = await getModuleProgress(moduleId);
                     
-                    if (seekDetectionCount >= 2) {
-                        showCheatingWarning();
-                    }
+                    const card = document.createElement('div');
+                    card.className = 'course-card';
+                    card.onclick = () => showCourse(course);
+                    
+                    card.innerHTML = `
+                        <div class="course-category">${course.category || 'Professional Course'}</div>
+                        <h3>${escapeHtml(course.title)}</h3>
+                        <p class="course-description">${escapeHtml(course.description || 'Master this professional skill with our comprehensive curriculum.')}</p>
+                        <div class="progress-section">
+                            <div class="progress-bar-container">
+                                <div class="progress-bar-fill" style="width: ${progress.percentage}%"></div>
+                            </div>
+                            <div class="progress-text">${progress.completed}/${progress.total} lessons completed</div>
+                        </div>
+                        <div class="course-meta">
+                            <span class="course-duration">${escapeHtml(course.estimatedTime || 'Self-paced')}</span>
+                            <span class="start-link">Continue →</span>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('courses-container').innerHTML = '<div class="loading">Unable to load courses. Please refresh the page.</div>';
+            }
+        }
+        
+        async function getModuleProgress(moduleId) {
+            try {
+                const response = await fetch(`/api/progress/${userId}/${moduleId}`);
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                return { total: 0, completed: 0, percentage: 0 };
+            }
+        }
+        
+        async function showCourse(course) {
+            currentCourse = course;
+            const moduleId = course.module_id || course.moduleId;
+            
+            document.getElementById('course-title').textContent = course.title;
+            document.getElementById('course-description').innerHTML = `
+                <div style="background: #fefcf8; padding: 24px; border-radius: 4px; margin: 20px 0; border-left: 2px solid #c9a03d;">
+                    <p>${escapeHtml(course.description || 'No description available')}</p>
+                    <p style="margin-top: 12px;"><strong>Estimated time:</strong> ${escapeHtml(course.estimatedTime || 'Self-paced')}</p>
+                </div>
+            `;
+            
+            try {
+                const response = await fetch(`/api/modules/${moduleId}/lessons`);
+                const lessons = await response.json();
+                currentLessons = lessons;
+                
+                const progressResponse = await fetch(`/api/progress/${userId}/${moduleId}`);
+                const progress = await progressResponse.json();
+                
+                document.getElementById('module-progress-container').style.display = 'block';
+                document.getElementById('module-progress-fill').style.width = `${progress.percentage}%`;
+                document.getElementById('module-progress-text').textContent = `${progress.completed}/${progress.total} lessons completed`;
+                
+                const lessonsList = document.getElementById('lessons-list');
+                lessonsList.innerHTML = '';
+                
+                if (lessons.length === 0) {
+                    lessonsList.innerHTML = '<div class="loading">No lessons yet. Content coming soon!</div>';
+                } else {
+                    lessons.sort((a, b) => (a.order || 0) - (b.order || 0));
+                    lessons.forEach(lesson => {
+                        const isCompleted = progress.completedLessons?.includes(lesson.id);
+                        const lessonDiv = document.createElement('div');
+                        lessonDiv.className = `lesson-item ${isCompleted ? 'lesson-completed' : ''}`;
+                        lessonDiv.innerHTML = `
+                            <div>
+                                <strong>${lesson.order || 1}. ${escapeHtml(lesson.title)}</strong>
+                                <br>
+                                <small style="color: #9a9a9a;">${lesson.contentType === 'youtube' ? 'Video Lesson' : lesson.contentType} | ${lesson.duration || 'N/A'}</small>
+                            </div>
+                            ${isCompleted ? '<span class="complete-badge">Completed</span>' : ''}
+                        `;
+                        lessonDiv.onclick = () => playLesson(lesson);
+                        lessonsList.appendChild(lessonDiv);
+                    });
                 }
                 
-                // Update watched segments
-                updateWatchedSegments(currentTime);
+                document.getElementById('courses-section').classList.add('hidden');
+                document.getElementById('lessons-section').classList.remove('hidden');
+                document.getElementById('player-section').classList.add('hidden');
                 
-                // Smooth playback tracking
-                const timeDelta = currentTime - lastReportedPosition;
-                if (timeDelta > 0 && timeDelta < 5) {
-                    const startSegment = Math.floor(lastReportedPosition / segmentDuration);
-                    const endSegment = Math.floor(currentTime / segmentDuration);
-                    for (let i = startSegment; i <= endSegment; i++) {
-                        if (i >= 0 && i < totalSegments) {
-                            watchedSegments.add(i);
+            } catch (error) {
+                console.error('Error loading lessons:', error);
+            }
+        }
+        
+        function playLesson(lesson) {
+            currentLesson = lesson;
+            
+            watchedSeconds = 0;
+            watchPercentage = 0;
+            isTracking = false;
+            if (watchInterval) clearInterval(watchInterval);
+            
+            document.getElementById('lesson-title').textContent = lesson.title;
+            const playerDiv = document.getElementById('lesson-player');
+            const markBtn = document.getElementById('mark-complete-btn');
+            markBtn.disabled = false;
+            markBtn.style.opacity = '1';
+            
+            if (lesson.contentType === 'youtube') {
+                if (lesson.duration) {
+                    const match = lesson.duration.match(/(\d+)/);
+                    if (match) {
+                        totalDuration = parseInt(match[1]) * 60;
+                    } else {
+                        totalDuration = 300;
+                    }
+                } else {
+                    totalDuration = 300;
+                }
+                
+                playerDiv.innerHTML = `
+                    <div id="youtube-player" style="width: 100%; aspect-ratio: 16/9;"></div>
+                    <div class="watch-progress">
+                        <div class="watch-progress-bar-container">
+                            <div class="watch-progress-fill" id="watch-progress-fill"></div>
+                        </div>
+                        <div class="watch-progress-stats">
+                            <span class="watch-progress-label">Watch Progress</span>
+                            <span class="watch-progress-percent" id="watch-progress-percent">0%</span>
+                        </div>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <p>${escapeHtml(lesson.title)}</p>
+                        <p style="color: #9a9a9a; font-size: 0.85rem;">${lesson.duration || 'N/A'}</p>
+                    </div>
+                `;
+                
+                if (typeof YT === 'undefined') {
+                    const tag = document.createElement('script');
+                    tag.src = 'https://www.youtube.com/iframe_api';
+                    const firstScriptTag = document.getElementsByTagName('script')[0];
+                    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+                    
+                    window.onYouTubeIframeAPIReady = () => {
+                        createYouTubePlayer(lesson);
+                    };
+                } else {
+                    createYouTubePlayer(lesson);
+                }
+            } else {
+                playerDiv.innerHTML = `<div style="padding: 40px; text-align: center;">Content type: ${lesson.contentType}</div>`;
+            }
+            
+            document.getElementById('courses-section').classList.add('hidden');
+            document.getElementById('lessons-section').classList.add('hidden');
+            document.getElementById('player-section').classList.remove('hidden');
+        }
+        
+        function createYouTubePlayer(lesson) {
+            youtubePlayer = new YT.Player('youtube-player', {
+                height: '100%',
+                width: '100%',
+                videoId: lesson.youtubeId,
+                playerVars: { controls: 1, modestbranding: 1, rel: 0, showinfo: 0 },
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange
+                }
+            });
+        }
+        
+        function onPlayerReady(event) {
+            totalDuration = event.target.getDuration();
+            console.log('Video duration:', totalDuration, 'seconds');
+        }
+        
+        function onPlayerStateChange(event) {
+            const markBtn = document.getElementById('mark-complete-btn');
+            
+            if (event.data === YT.PlayerState.PLAYING) {
+                if (!isTracking) {
+                    isTracking = true;
+                    let lastPosition = 0;
+                    
+                    watchInterval = setInterval(() => {
+                        if (youtubePlayer && typeof youtubePlayer.getCurrentTime === 'function') {
+                            const currentTime = youtubePlayer.getCurrentTime();
+                            watchedSeconds = currentTime;
+                            watchPercentage = (watchedSeconds / totalDuration) * 100;
+                            
+                            const progressFill = document.getElementById('watch-progress-fill');
+                            const percentSpan = document.getElementById('watch-progress-percent');
+                            
+                            if (progressFill) {
+                                progressFill.style.width = `${Math.min(watchPercentage, 100)}%`;
+                            }
+                            if (percentSpan) {
+                                percentSpan.textContent = `${Math.min(Math.floor(watchPercentage), 100)}%`;
+                            }
+                            
+                            if (watchPercentage >= 90 && markBtn) {
+                                markBtn.disabled = false;
+                                markBtn.style.opacity = '1';
+                                clearInterval(watchInterval);
+                                isTracking = false;
+                            }
                         }
-                    }
+                    }, 2000);
                 }
-                
-                lastReportedPosition = currentTime;
-                watchedSeconds = currentTime;
-                watchPercentage = calculateUniqueWatchPercentage();
-                
-                // Update progress bar
-                const progressFill = document.getElementById('watch-progress-fill');
-                const percentSpan = document.getElementById('watch-progress-percent');
-                const uniquePercentSpan = document.getElementById('unique-watch-percent');
-                
-                if (progressFill) {
-                    progressFill.style.width = `${Math.min(watchPercentage, 100)}%`;
-                }
-                if (percentSpan) {
-                    percentSpan.textContent = `${Math.min(Math.floor(watchPercentage), 100)}%`;
-                }
-                if (uniquePercentSpan) {
-                    uniquePercentSpan.textContent = `${Math.min(Math.floor(watchPercentage), 100)}%`;
-                }
-                
-                // Enable complete button only when unique watch percentage reaches 90% AND no cheating
-                if (watchPercentage >= 90 && !cheatDetected) {
-                    const markBtn = document.getElementById('mark-complete-btn');
-                    if (markBtn) {
-                        markBtn.disabled = false;
-                        markBtn.style.opacity = '1';
-                    }
+            } else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
+                if (watchInterval) {
                     clearInterval(watchInterval);
                     isTracking = false;
                 }
             }
-        }, 2000);
-    }
-    
-    // Add reset button event listener
-    document.getElementById('reset-lesson-btn')?.addEventListener('click', () => {
-        if (currentLesson) {
-            resetLesson(currentLesson.id, currentCourse?.module_id || currentCourse?.moduleId);
-        }
-    });
-</script>
-<!-- Add reset module button at bottom of course page -->
-<div style="text-align: center; margin: 20px 0;">
-    <button id="reset-module-btn" style="background: none; border: 1px solid #dc3545; color: #dc3545; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 12px;">
-        🔄 Reset Entire Course Progress
-    </button>
-</div>
-
-<script>
-    document.getElementById('reset-module-btn')?.addEventListener('click', async () => {
-        if (!confirm('⚠️⚠️⚠️ WARNING: This will reset ALL progress for this entire course!\n\nYou will lose all completed lessons, quiz passes, and certificates.\n\nThis cannot be undone.\n\nAre you absolutely sure?')) {
-            return;
         }
         
-        if (!confirm('Type "RESET" to confirm:') === 'RESET') {
-            alert('Reset cancelled. Type "RESET" to confirm.');
-            return;
-        }
-        
-        try {
-            const response = await fetch('/api/progress/reset-module', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    userId: userId,
-                    moduleId: currentModuleId
-                })
-            });
-            
-            if (response.ok) {
-                alert('✅ Course reset successfully! Page will now reload.');
-                location.reload();
-            } else {
-                const error = await response.json();
-                alert('Failed to reset: ' + (error.error || 'Unknown error'));
-            }
-        } catch (error) {
-            alert('Error resetting course. Please try again.');
-        }
-    });
-</script>
-<script>
-    // Improved reset module function with input field
-    async function resetModuleProgress() {
-        // Create a modal dialog for confirmation
-        const confirmed = await showResetConfirmation();
-        
-        if (!confirmed) {
-            alert('Reset cancelled.');
-            return;
-        }
-        
-        try {
-            const response = await fetch('/api/progress/reset-module', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    userId: userId,
-                    moduleId: currentModuleId
-                })
-            });
-            
-            if (response.ok) {
-                alert('✅ Course reset successfully! Page will now reload.');
-                location.reload();
-            } else {
-                const error = await response.json();
-                alert('Failed to reset: ' + (error.error || 'Unknown error'));
-            }
-        } catch (error) {
-            alert('Error resetting course. Please try again.');
-        }
-    }
-    
-    function showResetConfirmation() {
-        return new Promise((resolve) => {
-            // Create modal overlay
-            const modal = document.createElement('div');
-            modal.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0,0,0,0.8);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 10000;
-            `;
-            
-            // Create modal content
-            const content = document.createElement('div');
-            content.style.cssText = `
-                background: white;
-                padding: 30px;
-                border-radius: 12px;
-                max-width: 400px;
-                text-align: center;
-                border-top: 4px solid #dc3545;
-            `;
-            
-            content.innerHTML = `
-                <h3 style="color: #dc3545; margin-bottom: 16px;">⚠️ WARNING</h3>
-                <p style="margin-bottom: 16px;">This will reset ALL progress for this entire course!</p>
-                <p style="margin-bottom: 16px;">You will lose:</p>
-                <ul style="text-align: left; margin-bottom: 20px; color: #666;">
-                    <li>✓ All completed lessons</li>
-                    <li>✓ All quiz passes</li>
-                    <li>✓ Any certificates earned</li>
-                </ul>
-                <p style="margin-bottom: 20px;"><strong>Type "RESET" to confirm:</strong></p>
-                <input type="text" id="reset-confirm-input" style="width: 100%; padding: 10px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 4px; text-align: center; font-size: 16px;" placeholder="Type RESET here">
-                <div style="display: flex; gap: 12px;">
-                    <button id="reset-confirm-btn" style="background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; flex: 1;">Confirm Reset</button>
-                    <button id="reset-cancel-btn" style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; flex: 1;">Cancel</button>
-                </div>
-            `;
-            
-            modal.appendChild(content);
-            document.body.appendChild(modal);
-            
-            // Handle confirm button
-            const confirmBtn = document.getElementById('reset-confirm-btn');
-            const cancelBtn = document.getElementById('reset-cancel-btn');
-            const inputField = document.getElementById('reset-confirm-input');
-            
-            const cleanup = () => {
-                modal.remove();
-            };
-            
-            confirmBtn.onclick = () => {
-                const typedText = inputField.value.trim();
-                if (typedText === 'RESET') {
-                    cleanup();
-                    resolve(true);
-                } else {
-                    alert('Please type "RESET" exactly to confirm.');
-                }
-            };
-            
-            cancelBtn.onclick = () => {
-                cleanup();
-                resolve(false);
-            };
-            
-            // Close on outside click
-            modal.onclick = (e) => {
-                if (e.target === modal) {
-                    cleanup();
-                    resolve(false);
-                }
-            };
-        });
-    }
-    
-    // Update the reset module button
-    const resetModuleBtn = document.getElementById('reset-module-btn');
-    if (resetModuleBtn) {
-        // Remove existing listeners
-        const newBtn = resetModuleBtn.cloneNode(true);
-        resetModuleBtn.parentNode.replaceChild(newBtn, resetModuleBtn);
-        newBtn.onclick = resetModuleProgress;
-    }
-</script>
-<script>
-    // Improved lesson reset with confirmation
-    async function resetLessonWithConfirm(lessonId, moduleId) {
-        // Create modal for lesson reset
-        const modal = document.createElement('div');
-        modal.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-        `;
-        
-        const content = document.createElement('div');
-        content.style.cssText = `
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            max-width: 400px;
-            text-align: center;
-            border-top: 4px solid #ffc107;
-        `;
-        
-        content.innerHTML = `
-            <h3 style="color: #ffc107; margin-bottom: 16px;">⚠️ Reset Lesson</h3>
-            <p style="margin-bottom: 20px;">This will reset ALL progress for this lesson.</p>
-            <p style="margin-bottom: 20px;">You will need to watch the video again and retake the quiz.</p>
-            <div style="display: flex; gap: 12px;">
-                <button id="reset-lesson-confirm" style="background: #ffc107; color: #1a1a1a; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; flex: 1;">Reset Lesson</button>
-                <button id="reset-lesson-cancel" style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; flex: 1;">Cancel</button>
-            </div>
-        `;
-        
-        modal.appendChild(content);
-        document.body.appendChild(modal);
-        
-        return new Promise((resolve) => {
-            document.getElementById('reset-lesson-confirm').onclick = async () => {
-                modal.remove();
-                
-                try {
-                    const response = await fetch('/api/progress/reset-lesson', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            userId: userId,
-                            lessonId: lessonId,
-                            moduleId: moduleId
-                        })
-                    });
-                    
-                    if (response.ok) {
-                        alert('✅ Lesson reset successfully! Page will now reload.');
-                        location.reload();
-                        resolve(true);
-                    } else {
-                        const error = await response.json();
-                        alert('Failed to reset: ' + (error.error || 'Unknown error'));
-                        resolve(false);
-                    }
-                } catch (error) {
-                    alert('Error resetting lesson. Please try again.');
-                    resolve(false);
-                }
-            };
-            
-            document.getElementById('reset-lesson-cancel').onclick = () => {
-                modal.remove();
-                resolve(false);
-            };
-            
-            modal.onclick = (e) => {
-                if (e.target === modal) {
-                    modal.remove();
-                    resolve(false);
-                }
-            };
-        });
-    }
-    
-    // Update the reset lesson button handler
-    const resetLessonBtn = document.getElementById('reset-lesson-btn');
-    if (resetLessonBtn) {
-        const newResetBtn = resetLessonBtn.cloneNode(true);
-        resetLessonBtn.parentNode.replaceChild(newResetBtn, resetLessonBtn);
-        newResetBtn.onclick = () => {
-            if (currentLesson) {
-                resetLessonWithConfirm(currentLesson.id, currentCourse?.module_id || currentCourse?.moduleId);
-            }
-        };
-    }
-</script>
-<script>
-    // Improved reset module function with better error handling
-    async function resetModuleProgress() {
-        // Get current module ID
-        const moduleId = currentCourse?.module_id || currentCourse?.moduleId || currentModuleId;
-        
-        if (!moduleId) {
-            alert('Error: Could not identify current course. Please refresh the page and try again.');
-            return;
-        }
-        
-        console.log('Resetting module:', moduleId);
-        console.log('User ID:', userId);
-        
-        // Create modal dialog for confirmation
-        const modal = document.createElement('div');
-        modal.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-        `;
-        
-        const content = document.createElement('div');
-        content.style.cssText = `
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            max-width: 450px;
-            width: 90%;
-            text-align: center;
-            border-top: 4px solid #dc3545;
-        `;
-        
-        content.innerHTML = `
-            <h3 style="color: #dc3545; margin-bottom: 16px;">⚠️ WARNING</h3>
-            <p style="margin-bottom: 16px;">This will reset ALL progress for:</p>
-            <p style="font-weight: bold; color: #1a1a1a; margin-bottom: 16px;">"${currentCourse?.title || 'this course'}"</p>
-            <p style="margin-bottom: 16px;">You will lose:</p>
-            <ul style="text-align: left; margin-bottom: 20px; color: #666;">
-                <li>✓ All completed lessons</li>
-                <li>✓ All quiz passes</li>
-                <li>✓ Any certificates earned</li>
-            </ul>
-            <p style="margin-bottom: 20px;"><strong>Type "RESET" to confirm:</strong></p>
-            <input type="text" id="reset-confirm-input" style="width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 4px; text-align: center; font-size: 16px;" placeholder="Type RESET here">
-            <div style="display: flex; gap: 12px;">
-                <button id="reset-confirm-btn" style="background: #dc3545; color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; flex: 1;">Confirm Reset</button>
-                <button id="reset-cancel-btn" style="background: #6c757d; color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; flex: 1;">Cancel</button>
-            </div>
-            <div id="reset-error-msg" style="color: red; margin-top: 12px; font-size: 12px; display: none;"></div>
-        `;
-        
-        modal.appendChild(content);
-        document.body.appendChild(modal);
-        
-        const confirmBtn = document.getElementById('reset-confirm-btn');
-        const cancelBtn = document.getElementById('reset-cancel-btn');
-        const inputField = document.getElementById('reset-confirm-input');
-        const errorMsg = document.getElementById('reset-error-msg');
-        
-        const cleanup = () => {
-            if (modal && modal.parentNode) modal.remove();
-        };
-        
-        confirmBtn.onclick = async () => {
-            const typedText = inputField.value.trim();
-            if (typedText !== 'RESET') {
-                errorMsg.textContent = 'Please type "RESET" exactly to confirm.';
-                errorMsg.style.display = 'block';
-                return;
-            }
-            
-            errorMsg.style.display = 'none';
-            confirmBtn.disabled = true;
-            confirmBtn.textContent = 'Resetting...';
+        document.getElementById('mark-complete-btn')?.addEventListener('click', async () => {
+            if (!currentLesson) return;
             
             try {
-                console.log('Sending reset request...');
-                const response = await fetch('/api/progress/reset-module', {
+                const response = await fetch('/api/progress/mark-complete', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         userId: userId,
-                        moduleId: moduleId
+                        lessonId: currentLesson.id,
+                        moduleId: currentCourse?.module_id || currentCourse?.moduleId,
+                        timeSpent: Math.floor(watchedSeconds),
+                        watchPercentage: Math.floor(watchPercentage)
                     })
                 });
                 
-                const data = await response.json();
-                console.log('Reset response:', data);
-                
-                if (response.ok && data.success) {
-                    alert('✅ Course reset successfully! Page will now reload.');
-                    cleanup();
-                    location.reload();
+                if (response.ok) {
+                    const btn = document.getElementById('mark-complete-btn');
+                    btn.textContent = 'Completed';
+                    btn.disabled = true;
+                    btn.style.opacity = '0.5';
+                    
+                    if (currentCourse) {
+                        showCourse(currentCourse);
+                    }
                 } else {
-                    errorMsg.textContent = data.error || 'Failed to reset course. Please try again.';
-                    errorMsg.style.display = 'block';
-                    confirmBtn.disabled = false;
-                    confirmBtn.textContent = 'Confirm Reset';
+                    const error = await response.json();
+                    alert(error.error || 'Failed to mark complete.');
                 }
             } catch (error) {
-                console.error('Reset error:', error);
-                errorMsg.textContent = 'Network error. Please check your connection and try again.';
-                errorMsg.style.display = 'block';
-                confirmBtn.disabled = false;
-                confirmBtn.textContent = 'Confirm Reset';
+                console.error('Error:', error);
+                alert('Error saving progress. Please try again.');
             }
-        };
+        });
         
-        cancelBtn.onclick = () => {
-            cleanup();
-        };
-        
-        modal.onclick = (e) => {
-            if (e.target === modal) cleanup();
-        };
-        
-        inputField.focus();
-    }
-    
-    // Update reset module button
-    const resetModuleBtn = document.getElementById('reset-module-btn');
-    if (resetModuleBtn) {
-        const newBtn = resetModuleBtn.cloneNode(true);
-        resetModuleBtn.parentNode.replaceChild(newBtn, resetModuleBtn);
-        newBtn.onclick = resetModuleProgress;
-    }
-</script>
-<script>
-    // Reset all cheat detection flags when page loads
-    function resetCheatFlags() {
-        cheatDetected = false;
-        seekDetectionCount = 0;
-        lastReportedPosition = 0;
-        watchedSegments.clear();
-        
-        // Hide warning if visible
-        const warningDiv = document.getElementById('cheating-warning');
-        if (warningDiv) {
-            warningDiv.style.display = 'none';
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
         
-        // Re-enable mark complete button if video is at 90%+
-        if (watchPercentage >= 90) {
-            const markBtn = document.getElementById('mark-complete-btn');
-            if (markBtn) {
-                markBtn.disabled = false;
-                markBtn.style.opacity = '1';
+        document.getElementById('back-to-courses')?.addEventListener('click', () => {
+            document.getElementById('courses-section').classList.remove('hidden');
+            document.getElementById('lessons-section').classList.add('hidden');
+            document.getElementById('player-section').classList.add('hidden');
+            loadCourses();
+        });
+        
+        document.getElementById('back-to-lessons')?.addEventListener('click', () => {
+            if (currentCourse) {
+                showCourse(currentCourse);
             }
-        }
+        });
         
-        console.log('Cheat flags reset');
-    }
-    
-    // Call on page load
-    document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(resetCheatFlags, 1000);
-    });
-    
-    // Also reset when a new lesson is loaded
-    const originalPlayLesson = playLesson;
-    window.playLesson = function(lesson) {
-        resetCheatFlags();
-        if (originalPlayLesson) {
-            originalPlayLesson(lesson);
-        }
-    };
-</script>
-<script>
-    // Replace the seek detection section with less sensitive values
-    // In the onPlayerStateChange function, replace the seek detection code:
-    
-    // OLD (too sensitive):
-    // if (lastReportedPosition > 0 && currentTime > lastReportedPosition + 5) {
-    //     seekDetectionCount++;
-    //     if (seekDetectionCount >= 2) {
-    //         showCheatingWarning();
-    //     }
-    // }
-    
-    // NEW (more forgiving):
-    if (lastReportedPosition > 0 && currentTime > lastReportedPosition + 15) {
-        // Only count as seek if jump is more than 15 seconds
-        seekDetectionCount++;
-        console.log(`Seek detected: jumped from ${lastReportedPosition} to ${currentTime}`);
-        
-        // Require 3 large seeks before showing warning
-        if (seekDetectionCount >= 3) {
-            showCheatingWarning();
-        }
-    } else if (currentTime > lastReportedPosition + 2) {
-        // Small jumps are normal (buffering, slight drag)
-        // Don't count as cheating
-        console.log(`Small jump: ${lastReportedPosition} → ${currentTime} (ignored)`);
-    }
-    
-    // Also reset seek count if watching normally for 30 seconds
-    if (seekDetectionCount > 0 && currentTime - lastReportedPosition < 2) {
-        // Gradually reduce seek count during normal playback
-        seekDetectionCount = Math.max(0, seekDetectionCount - 0.1);
-    }
-</script>
-<!-- Add this inside the cheating-warning div -->
-<div style="display: flex; gap: 12px;">
-    <button id="reset-lesson-btn" style="background: #dc3545; color: white; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer;">🔄 Reset Lesson</button>
-    <button id="clear-cheat-warning-btn" style="background: #6c757d; color: white; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer;">✕ Clear Warning (If False)</button>
-</div>
-
-<script>
-    // Clear cheat warning without resetting
-    document.getElementById('clear-cheat-warning-btn')?.addEventListener('click', () => {
-        cheatDetected = false;
-        seekDetectionCount = 0;
-        const warningDiv = document.getElementById('cheating-warning');
-        if (warningDiv) {
-            warningDiv.style.display = 'none';
-        }
-        
-        // Re-enable mark complete if watch percentage is sufficient
-        if (watchPercentage >= 90) {
-            const markBtn = document.getElementById('mark-complete-btn');
-            if (markBtn) {
-                markBtn.disabled = false;
-                markBtn.style.opacity = '1';
-            }
-        }
-        
-        alert('⚠️ Warning cleared. Please watch continuously without skipping ahead.');
-    });
-</script>
+        loadCourses();
+    </script>
+</body>
+</html>
