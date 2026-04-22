@@ -686,3 +686,224 @@
         }
     });
 </script>
+<script>
+    // Improved reset module function with input field
+    async function resetModuleProgress() {
+        // Create a modal dialog for confirmation
+        const confirmed = await showResetConfirmation();
+        
+        if (!confirmed) {
+            alert('Reset cancelled.');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/progress/reset-module', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: userId,
+                    moduleId: currentModuleId
+                })
+            });
+            
+            if (response.ok) {
+                alert('✅ Course reset successfully! Page will now reload.');
+                location.reload();
+            } else {
+                const error = await response.json();
+                alert('Failed to reset: ' + (error.error || 'Unknown error'));
+            }
+        } catch (error) {
+            alert('Error resetting course. Please try again.');
+        }
+    }
+    
+    function showResetConfirmation() {
+        return new Promise((resolve) => {
+            // Create modal overlay
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+            `;
+            
+            // Create modal content
+            const content = document.createElement('div');
+            content.style.cssText = `
+                background: white;
+                padding: 30px;
+                border-radius: 12px;
+                max-width: 400px;
+                text-align: center;
+                border-top: 4px solid #dc3545;
+            `;
+            
+            content.innerHTML = `
+                <h3 style="color: #dc3545; margin-bottom: 16px;">⚠️ WARNING</h3>
+                <p style="margin-bottom: 16px;">This will reset ALL progress for this entire course!</p>
+                <p style="margin-bottom: 16px;">You will lose:</p>
+                <ul style="text-align: left; margin-bottom: 20px; color: #666;">
+                    <li>✓ All completed lessons</li>
+                    <li>✓ All quiz passes</li>
+                    <li>✓ Any certificates earned</li>
+                </ul>
+                <p style="margin-bottom: 20px;"><strong>Type "RESET" to confirm:</strong></p>
+                <input type="text" id="reset-confirm-input" style="width: 100%; padding: 10px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 4px; text-align: center; font-size: 16px;" placeholder="Type RESET here">
+                <div style="display: flex; gap: 12px;">
+                    <button id="reset-confirm-btn" style="background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; flex: 1;">Confirm Reset</button>
+                    <button id="reset-cancel-btn" style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; flex: 1;">Cancel</button>
+                </div>
+            `;
+            
+            modal.appendChild(content);
+            document.body.appendChild(modal);
+            
+            // Handle confirm button
+            const confirmBtn = document.getElementById('reset-confirm-btn');
+            const cancelBtn = document.getElementById('reset-cancel-btn');
+            const inputField = document.getElementById('reset-confirm-input');
+            
+            const cleanup = () => {
+                modal.remove();
+            };
+            
+            confirmBtn.onclick = () => {
+                const typedText = inputField.value.trim();
+                if (typedText === 'RESET') {
+                    cleanup();
+                    resolve(true);
+                } else {
+                    alert('Please type "RESET" exactly to confirm.');
+                }
+            };
+            
+            cancelBtn.onclick = () => {
+                cleanup();
+                resolve(false);
+            };
+            
+            // Close on outside click
+            modal.onclick = (e) => {
+                if (e.target === modal) {
+                    cleanup();
+                    resolve(false);
+                }
+            };
+        });
+    }
+    
+    // Update the reset module button
+    const resetModuleBtn = document.getElementById('reset-module-btn');
+    if (resetModuleBtn) {
+        // Remove existing listeners
+        const newBtn = resetModuleBtn.cloneNode(true);
+        resetModuleBtn.parentNode.replaceChild(newBtn, resetModuleBtn);
+        newBtn.onclick = resetModuleProgress;
+    }
+</script>
+<script>
+    // Improved lesson reset with confirmation
+    async function resetLessonWithConfirm(lessonId, moduleId) {
+        // Create modal for lesson reset
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        `;
+        
+        const content = document.createElement('div');
+        content.style.cssText = `
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 400px;
+            text-align: center;
+            border-top: 4px solid #ffc107;
+        `;
+        
+        content.innerHTML = `
+            <h3 style="color: #ffc107; margin-bottom: 16px;">⚠️ Reset Lesson</h3>
+            <p style="margin-bottom: 20px;">This will reset ALL progress for this lesson.</p>
+            <p style="margin-bottom: 20px;">You will need to watch the video again and retake the quiz.</p>
+            <div style="display: flex; gap: 12px;">
+                <button id="reset-lesson-confirm" style="background: #ffc107; color: #1a1a1a; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; flex: 1;">Reset Lesson</button>
+                <button id="reset-lesson-cancel" style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; flex: 1;">Cancel</button>
+            </div>
+        `;
+        
+        modal.appendChild(content);
+        document.body.appendChild(modal);
+        
+        return new Promise((resolve) => {
+            document.getElementById('reset-lesson-confirm').onclick = async () => {
+                modal.remove();
+                
+                try {
+                    const response = await fetch('/api/progress/reset-lesson', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            userId: userId,
+                            lessonId: lessonId,
+                            moduleId: moduleId
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        alert('✅ Lesson reset successfully! Page will now reload.');
+                        location.reload();
+                        resolve(true);
+                    } else {
+                        const error = await response.json();
+                        alert('Failed to reset: ' + (error.error || 'Unknown error'));
+                        resolve(false);
+                    }
+                } catch (error) {
+                    alert('Error resetting lesson. Please try again.');
+                    resolve(false);
+                }
+            };
+            
+            document.getElementById('reset-lesson-cancel').onclick = () => {
+                modal.remove();
+                resolve(false);
+            };
+            
+            modal.onclick = (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                    resolve(false);
+                }
+            };
+        });
+    }
+    
+    // Update the reset lesson button handler
+    const resetLessonBtn = document.getElementById('reset-lesson-btn');
+    if (resetLessonBtn) {
+        const newResetBtn = resetLessonBtn.cloneNode(true);
+        resetLessonBtn.parentNode.replaceChild(newResetBtn, resetLessonBtn);
+        newResetBtn.onclick = () => {
+            if (currentLesson) {
+                resetLessonWithConfirm(currentLesson.id, currentCourse?.module_id || currentCourse?.moduleId);
+            }
+        };
+    }
+</script>
