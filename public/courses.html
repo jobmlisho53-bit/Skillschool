@@ -715,3 +715,228 @@
         }
     }
 </script>
+<!-- Add this inside the lessons-section, after the lessons list -->
+<div id="certificate-section" style="margin: 40px 0; padding: 30px; background: var(--bg-secondary); border-radius: 12px; position: relative; overflow: hidden; border: 1px solid var(--border-medium);">
+    <!-- Blur Overlay (shows when certificate is locked) -->
+    <div id="certificate-blur-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; backdrop-filter: blur(12px); background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; z-index: 10; transition: backdrop-filter 0.5s ease; border-radius: 12px;">
+        <div style="text-align: center; color: white;">
+            <div id="certificate-lock-icon" style="font-size: 48px; margin-bottom: 16px;">🔒</div>
+            <div id="certificate-lock-text" style="font-size: 14px; font-weight: 500;">Certificate Locked</div>
+        </div>
+    </div>
+    
+    <!-- Certificate Preview -->
+    <div style="text-align: center; padding: 30px;">
+        <div style="font-size: 11px; letter-spacing: 3px; color: var(--gold); margin-bottom: 12px;">CERTIFICATE OF COMPLETION</div>
+        <div style="font-size: 22px; font-weight: 600; font-family: 'Cormorant Garamond', serif; color: var(--text-primary);">Skill to Income</div>
+        <div style="width: 60px; height: 2px; background: var(--gold); margin: 16px auto;"></div>
+        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">This certificate is proudly presented to</div>
+        <div id="certificate-user-name" style="font-size: 20px; font-family: 'Cormorant Garamond', serif; color: var(--gold); margin-bottom: 16px;">[Your Name]</div>
+        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">for successfully completing</div>
+        <div id="certificate-course-name" style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 20px;">Course Name</div>
+        <div style="width: 50px; height: 1px; background: var(--border-light); margin: 16px auto;"></div>
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 20px; flex-wrap: wrap; gap: 16px;">
+            <div style="text-align: left;">
+                <div style="width: 120px; height: 1px; background: var(--text-primary); margin-bottom: 6px;"></div>
+                <div style="font-size: 9px; color: var(--text-muted);">Authorized Signature</div>
+            </div>
+            <div style="text-align: center;">
+                <div style="width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--gold); margin: 0 auto 6px;"></div>
+                <div style="font-size: 9px; color: var(--text-muted);">Official Seal</div>
+            </div>
+            <div style="text-align: right;">
+                <div id="certificate-date" style="font-size: 10px; color: var(--text-muted); margin-bottom: 4px;">Date: [Completion Date]</div>
+                <div id="certificate-id" style="font-size: 8px; color: var(--text-muted);">ID: [Certificate ID]</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Unlock Progress Bar -->
+    <div style="margin-top: 16px; text-align: center;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 11px;">
+            <span style="color: var(--gold);">🔒 LOCKED</span>
+            <span id="unlock-percentage" style="color: var(--gold); font-weight: bold;">0%</span>
+            <span style="color: var(--gold);">🔓 UNLOCKED</span>
+        </div>
+        <div style="background: var(--progress-bg); border-radius: 10px; height: 6px; overflow: hidden;">
+            <div id="unlock-progress-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-light)); border-radius: 10px; transition: width 0.3s ease;"></div>
+        </div>
+        <div id="unlock-status-text" style="font-size: 11px; color: var(--text-muted); margin-top: 12px;"></div>
+        <button id="claim-certificate-btn" style="background: var(--gold); color: #1a1a1a; border: none; padding: 10px 24px; border-radius: 4px; cursor: pointer; font-weight: 600; margin-top: 16px; display: none;">🏆 Claim Certificate</button>
+        <div id="certificate-actions" style="display: none; margin-top: 16px;">
+            <button id="download-cert-btn" style="background: var(--gold); color: #1a1a1a; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; margin-right: 12px;">📥 Download PDF</button>
+            <button id="view-cert-btn" style="background: var(--bg-primary); color: var(--gold); border: 1px solid var(--gold); padding: 8px 20px; border-radius: 4px; cursor: pointer;">👁️ View Certificate</button>
+        </div>
+    </div>
+</div>
+<script>
+    // Certificate Management
+    let currentModuleId = null;
+    let certificateUnlocked = false;
+    let currentCertificateId = null;
+    
+    async function updateCertificateProgress(moduleId) {
+        try {
+            const response = await fetch(`/api/certificate/status/${userId}/${moduleId}`);
+            const status = await response.json();
+            
+            const blurOverlay = document.getElementById('certificate-blur-overlay');
+            const unlockProgress = document.getElementById('unlock-progress-bar');
+            const unlockPercentage = document.getElementById('unlock-percentage');
+            const unlockStatusText = document.getElementById('unlock-status-text');
+            const lockIcon = document.getElementById('certificate-lock-icon');
+            const lockText = document.getElementById('certificate-lock-text');
+            const courseNameEl = document.getElementById('certificate-course-name');
+            const claimBtn = document.getElementById('claim-certificate-btn');
+            const certActions = document.getElementById('certificate-actions');
+            
+            // Calculate overall progress (50% lessons + 50% quizzes)
+            const totalRequirements = status.requirements.totalLessons * 2;
+            let metRequirements = status.requirements.completedLessons + status.requirements.quizzesPassed;
+            const progressPercent = Math.min(Math.floor((metRequirements / totalRequirements) * 100), 100);
+            
+            // Update progress bar
+            if (unlockProgress) unlockProgress.style.width = `${progressPercent}%`;
+            if (unlockPercentage) unlockPercentage.textContent = `${progressPercent}%`;
+            
+            // Update course name
+            if (courseNameEl && currentCourse) {
+                courseNameEl.textContent = currentCourse.title;
+            }
+            
+            if (status.certificateAvailable) {
+                // Certificate already claimed
+                if (blurOverlay) blurOverlay.style.display = 'none';
+                if (lockIcon) lockIcon.innerHTML = '🏆';
+                if (lockText) lockText.innerHTML = 'Certificate Earned!';
+                if (unlockStatusText) unlockStatusText.innerHTML = '✓ Certificate already claimed!';
+                if (claimBtn) claimBtn.style.display = 'none';
+                if (certActions) certActions.style.display = 'block';
+                certificateUnlocked = true;
+                currentCertificateId = status.certificateId;
+                
+                // Update certificate with actual data
+                const userNameEl = document.getElementById('certificate-user-name');
+                if (userNameEl && status.userName) userNameEl.textContent = status.userName;
+                const dateEl = document.getElementById('certificate-date');
+                if (dateEl && status.issuedAt) dateEl.textContent = `Date: ${new Date(status.issuedAt).toLocaleDateString()}`;
+                const idEl = document.getElementById('certificate-id');
+                if (idEl && status.certificateId) idEl.textContent = `ID: ${status.certificateId.substring(0, 24)}...`;
+            } 
+            else if (status.canGenerate) {
+                // Ready to claim
+                if (blurOverlay) {
+                    blurOverlay.style.display = 'flex';
+                    blurOverlay.style.backdropFilter = 'blur(4px)';
+                }
+                if (lockIcon) lockIcon.innerHTML = '🏆';
+                if (lockText) lockText.innerHTML = 'Certificate Ready!';
+                if (unlockStatusText) unlockStatusText.innerHTML = '🎉 Congratulations! You can now claim your certificate!';
+                if (claimBtn) claimBtn.style.display = 'block';
+                if (certActions) certActions.style.display = 'none';
+                certificateUnlocked = true;
+            }
+            else {
+                // Still locked
+                const lessonsRemaining = status.requirements.lessonsRemaining;
+                const quizzesRemaining = status.requirements.quizzesRemaining;
+                
+                let requirementText = [];
+                if (lessonsRemaining > 0) requirementText.push(`${lessonsRemaining} lesson${lessonsRemaining > 1 ? 's' : ''} remaining`);
+                if (quizzesRemaining > 0) requirementText.push(`${quizzesRemaining} quiz${quizzesRemaining > 1 ? 'zes' : ''} to pass`);
+                
+                if (unlockStatusText) unlockStatusText.innerHTML = `🔒 Complete ${requirementText.join(' and ')} to unlock certificate`;
+                if (claimBtn) claimBtn.style.display = 'none';
+                if (certActions) certActions.style.display = 'none';
+                
+                // Update blur intensity based on progress
+                const blurIntensity = Math.max(2, 12 - (progressPercent / 10));
+                if (blurOverlay) blurOverlay.style.backdropFilter = `blur(${blurIntensity}px)`;
+                if (lockIcon) lockIcon.innerHTML = '🔒';
+                if (lockText) lockText.innerHTML = `${progressPercent}% Complete`;
+                certificateUnlocked = false;
+            }
+        } catch (error) {
+            console.error('Certificate progress error:', error);
+        }
+    }
+    
+    async function claimCertificate() {
+        if (!certificateUnlocked) {
+            alert('Complete all lessons and quizzes first!');
+            return;
+        }
+        
+        const userName = prompt('Enter your name for the certificate:', 'Student');
+        if (!userName) return;
+        
+        const claimBtn = document.getElementById('claim-certificate-btn');
+        claimBtn.disabled = true;
+        claimBtn.textContent = 'Generating...';
+        
+        try {
+            const response = await fetch('/api/certificate/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: userId,
+                    moduleId: currentModuleId,
+                    name: userName
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Update certificate display
+                const userNameEl = document.getElementById('certificate-user-name');
+                if (userNameEl) userNameEl.textContent = userName;
+                const dateEl = document.getElementById('certificate-date');
+                if (dateEl) dateEl.textContent = `Date: ${new Date().toLocaleDateString()}`;
+                const idEl = document.getElementById('certificate-id');
+                if (idEl && data.certificateId) idEl.textContent = `ID: ${data.certificateId.substring(0, 24)}...`;
+                
+                // Update UI
+                const blurOverlay = document.getElementById('certificate-blur-overlay');
+                if (blurOverlay) blurOverlay.style.display = 'none';
+                claimBtn.style.display = 'none';
+                document.getElementById('certificate-actions').style.display = 'block';
+                currentCertificateId = data.certificateId;
+                
+                alert('🎉 Certificate generated successfully!');
+            } else {
+                alert('Error: ' + (data.error || 'Unknown error'));
+            }
+        } catch (error) {
+            alert('Failed to generate certificate. Please try again.');
+        } finally {
+            claimBtn.disabled = false;
+            claimBtn.textContent = '🏆 Claim Certificate';
+        }
+    }
+    
+    function downloadCertificate() {
+        if (currentCertificateId) {
+            window.open(`/api/certificate/download/${currentCertificateId}`, '_blank');
+        }
+    }
+    
+    function viewCertificate() {
+        if (currentCertificateId) {
+            window.open(`/api/certificate/view/${currentCertificateId}`, '_blank');
+        }
+    }
+    
+    // Add event listeners for certificate buttons
+    document.getElementById('claim-certificate-btn')?.addEventListener('click', claimCertificate);
+    document.getElementById('download-cert-btn')?.addEventListener('click', downloadCertificate);
+    document.getElementById('view-cert-btn')?.addEventListener('click', viewCertificate);
+    
+    // Update showCourse to refresh certificate progress
+    const originalShowCourseForCert = showCourse;
+    window.showCourse = async function(course) {
+        currentModuleId = course.module_id || course.moduleId;
+        await originalShowCourseForCert(course);
+        await updateCertificateProgress(currentModuleId);
+    };
+</script>
