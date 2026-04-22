@@ -1042,3 +1042,105 @@
         newBtn.onclick = resetModuleProgress;
     }
 </script>
+<script>
+    // Reset all cheat detection flags when page loads
+    function resetCheatFlags() {
+        cheatDetected = false;
+        seekDetectionCount = 0;
+        lastReportedPosition = 0;
+        watchedSegments.clear();
+        
+        // Hide warning if visible
+        const warningDiv = document.getElementById('cheating-warning');
+        if (warningDiv) {
+            warningDiv.style.display = 'none';
+        }
+        
+        // Re-enable mark complete button if video is at 90%+
+        if (watchPercentage >= 90) {
+            const markBtn = document.getElementById('mark-complete-btn');
+            if (markBtn) {
+                markBtn.disabled = false;
+                markBtn.style.opacity = '1';
+            }
+        }
+        
+        console.log('Cheat flags reset');
+    }
+    
+    // Call on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(resetCheatFlags, 1000);
+    });
+    
+    // Also reset when a new lesson is loaded
+    const originalPlayLesson = playLesson;
+    window.playLesson = function(lesson) {
+        resetCheatFlags();
+        if (originalPlayLesson) {
+            originalPlayLesson(lesson);
+        }
+    };
+</script>
+<script>
+    // Replace the seek detection section with less sensitive values
+    // In the onPlayerStateChange function, replace the seek detection code:
+    
+    // OLD (too sensitive):
+    // if (lastReportedPosition > 0 && currentTime > lastReportedPosition + 5) {
+    //     seekDetectionCount++;
+    //     if (seekDetectionCount >= 2) {
+    //         showCheatingWarning();
+    //     }
+    // }
+    
+    // NEW (more forgiving):
+    if (lastReportedPosition > 0 && currentTime > lastReportedPosition + 15) {
+        // Only count as seek if jump is more than 15 seconds
+        seekDetectionCount++;
+        console.log(`Seek detected: jumped from ${lastReportedPosition} to ${currentTime}`);
+        
+        // Require 3 large seeks before showing warning
+        if (seekDetectionCount >= 3) {
+            showCheatingWarning();
+        }
+    } else if (currentTime > lastReportedPosition + 2) {
+        // Small jumps are normal (buffering, slight drag)
+        // Don't count as cheating
+        console.log(`Small jump: ${lastReportedPosition} → ${currentTime} (ignored)`);
+    }
+    
+    // Also reset seek count if watching normally for 30 seconds
+    if (seekDetectionCount > 0 && currentTime - lastReportedPosition < 2) {
+        // Gradually reduce seek count during normal playback
+        seekDetectionCount = Math.max(0, seekDetectionCount - 0.1);
+    }
+</script>
+<!-- Add this inside the cheating-warning div -->
+<div style="display: flex; gap: 12px;">
+    <button id="reset-lesson-btn" style="background: #dc3545; color: white; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer;">🔄 Reset Lesson</button>
+    <button id="clear-cheat-warning-btn" style="background: #6c757d; color: white; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer;">✕ Clear Warning (If False)</button>
+</div>
+
+<script>
+    // Clear cheat warning without resetting
+    document.getElementById('clear-cheat-warning-btn')?.addEventListener('click', () => {
+        cheatDetected = false;
+        seekDetectionCount = 0;
+        const warningDiv = document.getElementById('cheating-warning');
+        if (warningDiv) {
+            warningDiv.style.display = 'none';
+        }
+        
+        // Re-enable mark complete if watch percentage is sufficient
+        if (watchPercentage >= 90) {
+            const markBtn = document.getElementById('mark-complete-btn');
+            if (markBtn) {
+                markBtn.disabled = false;
+                markBtn.style.opacity = '1';
+            }
+        }
+        
+        alert('⚠️ Warning cleared. Please watch continuously without skipping ahead.');
+    });
+</script>
