@@ -390,3 +390,328 @@
     </script>
 </body>
 </html>
+<style>
+    /* Skeleton Loading Styles */
+    .skeleton {
+        background: linear-gradient(
+            90deg,
+            var(--bg-card) 0%,
+            var(--bg-secondary) 50%,
+            var(--bg-card) 100%
+        );
+        background-size: 200% 100%;
+        animation: skeleton-loading 1.5s infinite;
+        border-radius: 8px;
+    }
+    
+    @keyframes skeleton-loading {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+    
+    .skeleton-card {
+        background: var(--bg-card);
+        border-radius: 8px;
+        padding: 28px;
+        border: 1px solid var(--border-light);
+    }
+    
+    .skeleton-title {
+        height: 28px;
+        width: 70%;
+        margin-bottom: 12px;
+    }
+    
+    .skeleton-text {
+        height: 16px;
+        width: 100%;
+        margin-bottom: 8px;
+    }
+    
+    .skeleton-text-short {
+        width: 60%;
+    }
+    
+    .skeleton-progress {
+        height: 2px;
+        width: 100%;
+        margin: 20px 0 16px;
+    }
+    
+    .skeleton-meta {
+        height: 20px;
+        width: 40%;
+        margin-top: 20px;
+    }
+    
+    .skeleton-lesson {
+        height: 70px;
+        width: 100%;
+        margin: 12px 0;
+        border-radius: 6px;
+    }
+    
+    /* Grid layout for skeletons */
+    .skeleton-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+        gap: 32px;
+        padding: 48px 0;
+    }
+    
+    /* Skeleton for lessons list */
+    .skeleton-lessons-list {
+        margin-top: 20px;
+    }
+    
+    /* Hide content until loaded */
+    .content-loaded {
+        display: block;
+    }
+    
+    .skeleton-placeholder {
+        display: none;
+    }
+    
+    .skeleton-placeholder.active {
+        display: block;
+    }
+</style>
+<!-- Replace courses section with skeleton support -->
+<section id="courses-section">
+    <!-- Skeleton Loading Placeholder -->
+    <div id="courses-skeleton" class="skeleton-grid skeleton-placeholder active">
+        <div class="skeleton-card">
+            <div class="skeleton skeleton-title"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-progress"></div>
+            <div class="skeleton skeleton-meta"></div>
+        </div>
+        <div class="skeleton-card">
+            <div class="skeleton skeleton-title"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-progress"></div>
+            <div class="skeleton skeleton-meta"></div>
+        </div>
+        <div class="skeleton-card">
+            <div class="skeleton skeleton-title"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-progress"></div>
+            <div class="skeleton skeleton-meta"></div>
+        </div>
+        <div class="skeleton-card">
+            <div class="skeleton skeleton-title"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-progress"></div>
+            <div class="skeleton skeleton-meta"></div>
+        </div>
+        <div class="skeleton-card">
+            <div class="skeleton skeleton-title"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-progress"></div>
+            <div class="skeleton skeleton-meta"></div>
+        </div>
+        <div class="skeleton-card">
+            <div class="skeleton skeleton-title"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-progress"></div>
+            <div class="skeleton skeleton-meta"></div>
+        </div>
+    </div>
+    
+    <!-- Actual Courses Container -->
+    <div id="courses-container" style="display: none;"></div>
+</section>
+
+<!-- Lessons section skeleton -->
+<section id="lessons-section" class="hidden">
+    <button id="back-to-courses" class="back-button">← Back to Courses</button>
+    <div id="lessons-skeleton" class="skeleton-lessons-list skeleton-placeholder active">
+        <div class="skeleton skeleton-lesson"></div>
+        <div class="skeleton skeleton-lesson"></div>
+        <div class="skeleton skeleton-lesson"></div>
+        <div class="skeleton skeleton-lesson"></div>
+        <div class="skeleton skeleton-lesson"></div>
+    </div>
+    <div id="lessons-content" style="display: none;">
+        <h2 id="course-title" style="font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 600;"></h2>
+        <div id="course-description"></div>
+        <div class="progress-section" id="module-progress-container" style="display: none;">
+            <div class="progress-bar-container"><div class="progress-bar-fill" id="module-progress-fill" style="width: 0%"></div></div>
+            <div class="progress-text" id="module-progress-text"></div>
+        </div>
+        <h3 style="margin: 32px 0 16px; font-weight: 500; font-size: 1rem; letter-spacing: 1px; color: var(--gold);">CURRICULUM</h3>
+        <div id="lessons-list"></div>
+    </div>
+</section>
+<script>
+    // Helper functions for skeleton loading
+    function showSkeleton(type) {
+        if (type === 'courses') {
+            const skeleton = document.getElementById('courses-skeleton');
+            const container = document.getElementById('courses-container');
+            if (skeleton) skeleton.classList.add('active');
+            if (container) container.style.display = 'none';
+        } else if (type === 'lessons') {
+            const skeleton = document.getElementById('lessons-skeleton');
+            const content = document.getElementById('lessons-content');
+            if (skeleton) skeleton.classList.add('active');
+            if (content) content.style.display = 'none';
+        }
+    }
+    
+    function hideSkeleton(type) {
+        if (type === 'courses') {
+            const skeleton = document.getElementById('courses-skeleton');
+            const container = document.getElementById('courses-container');
+            if (skeleton) skeleton.classList.remove('active');
+            if (container) container.style.display = 'block';
+        } else if (type === 'lessons') {
+            const skeleton = document.getElementById('lessons-skeleton');
+            const content = document.getElementById('lessons-content');
+            if (skeleton) skeleton.classList.remove('active');
+            if (content) content.style.display = 'block';
+        }
+    }
+    
+    // Updated loadCourses with skeleton
+    async function loadCourses() {
+        showSkeleton('courses');
+        try {
+            const response = await fetch('/api/modules');
+            const courses = await response.json();
+            const container = document.getElementById('courses-container');
+            
+            if (courses.length === 0) {
+                container.innerHTML = '<div class="loading">No courses available yet. Check back soon!</div>';
+                hideSkeleton('courses');
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            for (const course of courses) {
+                const moduleId = course.module_id || course.moduleId;
+                const progress = await getModuleProgress(moduleId);
+                
+                const card = document.createElement('div');
+                card.className = 'course-card';
+                card.onclick = () => showCourse(course);
+                
+                card.innerHTML = `
+                    <div class="course-category">${course.category || 'Professional Course'}</div>
+                    <h3>${escapeHtml(course.title)}</h3>
+                    <p class="course-description">${escapeHtml(course.description || 'Master this professional skill with our comprehensive curriculum.')}</p>
+                    <div class="progress-section">
+                        <div class="progress-bar-container">
+                            <div class="progress-bar-fill" style="width: ${progress.percentage}%"></div>
+                        </div>
+                        <div class="progress-text">${progress.completed}/${progress.total} lessons completed</div>
+                    </div>
+                    <div class="course-meta">
+                        <span class="course-duration">${escapeHtml(course.estimatedTime || 'Self-paced')}</span>
+                        <span class="start-link">Continue →</span>
+                    </div>
+                `;
+                container.appendChild(card);
+            }
+            
+            hideSkeleton('courses');
+        } catch (error) {
+            console.error('Error:', error);
+            const container = document.getElementById('courses-container');
+            container.innerHTML = '<div class="loading">Unable to load courses. Please refresh the page.</div>';
+            hideSkeleton('courses');
+        }
+    }
+    
+    // Updated showCourse with skeleton
+    async function showCourse(course) {
+        destroyYouTubePlayer();
+        currentCourse = course;
+        const moduleId = course.module_id || course.moduleId;
+        
+        // Show skeleton, hide content
+        showSkeleton('lessons');
+        
+        // Update static content immediately
+        document.getElementById('course-title').textContent = course.title;
+        document.getElementById('course-description').innerHTML = `
+            <div style="background: var(--bg-secondary); padding: 24px; border-radius: 4px; margin: 20px 0; border-left: 2px solid var(--gold);">
+                <p>${escapeHtml(course.description || 'No description available')}</p>
+                <p style="margin-top: 12px;"><strong>Estimated time:</strong> ${escapeHtml(course.estimatedTime || 'Self-paced')}</p>
+            </div>
+        `;
+        
+        try {
+            // Fetch lessons and progress in parallel for faster loading
+            const [lessonsResponse, progressResponse] = await Promise.all([
+                fetch(`/api/modules/${moduleId}/lessons`),
+                fetch(`/api/progress/${userId}/${moduleId}`)
+            ]);
+            
+            const lessons = await lessonsResponse.json();
+            const progress = await progressResponse.json();
+            currentLessons = lessons;
+            
+            // Update progress bar
+            document.getElementById('module-progress-container').style.display = 'block';
+            document.getElementById('module-progress-fill').style.width = `${progress.percentage}%`;
+            document.getElementById('module-progress-text').textContent = `${progress.completed}/${progress.total} lessons completed`;
+            
+            // Build lessons list
+            const lessonsList = document.getElementById('lessons-list');
+            lessonsList.innerHTML = '';
+            
+            if (lessons.length === 0) {
+                lessonsList.innerHTML = '<div class="loading">No lessons yet. Content coming soon!</div>';
+            } else {
+                lessons.sort((a, b) => (a.order || 0) - (b.order || 0));
+                lessons.forEach(lesson => {
+                    const isCompleted = progress.completedLessons?.includes(lesson.id);
+                    const lessonDiv = document.createElement('div');
+                    lessonDiv.className = `lesson-item ${isCompleted ? 'lesson-completed' : ''}`;
+                    lessonDiv.innerHTML = `
+                        <div>
+                            <strong>${lesson.order || 1}. ${escapeHtml(lesson.title)}</strong>
+                            <br>
+                            <small style="color: var(--text-muted);">${lesson.contentType === 'youtube' ? 'Video Lesson' : lesson.contentType} | ${lesson.duration || 'N/A'}</small>
+                        </div>
+                        ${isCompleted ? '<span class="complete-badge">Completed</span>' : ''}
+                    `;
+                    lessonDiv.onclick = () => playLesson(lesson);
+                    lessonsList.appendChild(lessonDiv);
+                });
+            }
+            
+            // Hide skeleton, show content
+            hideSkeleton('lessons');
+            
+            // Switch views
+            document.getElementById('courses-section').classList.add('hidden');
+            document.getElementById('lessons-section').classList.remove('hidden');
+            document.getElementById('player-section').classList.add('hidden');
+            
+        } catch (error) {
+            console.error('Error loading lessons:', error);
+            document.getElementById('lessons-list').innerHTML = '<div class="loading">Error loading lessons. Please refresh.</div>';
+            hideSkeleton('lessons');
+        }
+    }
+    
+    // Add skeleton for module progress loading
+    async function getModuleProgress(moduleId) {
+        try {
+            const response = await fetch(`/api/progress/${userId}/${moduleId}`);
+            return await response.json();
+        } catch (error) {
+            return { total: 0, completed: 0, percentage: 0 };
+        }
+    }
+</script>
