@@ -638,3 +638,192 @@
     </script>
 </body>
 </html>
+<style>
+    /* Loading Spinner for slow connections */
+    .loading-spinner {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 60px;
+        flex-direction: column;
+        gap: 16px;
+    }
+    
+    .spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid var(--border-light);
+        border-top-color: var(--gold);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    .loading-text {
+        color: var(--text-muted);
+        font-size: 13px;
+    }
+    
+    /* Retry button for failed loads */
+    .retry-btn {
+        background: var(--gold);
+        color: #1a1a1a;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 500;
+        margin-top: 16px;
+    }
+    
+    .error-message {
+        text-align: center;
+        padding: 40px;
+        color: var(--error-text);
+    }
+</style>
+<script>
+    // Add cache script
+    const CACHE_KEY = 'income_school_courses';
+    const CACHE_DURATION = 30 * 60 * 1000;
+    
+    function saveCoursesToCache(courses) {
+        try {
+            localStorage.setItem(CACHE_KEY, JSON.stringify({
+                data: courses,
+                timestamp: Date.now()
+            }));
+        } catch(e) {}
+    }
+    
+    function getCoursesFromCache() {
+        try {
+            const cached = localStorage.getItem(CACHE_KEY);
+            if (!cached) return null;
+            const cacheData = JSON.parse(cached);
+            if (Date.now() - cacheData.timestamp > CACHE_DURATION) {
+                localStorage.removeItem(CACHE_KEY);
+                return null;
+            }
+            return cacheData.data;
+        } catch(e) { return null; }
+    }
+    
+    let retryCount = 0;
+    const MAX_RETRIES = 3;
+    
+    async function loadCoursesWithRetry() {
+        // First show cached courses immediately
+        const cachedCourses = getCoursesFromCache();
+        if (cachedCourses && cachedCourses.length > 0) {
+            displayCourses(cachedCourses);
+            // Still fetch fresh in background
+            fetchFreshCourses();
+        } else {
+            await fetchFreshCourses();
+        }
+    }
+    
+    async function fetchFreshCourses() {
+        showSkeleton();
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+            
+            const response = await fetch('/api/modules', { signal: controller.signal });
+            clearTimeout(timeoutId);
+            
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            
+            const courses = await response.json();
+            saveCoursesToCache(courses);
+            displayCourses(courses);
+            retryCount = 0;
+            hideSkeleton();
+        } catch (error) {
+            console.error('Fetch error:', error);
+            retryCount++;
+            
+            if (retryCount <= MAX_RETRIES) {
+                showLoadingMessage(`Connection issue. Retrying (${retryCount}/${MAX_RETRIES})...`);
+                setTimeout(() => fetchFreshCourses(), 2000);
+            } else {
+                showErrorMessage('Unable to load courses. Please check your connection.');
+                hideSkeleton();
+            }
+        }
+    }
+    
+    function showLoadingMessage(message) {
+        const container = document.getElementById('courses-container');
+        container.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><div class="loading-text">${message}</div></div>`;
+        container.style.display = 'block';
+        hideSkeleton();
+    }
+    
+    function showErrorMessage(message) {
+        const container = document.getElementById('courses-container');
+        container.innerHTML = `<div class="error-message">⚠️ ${message}<br><button class="retry-btn" onclick="location.reload()">Retry</button></div>`;
+        container.style.display = 'block';
+        hideSkeleton();
+    }
+    
+    function displayCourses(courses) {
+        const container = document.getElementById('courses-container');
+        if (!courses || courses.length === 0) {
+            container.innerHTML = '<div class="loading">No courses available yet.</div>';
+            return;
+        }
+        
+        container.innerHTML = '';
+        
+        courses.forEach(course => {
+            const moduleId = course.module_id || course.moduleId;
+            const card = document.createElement('div');
+            card.className = 'course-card';
+            card.onclick = () => showCourse(course);
+            
+            // Show cached progress or placeholder
+            card.innerHTML = `
+                <div class="course-category">${course.category || 'Professional Course'}</div>
+                <h3>${escapeHtml(course.title)}</h3>
+                <p class="course-description">${escapeHtml(course.description || 'Master this professional skill.')}</p>
+                <div class="progress-section">
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" style="width: 0%"></div>
+                    </div>
+                    <div class="progress-text">Loading progress...</div>
+                </div>
+                <div class="course-meta">
+                    <span class="course-duration">${escapeHtml(course.estimatedTime || 'Self-paced')}</span>
+                    <span class="start-link">Continue →</span>
+                </div>
+            `;
+            container.appendChild(card);
+            
+            // Load progress asynchronously
+            loadProgressForCourse(card, moduleId);
+        });
+    }
+    
+    async function loadProgressForCourse(card, moduleId) {
+        try {
+            const progress = await getModuleProgress(moduleId);
+            const progressFill = card.querySelector('.progress-bar-fill');
+            const progressText = card.querySelector('.progress-text');
+            
+            if (progressFill) progressFill.style.width = `${progress.percentage}%`;
+            if (progressText) progressText.textContent = `${progress.completed}/${progress.total} lessons completed`;
+        } catch(e) {
+            const progressText = card.querySelector('.progress-text');
+            if (progressText) progressText.textContent = 'Progress unavailable';
+        }
+    }
+    
+    // Replace the old loadCourses with the new one
+    const originalLoadCourses = loadCourses;
+    loadCourses = loadCoursesWithRetry;
+</script>
