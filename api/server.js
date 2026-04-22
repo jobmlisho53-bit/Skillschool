@@ -1724,3 +1724,82 @@ app.post('/api/progress/reset-module', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+// ============ FIXED RESET MODULE ENDPOINT ============
+
+app.post('/api/progress/reset-module', async (req, res) => {
+    try {
+        const { userId, moduleId } = req.body;
+        
+        console.log('Reset request received:', { userId, moduleId });
+        
+        if (!userId || !moduleId) {
+            return res.status(400).json({ error: 'Missing userId or moduleId' });
+        }
+        
+        // First, get all lesson IDs for this module
+        const { data: lessons, error: lessonsError } = await supabase
+            .from('lessons')
+            .select('id')
+            .eq('module_id', moduleId);
+        
+        if (lessonsError) {
+            console.error('Lessons fetch error:', lessonsError);
+            return res.status(500).json({ error: 'Failed to fetch lessons' });
+        }
+        
+        console.log(`Found ${lessons?.length || 0} lessons in module ${moduleId}`);
+        
+        if (lessons && lessons.length > 0) {
+            const lessonIds = lessons.map(l => l.id);
+            
+            // Delete user progress for these lessons
+            const { error: deleteProgressError } = await supabase
+                .from('user_progress')
+                .delete()
+                .eq('user_id', userId)
+                .in('lesson_id', lessonIds);
+            
+            if (deleteProgressError) {
+                console.error('Progress delete error:', deleteProgressError);
+                // Continue anyway - might not have progress yet
+            }
+            
+            // Delete quiz attempts for these lessons
+            const { error: deleteQuizError } = await supabase
+                .from('quiz_attempts')
+                .delete()
+                .eq('user_id', userId)
+                .in('lesson_id', lessonIds);
+            
+            if (deleteQuizError) {
+                console.error('Quiz delete error:', deleteQuizError);
+                // Continue anyway
+            }
+        }
+        
+        // Also delete any certificate for this module
+        const { error: deleteCertError } = await supabase
+            .from('certificates')
+            .delete()
+            .eq('user_id', userId)
+            .eq('module_id', moduleId);
+        
+        if (deleteCertError) {
+            console.error('Certificate delete error:', deleteCertError);
+            // Continue anyway
+        }
+        
+        console.log(`Successfully reset module ${moduleId} for user ${userId}`);
+        res.json({ success: true, message: 'Module reset successfully' });
+        
+    } catch (error) {
+        console.error('Reset module error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Also add a simple test endpoint to verify connectivity
+app.get('/api/test', (req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
