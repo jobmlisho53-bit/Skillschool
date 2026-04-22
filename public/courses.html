@@ -483,3 +483,206 @@
         🔄 Refresh Progress
     </button>
 </div>
+<!-- Add this near the video player -->
+<div id="cheating-warning" style="display: none; background: #fed7d7; border-left: 4px solid #dc3545; padding: 16px; margin: 16px 0; border-radius: 4px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+        <div>
+            <strong style="color: #742a2a;">⚠️ Cheating Detected</strong>
+            <p style="margin: 4px 0 0; font-size: 13px; color: #742a2a;">Skipping ahead in videos is not allowed. Reset your progress to continue.</p>
+        </div>
+        <button id="reset-lesson-btn" style="background: #dc3545; color: white; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-weight: 500;">
+            🔄 Reset This Lesson
+        </button>
+    </div>
+</div>
+
+<script>
+    let cheatDetected = false;
+    
+    function showCheatingWarning() {
+        const warningDiv = document.getElementById('cheating-warning');
+        if (warningDiv) {
+            warningDiv.style.display = 'block';
+            cheatDetected = true;
+            
+            // Disable mark complete button
+            const markBtn = document.getElementById('mark-complete-btn');
+            if (markBtn) {
+                markBtn.disabled = true;
+                markBtn.style.opacity = '0.5';
+                markBtn.title = 'Cheating detected. Reset lesson to continue.';
+            }
+        }
+    }
+    
+    async function resetLesson(lessonId, moduleId) {
+        if (!confirm('⚠️ This will reset ALL progress for this lesson.\n\nYou will need to watch the video again properly.\n\nAre you sure?')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/progress/reset-lesson', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: userId,
+                    lessonId: lessonId,
+                    moduleId: moduleId
+                })
+            });
+            
+            if (response.ok) {
+                alert('✅ Lesson reset successfully! You can now watch the video properly.');
+                
+                // Hide warning
+                document.getElementById('cheating-warning').style.display = 'none';
+                cheatDetected = false;
+                
+                // Reset tracking variables
+                watchedSegments.clear();
+                watchedSeconds = 0;
+                watchPercentage = 0;
+                lastReportedPosition = 0;
+                seekDetectionCount = 0;
+                
+                // Reset YouTube player if exists
+                if (youtubePlayer && typeof youtubePlayer.seekTo === 'function') {
+                    youtubePlayer.seekTo(0);
+                    youtubePlayer.playVideo();
+                }
+                
+                // Re-enable tracking
+                isTracking = false;
+                if (watchInterval) clearInterval(watchInterval);
+                
+                // Restart tracking
+                if (youtubePlayer && typeof youtubePlayer.getCurrentTime === 'function') {
+                    startTracking();
+                }
+                
+                // Refresh the page to reset UI
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            } else {
+                const error = await response.json();
+                alert('Failed to reset: ' + (error.error || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('Reset error:', error);
+            alert('Error resetting lesson. Please refresh the page and try again.');
+        }
+    }
+    
+    function startTracking() {
+        if (watchInterval) clearInterval(watchInterval);
+        
+        watchInterval = setInterval(() => {
+            if (youtubePlayer && typeof youtubePlayer.getCurrentTime === 'function') {
+                const currentTime = youtubePlayer.getCurrentTime();
+                
+                // Detect seeking (large jump forward)
+                if (lastReportedPosition > 0 && currentTime > lastReportedPosition + 5) {
+                    seekDetectionCount++;
+                    console.warn(`Seek detected! Jumped from ${lastReportedPosition} to ${currentTime}`);
+                    
+                    if (seekDetectionCount >= 2) {
+                        showCheatingWarning();
+                    }
+                }
+                
+                // Update watched segments
+                updateWatchedSegments(currentTime);
+                
+                // Smooth playback tracking
+                const timeDelta = currentTime - lastReportedPosition;
+                if (timeDelta > 0 && timeDelta < 5) {
+                    const startSegment = Math.floor(lastReportedPosition / segmentDuration);
+                    const endSegment = Math.floor(currentTime / segmentDuration);
+                    for (let i = startSegment; i <= endSegment; i++) {
+                        if (i >= 0 && i < totalSegments) {
+                            watchedSegments.add(i);
+                        }
+                    }
+                }
+                
+                lastReportedPosition = currentTime;
+                watchedSeconds = currentTime;
+                watchPercentage = calculateUniqueWatchPercentage();
+                
+                // Update progress bar
+                const progressFill = document.getElementById('watch-progress-fill');
+                const percentSpan = document.getElementById('watch-progress-percent');
+                const uniquePercentSpan = document.getElementById('unique-watch-percent');
+                
+                if (progressFill) {
+                    progressFill.style.width = `${Math.min(watchPercentage, 100)}%`;
+                }
+                if (percentSpan) {
+                    percentSpan.textContent = `${Math.min(Math.floor(watchPercentage), 100)}%`;
+                }
+                if (uniquePercentSpan) {
+                    uniquePercentSpan.textContent = `${Math.min(Math.floor(watchPercentage), 100)}%`;
+                }
+                
+                // Enable complete button only when unique watch percentage reaches 90% AND no cheating
+                if (watchPercentage >= 90 && !cheatDetected) {
+                    const markBtn = document.getElementById('mark-complete-btn');
+                    if (markBtn) {
+                        markBtn.disabled = false;
+                        markBtn.style.opacity = '1';
+                    }
+                    clearInterval(watchInterval);
+                    isTracking = false;
+                }
+            }
+        }, 2000);
+    }
+    
+    // Add reset button event listener
+    document.getElementById('reset-lesson-btn')?.addEventListener('click', () => {
+        if (currentLesson) {
+            resetLesson(currentLesson.id, currentCourse?.module_id || currentCourse?.moduleId);
+        }
+    });
+</script>
+<!-- Add reset module button at bottom of course page -->
+<div style="text-align: center; margin: 20px 0;">
+    <button id="reset-module-btn" style="background: none; border: 1px solid #dc3545; color: #dc3545; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+        🔄 Reset Entire Course Progress
+    </button>
+</div>
+
+<script>
+    document.getElementById('reset-module-btn')?.addEventListener('click', async () => {
+        if (!confirm('⚠️⚠️⚠️ WARNING: This will reset ALL progress for this entire course!\n\nYou will lose all completed lessons, quiz passes, and certificates.\n\nThis cannot be undone.\n\nAre you absolutely sure?')) {
+            return;
+        }
+        
+        if (!confirm('Type "RESET" to confirm:') === 'RESET') {
+            alert('Reset cancelled. Type "RESET" to confirm.');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/progress/reset-module', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: userId,
+                    moduleId: currentModuleId
+                })
+            });
+            
+            if (response.ok) {
+                alert('✅ Course reset successfully! Page will now reload.');
+                location.reload();
+            } else {
+                const error = await response.json();
+                alert('Failed to reset: ' + (error.error || 'Unknown error'));
+            }
+        } catch (error) {
+            alert('Error resetting course. Please try again.');
+        }
+    });
+</script>

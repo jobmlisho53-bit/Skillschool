@@ -1642,3 +1642,85 @@ app.get('/api/certificate/debug/:userId/:moduleId', async (req, res) => {
         res.json({ error: error.message });
     }
 });
+
+// ============ RESET LESSON PROGRESS ============
+
+app.post('/api/progress/reset-lesson', async (req, res) => {
+    try {
+        const { userId, lessonId, moduleId } = req.body;
+        
+        if (!userId || !lessonId || !moduleId) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+        
+        // Delete user progress for this lesson
+        const { error: deleteError } = await supabase
+            .from('user_progress')
+            .delete()
+            .eq('user_id', userId)
+            .eq('lesson_id', lessonId);
+        
+        if (deleteError) throw deleteError;
+        
+        // Also delete quiz attempts for this lesson (if any)
+        const { error: quizDeleteError } = await supabase
+            .from('quiz_attempts')
+            .delete()
+            .eq('user_id', userId)
+            .eq('lesson_id', lessonId);
+        
+        if (quizDeleteError) throw quizDeleteError;
+        
+        // Clear any cheating flags (optional: log to admin)
+        console.log(`User ${userId} reset lesson ${lessonId} in module ${moduleId}`);
+        
+        res.json({ success: true, message: 'Lesson reset successfully' });
+    } catch (error) {
+        console.error('Reset lesson error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Reset entire module progress (all lessons)
+app.post('/api/progress/reset-module', async (req, res) => {
+    try {
+        const { userId, moduleId } = req.body;
+        
+        if (!userId || !moduleId) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+        
+        // Delete all user progress for this module
+        const { error: deleteError } = await supabase
+            .from('user_progress')
+            .delete()
+            .eq('user_id', userId)
+            .eq('module_id', moduleId);
+        
+        if (deleteError) throw deleteError;
+        
+        // Get all lessons in module
+        const { data: lessons } = await supabase
+            .from('lessons')
+            .select('id')
+            .eq('module_id', moduleId);
+        
+        if (lessons && lessons.length > 0) {
+            const lessonIds = lessons.map(l => l.id);
+            
+            // Delete all quiz attempts for these lessons
+            const { error: quizDeleteError } = await supabase
+                .from('quiz_attempts')
+                .delete()
+                .eq('user_id', userId)
+                .in('lesson_id', lessonIds);
+            
+            if (quizDeleteError) throw quizDeleteError;
+        }
+        
+        res.json({ success: true, message: 'Module reset successfully' });
+    } catch (error) {
+        console.error('Reset module error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
