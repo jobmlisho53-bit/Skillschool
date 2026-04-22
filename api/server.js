@@ -1570,3 +1570,75 @@ app.get('/api/certificate/status/:userId/:moduleId', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+// Debug endpoint to check certificate status
+app.get('/api/certificate/debug/:userId/:moduleId', async (req, res) => {
+    try {
+        const { userId, moduleId } = req.params;
+        
+        // Get all lessons
+        const { data: lessons } = await supabase
+            .from('lessons')
+            .select('id, title')
+            .eq('module_id', moduleId);
+        
+        // Get completed lessons
+        const { data: completedLessons } = await supabase
+            .from('user_progress')
+            .select('lesson_id, completed')
+            .eq('user_id', userId)
+            .eq('module_id', moduleId);
+        
+        // Get quiz attempts
+        const { data: quizAttempts } = await supabase
+            .from('quiz_attempts')
+            .select('lesson_id, passed, score')
+            .eq('user_id', userId);
+        
+        res.json({
+            lessons: lessons,
+            completedLessons: completedLessons,
+            quizAttempts: quizAttempts,
+            totalLessons: lessons?.length || 0,
+            completedCount: completedLessons?.filter(l => l.completed === true).length || 0
+        });
+    } catch (error) {
+        res.json({ error: error.message });
+    }
+});
+
+// Debug endpoint to check certificate status
+app.get('/api/certificate/debug/:userId/:moduleId', async (req, res) => {
+    try {
+        const { userId, moduleId } = req.params;
+        
+        // Get all lessons
+        const { data: lessons } = await supabase
+            .from('lessons')
+            .select('id, title')
+            .eq('module_id', moduleId);
+        
+        // Get completed lessons
+        const { data: completedLessons } = await supabase
+            .from('user_progress')
+            .select('lesson_id, completed')
+            .eq('user_id', userId)
+            .eq('module_id', moduleId);
+        
+        // Get quiz attempts
+        const { data: quizAttempts } = await supabase
+            .from('quiz_attempts')
+            .select('lesson_id, passed, score')
+            .eq('user_id', userId);
+        
+        res.json({
+            lessons: lessons,
+            completedLessons: completedLessons,
+            quizAttempts: quizAttempts,
+            totalLessons: lessons?.length || 0,
+            completedCount: completedLessons?.filter(l => l.completed === true).length || 0
+        });
+    } catch (error) {
+        res.json({ error: error.message });
+    }
+});

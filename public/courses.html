@@ -431,3 +431,55 @@
         addClaimButtonIfReady();
     };
 </script>
+<script>
+    // Make sure certificate progress updates when lessons are completed
+    async function refreshCertificateProgress() {
+        if (currentModuleId) {
+            await updateCertificateProgress(currentModuleId);
+            addClaimButtonIfReady();
+        }
+    }
+    
+    // Override the existing showCourse function to ensure certificate loads
+    if (typeof window.originalShowCourse === 'undefined') {
+        window.originalShowCourse = window.showCourse;
+    }
+    
+    window.showCourse = async function(course) {
+        currentModuleId = course.module_id || course.moduleId;
+        currentCourse = course;
+        
+        // Call original showCourse function
+        if (window.originalShowCourse) {
+            await window.originalShowCourse(course);
+        }
+        
+        // Update certificate progress after course loads
+        setTimeout(async () => {
+            await updateCertificateProgress(currentModuleId);
+            addClaimButtonIfReady();
+        }, 500);
+    };
+    
+    // Also refresh when marking lessons complete
+    const originalMarkComplete = window.markCompleteHandler;
+    window.markCompleteHandler = async function() {
+        if (originalMarkComplete) {
+            await originalMarkComplete();
+        }
+        await refreshCertificateProgress();
+    };
+    
+    // Initial check when page loads
+    document.addEventListener('DOMContentLoaded', async () => {
+        if (currentModuleId) {
+            await updateCertificateProgress(currentModuleId);
+        }
+    });
+</script>
+<!-- Add refresh button near certificate -->
+<div style="text-align: right; margin-bottom: 10px;">
+    <button onclick="refreshCertificateProgress()" style="background: none; border: none; color: #c9a03d; cursor: pointer; font-size: 12px;">
+        🔄 Refresh Progress
+    </button>
+</div>
