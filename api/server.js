@@ -1803,3 +1803,104 @@ app.post('/api/progress/reset-module', async (req, res) => {
 app.get('/api/test', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+// ============ CONTINUE WATCHING / RESUME ============
+
+// Save watch position
+app.post('/api/watch/save', async (req, res) => {
+    try {
+        const { userId, lessonId, position, percentage } = req.body;
+        
+        if (!userId || !lessonId) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+        
+        // Upsert watch history
+        const { error } = await supabase
+            .from('watch_history')
+            .upsert({
+                user_id: userId,
+                lesson_id: lessonId,
+                last_position: Math.floor(position),
+                last_percentage: Math.floor(percentage),
+                updated_at: new Date().toISOString()
+            }, { onConflict: 'user_id, lesson_id' });
+        
+        if (error) throw error;
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Save watch error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get watch position for a lesson
+app.get('/api/watch/position/:userId/:lessonId', async (req, res) => {
+    try {
+        const { userId, lessonId } = req.params;
+        
+        const { data, error } = await supabase
+            .from('watch_history')
+            .select('last_position, last_percentage, updated_at')
+            .eq('user_id', userId)
+            .eq('lesson_id', lessonId)
+            .single();
+        
+        if (error && error.code !== 'PGRST116') throw error;
+        
+        res.json({
+            hasProgress: !!data,
+            position: data?.last_position || 0,
+            percentage: data?.last_percentage || 0,
+            updatedAt: data?.updated_at || null
+        });
+    } catch (error) {
+        console.error('Get watch error:', error);
+        res.json({ hasProgress: false, position: 0, percentage: 0 });
+    }
+});
+
+// Get all lessons with progress for a user (for resume carousel)
+app.get('/api/watch/resume/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        
+        const { data, error } = await supabase
+            .from('watch_history')
+            .select(`
+                last_position,
+                last_percentage,
+                updated_at,
+                lessons:lesson_id (
+                    id,
+                    title,
+                    module_id,
+                    modules:module_id (
+                        title
+                    )
+                )
+            `)
+            .eq('user_id', userId)
+            .eq('last_percentage', '<', 90)
+            .order('updated_at', { ascending: false })
+            .limit(10);
+        
+        if (error) throw error;
+        
+        const resumeItems = data?.map(item => ({
+            lessonId: item.lessons.id,
+            lessonTitle: item.lessons.title,
+            moduleId: item.lessons.module_id,
+            moduleTitle: item.lessons.modules?.title || 'Course',
+            position: item.last_position,
+            percentage: item.last_percentage,
+            lastWatched: item.updated_at
+        })) || [];
+        
+        res.json(resumeItems);
+    } catch (error) {
+        console.error('Get resume list error:', error);
+        res.json([]);
+    }
+});

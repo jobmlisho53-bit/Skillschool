@@ -827,3 +827,173 @@
     const originalLoadCourses = loadCourses;
     loadCourses = loadCoursesWithRetry;
 </script>
+<!-- Add this after the header, before courses section -->
+<div id="resume-section" style="display: none; margin-bottom: 24px;">
+    <div style="background: var(--bg-secondary); border-left: 4px solid var(--gold); border-radius: 8px; padding: 16px 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <div>
+                <span style="font-size: 12px; color: var(--gold); text-transform: uppercase; letter-spacing: 1px;">Continue Learning</span>
+                <div id="resume-info" style="margin-top: 4px;">
+                    <strong id="resume-course">Course Name</strong>
+                    <span style="color: var(--text-muted); margin: 0 8px">•</span>
+                    <span id="resume-lesson">Lesson Name</span>
+                </div>
+                <div id="resume-progress" style="margin-top: 8px;">
+                    <div style="background: var(--progress-bg); border-radius: 4px; height: 4px; width: 200px;">
+                        <div id="resume-progress-bar" style="width: 0%; height: 100%; background: var(--gold); border-radius: 4px;"></div>
+                    </div>
+                </div>
+            </div>
+            <button id="resume-btn" class="resume-button" style="background: var(--gold); color: #1a1a1a; border: none; padding: 10px 24px; border-radius: 4px; cursor: pointer; font-weight: 500;">
+                ▶ Resume Watching
+            </button>
+        </div>
+    </div>
+</div>
+<script>
+    // ============ CONTINUE WATCHING ============
+    let currentResumeLesson = null;
+    let currentResumeCourse = null;
+    let resumePosition = 0;
+    
+    async function saveWatchPosition(lessonId, position, percentage) {
+        try {
+            await fetch('/api/watch/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: userId,
+                    lessonId: lessonId,
+                    position: position,
+                    percentage: percentage
+                })
+            });
+        } catch(e) { console.log('Save position failed:', e); }
+    }
+    
+    async function loadResumeSuggestion() {
+        try {
+            const response = await fetch(`/api/watch/resume/${userId}`);
+            const items = await response.json();
+            
+            if (items.length === 0) {
+                document.getElementById('resume-section').style.display = 'none';
+                return;
+            }
+            
+            const topItem = items[0];
+            currentResumeLesson = topItem.lessonId;
+            currentResumeCourse = topItem.moduleId;
+            resumePosition = topItem.position;
+            
+            document.getElementById('resume-course').textContent = topItem.moduleTitle;
+            document.getElementById('resume-lesson').textContent = topItem.lessonTitle;
+            document.getElementById('resume-progress-bar').style.width = `${topItem.percentage}%`;
+            document.getElementById('resume-section').style.display = 'block';
+        } catch(e) {
+            console.log('Resume suggestion failed:', e);
+        }
+    }
+    
+    async function getWatchPosition(lessonId) {
+        try {
+            const response = await fetch(`/api/watch/position/${userId}/${lessonId}`);
+            const data = await response.json();
+            return data;
+        } catch(e) {
+            return { hasProgress: false, position: 0, percentage: 0 };
+        }
+    }
+    
+    function resumeWatching() {
+        if (currentResumeLesson && currentResumeCourse) {
+            // Find and play the lesson
+            const fakeCourse = { module_id: currentResumeCourse, title: currentResumeCourse };
+            showCourse(fakeCourse);
+            
+            // After course loads, find the specific lesson and play it at saved position
+            setTimeout(() => {
+                const lessonToResume = currentLessons.find(l => l.id === currentResumeLesson);
+                if (lessonToResume) {
+                    playLesson(lessonToResume, resumePosition);
+                }
+            }, 500);
+        }
+    }
+    
+    document.getElementById('resume-btn')?.addEventListener('click', resumeWatching);
+    
+    // Modify playLesson to accept starting position
+    const originalPlayLesson = playLesson;
+    window.playLesson = function(lesson, startPosition = 0) {
+        originalPlayLesson(lesson);
+        
+        // If there's a saved position and video is ready, seek to it
+        if (startPosition > 5 && startPosition < totalDuration - 10) {
+            setTimeout(() => {
+                if (youtubePlayer && typeof youtubePlayer.seekTo === 'function') {
+                    youtubePlayer.seekTo(startPosition);
+                    console.log(`Resumed at ${startPosition} seconds`);
+                }
+            }, 1000);
+        }
+    };
+    
+    // Save position periodically while watching
+    let lastSavedPosition = 0;
+    function startPositionSaving() {
+        if (window.positionSaveInterval) clearInterval(window.positionSaveInterval);
+        
+        window.positionSaveInterval = setInterval(() => {
+            if (youtubePlayer && typeof youtubePlayer.getCurrentTime === 'function' && currentLesson) {
+                const currentPos = youtubePlayer.getCurrentTime();
+                const currentPercent = (currentPos / totalDuration) * 100;
+                
+                // Save every 10 seconds or when position changes significantly
+                if (Math.abs(currentPos - lastSavedPosition) > 10 && currentPos > 5) {
+                    lastSavedPosition = currentPos;
+                    saveWatchPosition(currentLesson.id, currentPos, currentPercent);
+                }
+            }
+        }, 10000);
+    }
+    
+    // Override createYouTubePlayer to add position saving
+    const originalCreatePlayer = createYouTubePlayer;
+    window.createYouTubePlayer = function(lesson) {
+        originalCreatePlayer(lesson);
+        startPositionSaving();
+    };
+    
+    // Load resume suggestion on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(loadResumeSuggestion, 1000);
+    });
+</script>
+<script>
+    // Enhanced playLesson with resume check
+    async function playLessonWithResume(lesson) {
+        // Check for saved position
+        const savedPosition = await getWatchPosition(lesson.id);
+        
+        if (savedPosition.hasProgress && savedPosition.percentage < 90 && savedPosition.percentage > 5) {
+            // Ask user if they want to resume
+            const shouldResume = confirm(`You were ${Math.floor(savedPosition.percentage)}% through this lesson. Resume from where you left off?`);
+            
+            if (shouldResume) {
+                playLesson(lesson, savedPosition.position);
+            } else {
+                playLesson(lesson, 0);
+                // Clear saved position if user chooses to restart
+                saveWatchPosition(lesson.id, 0, 0);
+            }
+        } else {
+            playLesson(lesson, 0);
+        }
+    }
+    
+    // Replace the lesson click handler to use resume check
+    const originalLessonHandler = (lesson) => {
+        playLessonWithResume(lesson);
+    };
+</script>
