@@ -1904,3 +1904,29 @@ app.get('/api/watch/resume/:userId', async (req, res) => {
         res.json([]);
     }
 });
+
+// ============ SEO ROUTES ============
+
+// Serve sitemap
+app.get('/sitemap.xml', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/sitemap.xml'));
+});
+
+// Serve robots.txt
+app.get('/robots.txt', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/robots.txt'));
+});
+
+// Blog routes
+app.get('/blog', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/blog/index.html'));
+});
+
+app.get('/blog/:slug', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/blog/post.html'));
+});
+
+// Course landing pages for SEO
+app.get('/courses/:courseId', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/courses/index.html'));
+});
