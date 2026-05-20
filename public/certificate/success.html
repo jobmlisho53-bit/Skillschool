@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Certificate Purchase Success - Income School</title>
+    <style>
+        body { font-family: Arial; max-width: 600px; margin: 0 auto; padding: 40px; text-align: center; }
+        .code { background: #f0f4ff; padding: 20px; font-size: 24px; letter-spacing: 2px; border-radius: 8px; margin: 20px 0; }
+        button { background: #667eea; color: white; padding: 12px 24px; border: none; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>✅ Payment Successful!</h1>
+    <p>Your certificate access code:</p>
+    <div class="code" id="accessCode">Loading...</div>
+    <p>Save this code. You'll need it to download your certificate.</p>
+    <button onclick="downloadCertificate()">Download Certificate</button>
+    <br><br>
+    <a href="/">← Back to Home</a>
+    
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const accessCode = urlParams.get('code');
+        const certId = urlParams.get('cert');
+        
+        document.getElementById('accessCode').textContent = accessCode;
+        
+        function downloadCertificate() {
+            window.location.href = `/api/certificate/download/${certId}?code=${accessCode}`;
+        }
+    </script>
+</body>
+</html>

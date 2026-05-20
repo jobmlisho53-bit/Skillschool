@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Content - Income School</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #f8f9fa; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 60px 0; text-align: center; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 30px; }
+        .product-card { background: white; border-radius: 16px; padding: 28px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid #e8e8e8; }
+        .product-price { font-size: 2rem; font-weight: 700; color: #667eea; margin: 20px 0; }
+        .buy-btn { background: #667eea; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 600; }
+        .unlock-section { background: white; border-radius: 16px; padding: 30px; margin-top: 40px; text-align: center; }
+        .code-input { padding: 15px; width: 300px; border: 1px solid #ddd; border-radius: 8px; margin: 20px 0; font-size: 1rem; }
+        .back-link { display: inline-block; margin-top: 30px; color: #667eea; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1>✨ Premium Content</h1>
+            <p>Certificates • Bonus materials • Advanced courses</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="products-grid" id="products-grid">
+            <!-- Products load here -->
+        </div>
+
+        <div class="unlock-section">
+            <h3>🔐 Already purchased?</h3>
+            <p>Enter your access code to unlock premium content</p>
+            <input type="text" id="accessCode" class="code-input" placeholder="Enter your access code">
+            <button onclick="unlockContent()" class="buy-btn" style="width: auto; padding: 12px 40px;">Unlock →</button>
+            <div id="unlockResult" style="margin-top: 20px;"></div>
+        </div>
+    </div>
+
+    <script>
+        async function loadProducts() {
+            try {
+                const res = await fetch('/api/premium/products');
+                const products = await res.json();
+                const grid = document.getElementById('products-grid');
+                grid.innerHTML = products.map(p => `
+                    <div class="product-card">
+                        <h3>${p.title}</h3>
+                        <p>${p.description}</p>
+                        <div class="product-price">₦${(p.price/100).toLocaleString()}</div>
+                        <button onclick="buyProduct('${p.product_id}', ${p.price})" class="buy-btn">Purchase →</button>
+                    </div>
+                `).join('');
+            } catch(e) { console.error(e); }
+        }
+        
+        async function buyProduct(productId, amount) {
+            const email = prompt('Enter your email address to receive access code:');
+            if (!email) return;
+            
+            const res = await fetch('/api/payment/initialize', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, amount, productId })
+            });
+            const data = await res.json();
+            if (data.authorization_url) window.location.href = data.authorization_url;
+        }
+        
+        async function unlockContent() {
+            const code = document.getElementById('accessCode').value;
+            const resultDiv = document.getElementById('unlockResult');
+            
+            const res = await fetch('/api/premium/verify-code', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ accessCode: code })
+            });
+            const data = await res.json();
+            
+            if (data.valid) {
+                resultDiv.innerHTML = `<div style="background: #c6f6d5; padding: 15px; border-radius: 8px;">
+                    ✅ Valid! Redirecting to premium content...
+                </div>`;
+                setTimeout(() => window.location.href = `/premium/content/${code}`, 1500);
+            } else {
+                resultDiv.innerHTML = `<div style="background: #fed7d7; padding: 15px; border-radius: 8px;">
+                    ❌ Invalid or expired code
+                </div>`;
+            }
+        }
+        
+        loadProducts();
+    </script>
+</body>
+</html>

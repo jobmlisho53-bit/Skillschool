@@ -1935,3 +1935,456 @@ app.get("/shop", (req, res) => {
     res.sendFile(path.join(__dirname, "../public/shop.html"));
 });
 
+
+// ============ PAYSTACK PAYMENT INTEGRATION ============
+const crypto = require('crypto');
+const axios = require('axios');
+
+const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY;
+
+// Initialize payment
+app.post('/api/payment/initialize', async (req, res) => {
+    try {
+        const { email, amount, productId, callbackUrl } = req.body;
+        
+        const response = await axios.post(
+            'https://api.paystack.co/transaction/initialize',
+            {
+                email: email,
+                amount: amount,
+                callback_url: callbackUrl || 'https://skillschool-dbc1.vercel.app/payment/verify',
+                metadata: {
+                    product_id: productId,
+                    user_id: req.body.userId || 'guest_' + Date.now()
+                }
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${PAYSTACK_SECRET}`,
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+        
+        res.json({
+            success: true,
+            authorization_url: response.data.data.authorization_url,
+            reference: response.data.data.reference
+        });
+    } catch (error) {
+        console.error('Payment init error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Verify payment (webhook + callback)
+app.get('/api/payment/verify', async (req, res) => {
+    try {
+        const { reference } = req.query;
+        
+        const response = await axios.get(
+            `https://api.paystack.co/transaction/verify/${reference}`,
+            {
+                headers: { Authorization: `Bearer ${PAYSTACK_SECRET}` }
+            }
+        );
+        
+        const paymentData = response.data.data;
+        
+        if (paymentData.status === 'success') {
+            // Generate unique access code
+            const accessCode = crypto.randomBytes(16).toString('hex').substring(0, 16);
+            
+            // Get product details for expiration
+            const { data: product } = await supabase
+                .from('premium_content')
+                .select('access_duration_days')
+                .eq('product_id', paymentData.metadata.product_id)
+                .single();
+            
+            const expiresAt = new Date();
+            expiresAt.setDate(expiresAt.getDate() + (product?.access_duration_days || 30));
+            
+            // Save purchase
+            await supabase
+                .from('premium_purchases')
+                .insert([{
+                    user_id: paymentData.metadata.user_id,
+                    email: paymentData.customer.email,
+                    transaction_ref: reference,
+                    amount: paymentData.amount / 100,
+                    product_id: paymentData.metadata.product_id,
+                    access_code: accessCode,
+                    expires_at: expiresAt
+                }]);
+            
+            // Redirect to success page with access code
+            res.redirect(`/premium/success?code=${accessCode}&product=${paymentData.metadata.product_id}`);
+        } else {
+            res.redirect('/premium/failed');
+        }
+    } catch (error) {
+        console.error('Verify error:', error);
+        res.redirect('/premium/failed');
+    }
+});
+
+// Verify access code (for unlocking content)
+app.post('/api/premium/verify-code', async (req, res) => {
+    try {
+        const { accessCode } = req.body;
+        
+        const { data: purchase, error } = await supabase
+            .from('premium_purchases')
+            .select('*')
+            .eq('access_code', accessCode)
+            .eq('status', 'active')
+            .single();
+        
+        if (error || !purchase) {
+            return res.status(404).json({ valid: false, error: 'Invalid access code' });
+        }
+        
+        if (new Date(purchase.expires_at) < new Date()) {
+            return res.status(403).json({ valid: false, error: 'Access code expired' });
+        }
+        
+        res.json({
+            valid: true,
+            product_id: purchase.product_id,
+            expires_at: purchase.expires_at
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get premium content by access code
+app.get('/api/premium/content/:accessCode', async (req, res) => {
+    try {
+        const { accessCode } = req.params;
+        
+        // Verify code first
+        const { data: purchase } = await supabase
+            .from('premium_purchases')
+            .select('*')
+            .eq('access_code', accessCode)
+            .eq('status', 'active')
+            .single();
+        
+        if (!purchase || new Date(purchase.expires_at) < new Date()) {
+            return res.status(403).json({ error: 'Invalid or expired code' });
+        }
+        
+        // Get content
+        const { data: content } = await supabase
+            .from('premium_content')
+            .select('*')
+            .eq('product_id', purchase.product_id)
+            .single();
+        
+        res.json({
+            product: content,
+            purchase: {
+                purchased_at: purchase.created_at,
+                expires_at: purchase.expires_at
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// ============ PAYSTACK CHECKOUT ============
+const crypto = require('crypto');
+const axios = require('axios');
+const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY;
+
+// Initialize certificate payment
+app.post('/api/pay/certificate', async (req, res) => {
+    try {
+        const { email, certificateId, amount, userName } = req.body;
+        
+        const response = await axios.post(
+            'https://api.paystack.co/transaction/initialize',
+            {
+                email: email,
+                amount: amount,
+                metadata: {
+                    type: 'certificate',
+                    certificate_id: certificateId,
+                    user_name: userName
+                },
+                callback_url: 'https://skillschool-dbc1.vercel.app/payment/verify'
+            },
+            { headers: { Authorization: `Bearer ${PAYSTACK_SECRET}`, 'Content-Type': 'application/json' } }
+        );
+        
+        res.json({ success: true, authorization_url: response.data.data.authorization_url, reference: response.data.data.reference });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Initialize book payment
+app.post('/api/pay/book', async (req, res) => {
+    try {
+        const { email, bookTitle, amount } = req.body;
+        
+        const response = await axios.post(
+            'https://api.paystack.co/transaction/initialize',
+            {
+                email: email,
+                amount: amount,
+                metadata: { type: 'book', book_title: bookTitle },
+                callback_url: 'https://skillschool-dbc1.vercel.app/payment/verify'
+            },
+            { headers: { Authorization: `Bearer ${PAYSTACK_SECRET}`, 'Content-Type': 'application/json' } }
+        );
+        
+        res.json({ success: true, authorization_url: response.data.data.authorization_url, reference: response.data.data.reference });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Verify payment
+app.get('/api/payment/verify', async (req, res) => {
+    try {
+        const { reference } = req.query;
+        const response = await axios.get(`https://api.paystack.co/transaction/verify/${reference}`, {
+            headers: { Authorization: `Bearer ${PAYSTACK_SECRET}` }
+        });
+        
+        const payment = response.data.data;
+        if (payment.status === 'success') {
+            const accessCode = crypto.randomBytes(8).toString('hex');
+            
+            if (payment.metadata.type === 'certificate') {
+                await supabase.from('certificate_orders').insert([{
+                    email: payment.customer.email,
+                    transaction_ref: reference,
+                    amount: payment.amount / 100,
+                    certificate_id: payment.metadata.certificate_id,
+                    access_code: accessCode,
+                    status: 'completed'
+                }]);
+                res.redirect(`/certificate/unlock?code=${accessCode}&cert=${payment.metadata.certificate_id}`);
+            } else {
+                await supabase.from('book_orders').insert([{
+                    email: payment.customer.email,
+                    transaction_ref: reference,
+                    amount: payment.amount / 100,
+                    book_title: payment.metadata.book_title
+                }]);
+                res.redirect(`/book/download?book=${encodeURIComponent(payment.metadata.book_title)}`);
+            }
+        } else {
+            res.redirect('/payment/failed');
+        }
+    } catch (error) {
+        res.redirect('/payment/failed');
+    }
+});
+
+// Verify certificate access code
+app.post('/api/verify-certificate', async (req, res) => {
+    const { accessCode } = req.body;
+    const { data } = await supabase.from('certificate_orders').select('*').eq('access_code', accessCode).eq('status', 'completed').single();
+    if (data) res.json({ valid: true, certificateId: data.certificate_id });
+    else res.json({ valid: false });
+});
+
+// ============ PAYSTACK CHECKOUT ============
+const crypto = require('crypto');
+const axios = require('axios');
+const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY;
+
+// Initialize certificate payment
+app.post('/api/pay/certificate', async (req, res) => {
+    try {
+        const { email, certificateId, amount, userName } = req.body;
+        
+        const response = await axios.post(
+            'https://api.paystack.co/transaction/initialize',
+            {
+                email: email,
+                amount: amount,
+                metadata: {
+                    type: 'certificate',
+                    certificate_id: certificateId,
+                    user_name: userName
+                },
+                callback_url: 'https://skillschool-dbc1.vercel.app/payment/verify'
+            },
+            { headers: { Authorization: `Bearer ${PAYSTACK_SECRET}`, 'Content-Type': 'application/json' } }
+        );
+        
+        res.json({ success: true, authorization_url: response.data.data.authorization_url, reference: response.data.data.reference });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Initialize book payment
+app.post('/api/pay/book', async (req, res) => {
+    try {
+        const { email, bookTitle, amount } = req.body;
+        
+        const response = await axios.post(
+            'https://api.paystack.co/transaction/initialize',
+            {
+                email: email,
+                amount: amount,
+                metadata: { type: 'book', book_title: bookTitle },
+                callback_url: 'https://skillschool-dbc1.vercel.app/payment/verify'
+            },
+            { headers: { Authorization: `Bearer ${PAYSTACK_SECRET}`, 'Content-Type': 'application/json' } }
+        );
+        
+        res.json({ success: true, authorization_url: response.data.data.authorization_url, reference: response.data.data.reference });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Verify payment
+app.get('/api/payment/verify', async (req, res) => {
+    try {
+        const { reference } = req.query;
+        const response = await axios.get(`https://api.paystack.co/transaction/verify/${reference}`, {
+            headers: { Authorization: `Bearer ${PAYSTACK_SECRET}` }
+        });
+        
+        const payment = response.data.data;
+        if (payment.status === 'success') {
+            const accessCode = crypto.randomBytes(8).toString('hex');
+            
+            if (payment.metadata.type === 'certificate') {
+                await supabase.from('certificate_orders').insert([{
+                    email: payment.customer.email,
+                    transaction_ref: reference,
+                    amount: payment.amount / 100,
+                    certificate_id: payment.metadata.certificate_id,
+                    access_code: accessCode,
+                    status: 'completed'
+                }]);
+                res.redirect(`/certificate/unlock?code=${accessCode}&cert=${payment.metadata.certificate_id}`);
+            } else {
+                await supabase.from('book_orders').insert([{
+                    email: payment.customer.email,
+                    transaction_ref: reference,
+                    amount: payment.amount / 100,
+                    book_title: payment.metadata.book_title
+                }]);
+                res.redirect(`/book/download?book=${encodeURIComponent(payment.metadata.book_title)}`);
+            }
+        } else {
+            res.redirect('/payment/failed');
+        }
+    } catch (error) {
+        res.redirect('/payment/failed');
+    }
+});
+
+// Verify certificate access code
+app.post('/api/verify-certificate', async (req, res) => {
+    const { accessCode } = req.body;
+    const { data } = await supabase.from('certificate_orders').select('*').eq('access_code', accessCode).eq('status', 'completed').single();
+    if (data) res.json({ valid: true, certificateId: data.certificate_id });
+    else res.json({ valid: false });
+});
+
+// ============ CERTIFICATE PAYMENT - $4.99 ============
+const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY;
+
+// Convert $4.99 to kobo (for Paystack)
+const CERTIFICATE_AMOUNT_KOBO = 49900; // $4.99 in kobo (₦)
+
+app.post('/api/pay/certificate', async (req, res) => {
+    try {
+        const { email, certificateId, userName, courseName } = req.body;
+        
+        const response = await axios.post(
+            'https://api.paystack.co/transaction/initialize',
+            {
+                email: email,
+                amount: CERTIFICATE_AMOUNT_KOBO,
+                currency: 'USD', // or 'NGN' for Naira
+                metadata: {
+                    type: 'certificate',
+                    certificate_id: certificateId,
+                    user_name: userName,
+                    course_name: courseName,
+                    price: '4.99'
+                },
+                callback_url: 'https://skillschool-dbc1.vercel.app/payment/verify'
+            },
+            { headers: { Authorization: `Bearer ${PAYSTACK_SECRET}`, 'Content-Type': 'application/json' } }
+        );
+        
+        res.json({ success: true, authorization_url: response.data.data.authorization_url });
+    } catch (error) {
+        console.error('Payment error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Verify payment
+app.get('/api/payment/verify', async (req, res) => {
+    try {
+        const { reference } = req.query;
+        const response = await axios.get(`https://api.paystack.co/transaction/verify/${reference}`, {
+            headers: { Authorization: `Bearer ${PAYSTACK_SECRET}` }
+        });
+        
+        const payment = response.data.data;
+        
+        if (payment.status === 'success') {
+            const accessCode = crypto.randomBytes(8).toString('hex').toUpperCase();
+            
+            await supabase.from('certificate_orders').insert([{
+                email: payment.customer.email,
+                transaction_ref: reference,
+                amount: 4.99,
+                certificate_id: payment.metadata.certificate_id,
+                access_code: accessCode,
+                status: 'completed'
+            }]);
+            
+            // Redirect to success page with access code
+            res.redirect(`/certificate/success?code=${accessCode}&cert=${payment.metadata.certificate_id}`);
+        } else {
+            res.redirect('/payment/failed');
+        }
+    } catch (error) {
+        console.error('Verify error:', error);
+        res.redirect('/payment/failed');
+    }
+});
+
+// Verify certificate access code
+app.post('/api/verify-certificate', async (req, res) => {
+    try {
+        const { accessCode } = req.body;
+        const { data } = await supabase
+            .from('certificate_orders')
+            .select('*')
+            .eq('access_code', accessCode)
+            .eq('status', 'completed')
+            .single();
+        
+        if (data) {
+            res.json({ valid: true, certificateId: data.certificate_id });
+        } else {
+            res.json({ valid: false });
+        }
+    } catch (error) {
+        res.json({ valid: false });
+    }
+});
+
+app.get("/certificate/success", (req, res) => {
+    res.sendFile(path.join(__dirname, "../public/certificate/success.html"));
+});
+

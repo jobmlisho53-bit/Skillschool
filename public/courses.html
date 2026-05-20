@@ -1033,3 +1033,71 @@
     ]
 }
 </script>
+<!-- Add this inside certificate section when certificate is ready -->
+<button onclick="buyCertificate()" style="background: #48bb78; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; margin-top: 16px;">
+    💳 Buy Printed Certificate - ₦5,000 (~$3)
+</button>
+
+<script>
+async function buyCertificate() {
+    const email = prompt('Enter your email to receive the certificate:');
+    if (!email) return;
+    
+    const res = await fetch('/api/pay/certificate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            email: email,
+            certificateId: currentCourse?.module_id,
+            amount: 500000, // ₦5,000 in kobo
+            userName: document.getElementById('certificate-user-name')?.textContent || 'Student'
+        })
+    });
+    const data = await res.json();
+    if (data.authorization_url) window.location.href = data.authorization_url;
+}
+</script>
+<!-- Replace the claim certificate button with buy button -->
+<div id="certificate-actions" style="display: none; margin-top: 16px; text-align: center;">
+    <button onclick="buyCertificate()" style="background: #48bb78; color: white; border: none; padding: 14px 28px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1rem;">
+        💳 Buy Printed Certificate - $4.99
+    </button>
+    <p style="font-size: 11px; color: #666; margin-top: 8px;">High-quality PDF certificate • Instant delivery • Lifetime access</p>
+</div>
+
+<script>
+async function buyCertificate() {
+    const email = prompt('Enter your email to receive the certificate:', currentUserEmail || '');
+    if (!email) return;
+    
+    const btn = event.target;
+    btn.disabled = true;
+    btn.textContent = 'Processing...';
+    
+    try {
+        const response = await fetch('/api/pay/certificate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: email,
+                certificateId: currentModuleId,
+                userName: document.getElementById('certificate-user-name')?.textContent || 'Student',
+                courseName: currentCourse?.title
+            })
+        });
+        
+        const data = await response.json();
+        if (data.authorization_url) {
+            window.location.href = data.authorization_url;
+        } else {
+            alert('Payment initiation failed. Please try again.');
+            btn.disabled = false;
+            btn.textContent = 'Buy Printed Certificate - $4.99';
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
+        btn.disabled = false;
+        btn.textContent = 'Buy Printed Certificate - $4.99';
+    }
+}
+</script>
