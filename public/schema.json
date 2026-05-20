@@ -1,0 +1,42 @@
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "EducationalOrganization",
+  "name": "Skill to Income",
+  "url": "https://skillschool-dbc1.vercel.app",
+  "logo": "https://skillschool-dbc1.vercel.app/logo.png",
+  "description": "Free online courses teaching digital skills that generate income. Web development, crypto trading, copywriting, AI integration.",
+  "sameAs": [
+    "https://twitter.com/skilltoincome",
+    "https://facebook.com/skilltoincome"
+  ],
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD",
+    "availability": "https://schema.org/InStock"
+  },
+  "hasCourse": [
+    {
+      "@type": "Course",
+      "name": "Web Development (Full Stack)",
+      "description": "Master frontend and backend development",
+      "provider": {
+        "@type": "Organization",
+        "name": "Skill to Income",
+        "sameAs": "https://skillschool-dbc1.vercel.app"
+      }
+    },
+    {
+      "@type": "Course",
+      "name": "Crypto & Trading Foundations",
+      "description": "Understand blockchain and trading strategies"
+    },
+    {
+      "@type": "Course",
+      "name": "AI Integration for Apps",
+      "description": "Build applications with artificial intelligence"
+    }
+  ]
+}
+</script>
