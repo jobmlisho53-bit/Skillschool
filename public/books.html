@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head><title>Buy Books - Income School</title>
+<style>
+    body { font-family: Arial; max-width: 800px; margin: 0 auto; padding: 40px; }
+    .book { border: 1px solid #ddd; padding: 20px; margin: 20px 0; border-radius: 8px; }
+    button { background: #667eea; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
+</style>
+</head>
+<body>
+    <h1>📚 Buy Digital Books</h1>
+    
+    <div class="book">
+        <h3>Web Development Masterclass PDF</h3>
+        <p>Complete guide + code samples + exercises</p>
+        <p><strong>₦3,000 (~$2)</strong></p>
+        <button onclick="buyBook('Web Development Masterclass PDF', 300000)">Buy Now</button>
+    </div>
+    
+    <div class="book">
+        <h3>Crypto Trading Bible</h3>
+        <p>Strategies, analysis, risk management</p>
+        <p><strong>₦5,000 (~$3)</strong></p>
+        <button onclick="buyBook('Crypto Trading Bible', 500000)">Buy Now</button>
+    </div>
+    
+    <div class="book">
+        <h3>Copywriting Templates Kit</h3>
+        <p>Email templates, sales scripts, contracts</p>
+        <p><strong>₦2,500 (~$1.50)</strong></p>
+        <button onclick="buyBook('Copywriting Templates Kit', 250000)">Buy Now</button>
+    </div>
+    
+    <script>
+    async function buyBook(bookTitle, amount) {
+        const email = prompt('Enter your email:');
+        if (!email) return;
+        const res = await fetch('/api/pay/book', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, bookTitle, amount })
+        });
+        const data = await res.json();
+        if (data.authorization_url) window.location.href = data.authorization_url;
+    }
+    </script>
+</body>
+</html>
