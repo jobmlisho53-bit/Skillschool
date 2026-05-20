@@ -2388,3 +2388,8 @@ app.get("/certificate/success", (req, res) => {
     res.sendFile(path.join(__dirname, "../public/certificate/success.html"));
 });
 
+
+app.get("/certificate/unlock", (req, res) => {
+    res.sendFile(path.join(__dirname, "../public/certificate/unlock.html"));
+});
+
