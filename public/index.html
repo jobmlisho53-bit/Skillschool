@@ -9,103 +9,408 @@
     <meta name="author" content="Skill to Income">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://skillschool-dbc1.vercel.app/">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: #ffffff; color: #1a1a1a; line-height: 1.5; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         
-        /* Header */
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 80px 0; text-align: center; }
-        .header h1 { font-size: 3rem; margin-bottom: 16px; font-weight: 700; }
-        .header p { font-size: 1.2rem; opacity: 0.9; max-width: 600px; margin: 0 auto; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #ffffff;
+            color: #1a1a1a;
+            line-height: 1.5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+        
+        /* Header / Hero */
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 100px 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            letter-spacing: -0.02em;
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            opacity: 0.95;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .hero-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.15);
+            padding: 8px 20px;
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-bottom: 30px;
+        }
         
         /* Buttons */
-        .btn { display: inline-block; background: white; color: #667eea; padding: 14px 32px; border-radius: 50px; text-decoration: none; font-weight: 600; margin-top: 24px; transition: transform 0.2s; }
-        .btn:hover { transform: translateY(-2px); }
-        .btn-outline { background: transparent; color: white; border: 2px solid white; margin-left: 12px; }
-        .btn-outline:hover { background: white; color: #667eea; }
+        .btn-group {
+            margin-top: 40px;
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 14px 36px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .btn-primary {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+        
+        .btn-outline:hover {
+            background: white;
+            color: #667eea;
+            transform: translateY(-3px);
+        }
         
         /* Sections */
-        .section { padding: 60px 0; }
-        .section-light { background: #f8f9fa; }
-        .section-title { font-size: 2rem; text-align: center; margin-bottom: 40px; font-weight: 600; }
+        .section {
+            padding: 80px 0;
+        }
         
-        /* Grid */
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; }
-        .card { background: white; padding: 24px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid #e0e0e0; transition: transform 0.2s; }
-        .card:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
-        .card h3 { margin-bottom: 12px; color: #667eea; }
-        .card p { color: #666; font-size: 0.9rem; }
+        .section-light {
+            background: #f8f9fa;
+        }
         
-        /* Trust badges */
-        .trust-grid { display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; margin: 40px 0; }
-        .trust-item { text-align: center; }
-        .trust-number { font-size: 2rem; font-weight: 700; color: #667eea; }
-        .trust-label { font-size: 0.85rem; color: #666; }
+        .section-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 15px;
+            letter-spacing: -0.01em;
+        }
+        
+        .section-subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 50px;
+            font-size: 1rem;
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: flex;
+            justify-content: center;
+            gap: 60px;
+            flex-wrap: wrap;
+            margin: 40px 0;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 8px;
+        }
+        
+        /* Courses Grid */
+        .courses-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 20px;
+        }
+        
+        .course-card {
+            background: white;
+            border-radius: 16px;
+            padding: 28px;
+            transition: all 0.3s ease;
+            border: 1px solid #e8e8e8;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        
+        .course-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 30px -12px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+        
+        .course-icon {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+        
+        .course-card h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #1a1a1a;
+        }
+        
+        .course-card p {
+            font-size: 0.85rem;
+            color: #666;
+            line-height: 1.5;
+        }
+        
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 60px 0;
+            border-radius: 24px;
+            margin: 40px 0;
+        }
+        
+        .cta-section h3 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        
+        .cta-section p {
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+        
+        .btn-cta {
+            background: white;
+            color: #667eea;
+            padding: 14px 36px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-block;
+            transition: transform 0.3s;
+        }
+        
+        .btn-cta:hover {
+            transform: translateY(-3px);
+        }
         
         /* Footer */
-        .footer { background: #1a1a2e; color: white; text-align: center; padding: 40px 0; margin-top: 60px; }
-        .footer a { color: white; text-decoration: none; margin: 0 10px; }
-        .footer a:hover { text-decoration: underline; }
+        .footer {
+            background: #1a1a2e;
+            color: white;
+            text-align: center;
+            padding: 50px 0 30px;
+            margin-top: 60px;
+        }
         
+        .footer a {
+            color: #aaa;
+            text-decoration: none;
+            margin: 0 12px;
+            font-size: 0.85rem;
+            transition: color 0.2s;
+        }
+        
+        .footer a:hover {
+            color: white;
+        }
+        
+        .footer-links {
+            margin-bottom: 20px;
+        }
+        
+        .copyright {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 20px;
+        }
+        
+        /* Responsive */
         @media (max-width: 768px) {
-            .header h1 { font-size: 2rem; }
-            .header p { font-size: 1rem; }
-            .grid { grid-template-columns: 1fr; }
-            .trust-grid { gap: 20px; }
-            .btn-outline { margin-left: 0; margin-top: 12px; }
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+            
+            .hero p {
+                font-size: 1rem;
+                padding: 0 16px;
+            }
+            
+            .section {
+                padding: 50px 0;
+            }
+            
+            .section-title {
+                font-size: 1.6rem;
+            }
+            
+            .courses-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                gap: 30px;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 80%;
+                text-align: center;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="header">
+    <!-- Hero Section -->
+    <section class="hero">
         <div class="container">
+            <div class="hero-badge">🎓 Free. No Signup. Beginner-friendly</div>
             <h1>Skill to Income</h1>
-            <p>Learn real skills that can make you money online. Free. No signup. Beginner-friendly.</p>
-            <div>
-                <a href="/courses" class="btn">Start Learning →</a>
-                <a href="/courses" class="btn btn-outline">Browse Courses</a>
+            <p>Learn real skills that can make you money online. Web Development • Trading • Copywriting • AI • Business</p>
+            <div class="btn-group">
+                <a href="/courses" class="btn btn-primary">🚀 Start Learning Now</a>
+                <a href="/courses" class="btn btn-outline">📚 Browse All Courses</a>
             </div>
         </div>
-    </div>
+    </section>
 
-    <div class="section">
+    <!-- Stats Section -->
+    <section class="section">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-number">16+</div>
+                    <div class="stat-label">Professional Courses</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">100%</div>
+                    <div class="stat-label">Free Access</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">No Signup</div>
+                    <div class="stat-label">Start Instantly</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Courses Preview Section -->
+    <section class="section-light">
         <div class="container">
             <h2 class="section-title">What You'll Learn</h2>
-            <div class="grid">
-                <div class="card"><h3>💻 Web Development</h3><p>Full-stack development from scratch</p></div>
-                <div class="card"><h3>🤖 AI Integration</h3><p>Build apps with ChatGPT & AI</p></div>
-                <div class="card"><h3>💰 Crypto Trading</h3><p>Understand markets and strategies</p></div>
-                <div class="card"><h3>✍️ Copywriting</h3><p>Write copy that sells</p></div>
-                <div class="card"><h3>🎥 YouTube Automation</h3><p>Build and scale channels</p></div>
-                <div class="card"><h3>🏢 Digital Business</h3><p>Start and monetize online</p></div>
-                <div class="card"><h3>📈 Advanced Trading</h3><p>Smart money concepts</p></div>
-                <div class="card"><h3>🎬 Video Editing</h3><p>Professional content production</p></div>
+            <p class="section-subtitle">16+ real-world skills organized into complete courses</p>
+            
+            <div class="courses-grid">
+                <div class="course-card">
+                    <div class="course-icon">💻</div>
+                    <h3>Web Development</h3>
+                    <p>Full-stack development from fundamentals to deployment</p>
+                </div>
+                <div class="course-card">
+                    <div class="course-icon">🤖</div>
+                    <h3>AI Integration</h3>
+                    <p>Build applications with artificial intelligence</p>
+                </div>
+                <div class="course-card">
+                    <div class="course-icon">💰</div>
+                    <h3>Crypto & Trading</h3>
+                    <p>Understanding markets and strategic analysis</p>
+                </div>
+                <div class="course-card">
+                    <div class="course-icon">✍️</div>
+                    <h3>Copywriting</h3>
+                    <p>Professional writing that converts</p>
+                </div>
+                <div class="course-card">
+                    <div class="course-icon">🎥</div>
+                    <h3>YouTube Automation</h3>
+                    <p>Build and scale YouTube channels</p>
+                </div>
+                <div class="course-card">
+                    <div class="course-icon">🏢</div>
+                    <h3>Digital Business</h3>
+                    <p>Launch and scale online ventures</p>
+                </div>
+                <div class="course-card">
+                    <div class="course-icon">📈</div>
+                    <h3>Advanced Trading</h3>
+                    <p>Smart money concepts</p>
+                </div>
+                <div class="course-card">
+                    <div class="course-icon">🎬</div>
+                    <h3>Video Editing</h3>
+                    <p>Professional content production</p>
+                </div>
             </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <div class="container">
+        <div class="cta-section">
+            <h3>Ready to Start Your Journey?</h3>
+            <p>Join thousands of students learning skills that pay</p>
+            <a href="/courses" class="btn-cta">Start Learning Now →</a>
         </div>
     </div>
 
-    <div class="section-light">
+    <!-- Footer -->
+    <footer class="footer">
         <div class="container">
-            <div class="trust-grid">
-                <div class="trust-item"><div class="trust-number">16+</div><div class="trust-label">Professional Courses</div></div>
-                <div class="trust-item"><div class="trust-number">100%</div><div class="trust-label">Free Access</div></div>
-                <div class="trust-item"><div class="trust-number">No Signup</div><div class="trust-label">Start Instantly</div></div>
+            <div class="footer-links">
+                <a href="/privacy">Privacy Policy</a>
+                <a href="/terms">Terms of Use</a>
+                <a href="/contact">Contact</a>
+                <a href="/courses">All Courses</a>
             </div>
-            <div style="text-align: center;">
-                <a href="/courses" class="btn" style="background: #667eea; color: white;">Browse All Courses →</a>
+            <div class="copyright">
+                © 2026 Skill to Income. All rights reserved.
             </div>
         </div>
-    </div>
-
-    <div class="footer">
-        <div class="container">
-            <p>© 2026 Skill to Income. All rights reserved.</p>
-            <p style="margin-top: 16px;">
-                <a href="/privacy">Privacy</a> | <a href="/terms">Terms</a> | <a href="/contact">Contact</a>
-            </p>
-        </div>
-    </div>
+    </footer>
 </body>
 </html>
