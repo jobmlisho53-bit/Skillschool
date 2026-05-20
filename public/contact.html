@@ -1,346 +1,81 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Google AdSense -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8038320098546953"
-     crossorigin="anonymous"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact - Skill to Income</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <title>Contact Income School - Get Support or Ask Questions</title>
+    <meta name="description" content="Contact Income School for support, course suggestions, or business inquiries. We respond within 48 hours.">
+    <meta name="keywords" content="contact income school, support, help, course suggestions">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://skillschool-dbc1.vercel.app/contact">
+    
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8038320098546953" crossorigin="anonymous"></script>
+    
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #ffffff;
-            color: #1a1a1a;
-            line-height: 1.5;
-        }
-        
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 0 32px;
-        }
-        
-        .nav {
-            background: #ffffff;
-            border-bottom: 1px solid rgba(212, 175, 55, 0.15);
-            padding: 20px 0;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            backdrop-filter: blur(10px);
-            background: rgba(255, 255, 255, 0.98);
-        }
-        
-        .nav-content {
-            max-width: 1280px;
-            margin: 0 auto;
-            padding: 0 32px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-        
-        .logo {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 1.5rem;
-            font-weight: 600;
-            letter-spacing: -0.01em;
-            background: linear-gradient(135deg, #1a1a1a 0%, #c9a03d 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .nav-links {
-            display: flex;
-            gap: 32px;
-            align-items: center;
-        }
-        
-        .nav-links a {
-            color: #6b6b6b;
-            text-decoration: none;
-            font-size: 0.8rem;
-            transition: color 0.2s;
-        }
-        
-        .nav-links a:hover {
-            color: #c9a03d;
-        }
-        
-        .content {
-            padding: 60px 0 80px;
-        }
-        
-        h1 {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 2.5rem;
-            font-weight: 600;
-            margin-bottom: 16px;
-            background: linear-gradient(135deg, #1a1a1a 0%, #c9a03d 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .contact-description {
-            color: #6b6b6b;
-            margin-bottom: 40px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
-            font-size: 0.9rem;
-        }
-        
-        .form-group {
-            margin-bottom: 24px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            font-size: 0.85rem;
-            color: #1a1a1a;
-        }
-        
-        input, select, textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid rgba(212, 175, 55, 0.3);
-            border-radius: 2px;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.85rem;
-            transition: border-color 0.2s;
-        }
-        
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: #c9a03d;
-        }
-        
-        button {
-            background: #c9a03d;
-            color: white;
-            border: none;
-            padding: 12px 32px;
-            border-radius: 2px;
-            cursor: pointer;
-            font-family: 'Inter', sans-serif;
-            font-weight: 500;
-            font-size: 0.85rem;
-            letter-spacing: 0.5px;
-            transition: background 0.2s;
-        }
-        
-        button:hover {
-            background: #b8922e;
-        }
-        
-        .success-message {
-            background: rgba(212, 175, 55, 0.1);
-            color: #c9a03d;
-            padding: 16px;
-            border-radius: 2px;
-            margin-top: 24px;
-            display: none;
-            border-left: 2px solid #c9a03d;
-        }
-        
-        .error-message {
-            background: rgba(220, 53, 69, 0.1);
-            color: #dc3545;
-            padding: 16px;
-            border-radius: 2px;
-            margin-top: 24px;
-            display: none;
-            border-left: 2px solid #dc3545;
-        }
-        
-        .back-link {
-            display: inline-block;
-            margin-top: 40px;
-            color: #c9a03d;
-            text-decoration: none;
-            font-size: 0.85rem;
-            font-weight: 500;
-            transition: opacity 0.2s;
-        }
-        
-        .back-link:hover {
-            opacity: 0.7;
-        }
-        
-        .footer {
-            background: #ffffff;
-            border-top: 1px solid rgba(212, 175, 55, 0.15);
-            padding: 48px 0 32px;
-        }
-        
-        .footer-content {
-            max-width: 1280px;
-            margin: 0 auto;
-            padding: 0 32px;
-            display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 32px;
-        }
-        
-        .footer-links {
-            display: flex;
-            gap: 32px;
-            flex-wrap: wrap;
-        }
-        
-        .footer a {
-            color: #6b6b6b;
-            text-decoration: none;
-            font-size: 0.8rem;
-        }
-        
-        .footer a:hover {
-            color: #c9a03d;
-        }
-        
-        .copyright {
-            font-size: 0.75rem;
-            color: #9a9a9a;
-        }
-        
-        @media (max-width: 768px) {
-            .container, .nav-content, .footer-content {
-                padding: 0 20px;
-            }
-            
-            h1 {
-                font-size: 1.8rem;
-            }
-        }
+        body { font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 20px; }
+        h1 { color: #667eea; }
+        input, textarea, select { width: 100%; padding: 10px; margin: 10px 0 20px; border: 1px solid #ddd; border-radius: 5px; }
+        button { background: #667eea; color: white; padding: 12px 30px; border: none; border-radius: 5px; cursor: pointer; }
+        .back-link { display: inline-block; margin-top: 30px; color: #667eea; text-decoration: none; }
     </style>
 </head>
 <body>
-    <div class="nav">
-        <div class="nav-content">
-            <div class="logo">Skill to Income</div>
-            <div class="nav-links">
-                <a href="/">Home</a>
-                <a href="/courses">Courses</a>
-                <a href="/contact">Contact</a>
-            </div>
-        </div>
-    </div>
-
-    <div class="container">
-        <div class="content">
-            <h1>Contact Us</h1>
-            <div class="contact-description">
-                Have questions, feedback, or suggestions? We'd love to hear from you. Fill out the form below and we'll get back to you within 48 hours.
-            </div>
-            
-            <form id="contactForm">
-                <div class="form-group">
-                    <label>Your Name *</label>
-                    <input type="text" id="name" required>
-                </div>
-                
-                <div class="form-group">
-                    <label>Your Email *</label>
-                    <input type="email" id="email" required>
-                </div>
-                
-                <div class="form-group">
-                    <label>Subject *</label>
-                    <select id="subject" required>
-                        <option value="">Select a subject</option>
-                        <option value="Course Suggestion">Course Suggestion</option>
-                        <option value="Technical Issue">Technical Issue</option>
-                        <option value="Content Question">Content Question</option>
-                        <option value="Business Inquiry">Business Inquiry</option>
-                        <option value="Other">Other</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label>Message *</label>
-                    <textarea id="message" rows="6" required></textarea>
-                </div>
-                
-                <button type="submit">Send Message</button>
-            </form>
-            
-            <div id="successMessage" class="success-message">
-                ✓ Message sent successfully! We'll respond within 48 hours.
-            </div>
-            <div id="errorMessage" class="error-message">
-                ✗ Failed to send message. Please try again or email us directly.
-            </div>
-            
-            <a href="/" class="back-link">← Back to Home</a>
-        </div>
-    </div>
-
-    <footer class="footer">
-        <div class="footer-content">
-            <div class="copyright">© 2026 Skill to Income. All rights reserved.</div>
-            <div class="footer-links">
-                <a href="/privacy">Privacy</a>
-                <a href="/terms">Terms</a>
-                <a href="/contact">Contact</a>
-            </div>
-        </div>
-    </footer>
-
+    <h1>Contact Us</h1>
+    <p>Have questions, feedback, or suggestions? We'd love to hear from you.</p>
+    
+    <form id="contactForm">
+        <label>Your Name *</label>
+        <input type="text" id="name" required>
+        
+        <label>Your Email *</label>
+        <input type="email" id="email" required>
+        
+        <label>Subject *</label>
+        <select id="subject" required>
+            <option value="">Select a subject</option>
+            <option value="Course Suggestion">Course Suggestion</option>
+            <option value="Technical Issue">Technical Issue</option>
+            <option value="Business Inquiry">Business Inquiry</option>
+            <option value="Other">Other</option>
+        </select>
+        
+        <label>Message *</label>
+        <textarea id="message" rows="6" required></textarea>
+        
+        <button type="submit">Send Message</button>
+    </form>
+    
+    <div id="successMessage" style="display:none; color: green; margin-top: 20px;">✓ Message sent! We'll respond within 48 hours.</div>
+    <div id="errorMessage" style="display:none; color: red; margin-top: 20px;">✗ Error sending message. Please try again or email directly.</div>
+    
+    <p style="margin-top: 30px;">Or email us directly: <strong>jobmlisho63@gmail.com</strong></p>
+    
+    <a href="/" class="back-link">← Back to Home</a>
+    
     <script>
-        const form = document.getElementById('contactForm');
-        const successDiv = document.getElementById('successMessage');
-        const errorDiv = document.getElementById('errorMessage');
-        
-        successDiv.style.display = 'none';
-        errorDiv.style.display = 'none';
-        
-        form.addEventListener('submit', async (e) => {
+        document.getElementById('contactForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
             const formData = {
                 name: document.getElementById('name').value,
                 email: document.getElementById('email').value,
                 subject: document.getElementById('subject').value,
                 message: document.getElementById('message').value
             };
-            
             try {
-                const response = await fetch('/api/contact', {
+                const res = await fetch('/api/contact', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formData)
                 });
-                
-                if (response.ok) {
-                    successDiv.style.display = 'block';
-                    errorDiv.style.display = 'none';
-                    form.reset();
-                    setTimeout(() => {
-                        successDiv.style.display = 'none';
-                    }, 5000);
-                } else {
-                    throw new Error('Failed to send');
-                }
-            } catch (error) {
-                errorDiv.style.display = 'block';
-                successDiv.style.display = 'none';
-                setTimeout(() => {
-                    errorDiv.style.display = 'none';
-                }, 5000);
+                if (res.ok) {
+                    document.getElementById('successMessage').style.display = 'block';
+                    document.getElementById('contactForm').reset();
+                    setTimeout(() => document.getElementById('successMessage').style.display = 'none', 5000);
+                } else throw new Error();
+            } catch(e) {
+                document.getElementById('errorMessage').style.display = 'block';
+                setTimeout(() => document.getElementById('errorMessage').style.display = 'none', 5000);
             }
         });
     </script>
