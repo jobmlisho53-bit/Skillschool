@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <!-- Main Pages -->
     <url>
         <loc>https://skillschool-dbc1.vercel.app/</loc>
         <lastmod>2026-05-20</lastmod>
@@ -43,19 +44,33 @@
         <priority>0.3</priority>
     </url>
     <url>
+        <loc>https://skillschool-dbc1.vercel.app/faq</loc>
+        <lastmod>2026-05-20</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.4</priority>
+    </url>
+    
+    <!-- Blog Posts -->
+    <url>
         <loc>https://skillschool-dbc1.vercel.app/blog/make-1000-dollars-per-day.html</loc>
         <lastmod>2026-05-20</lastmod>
         <changefreq>weekly</changefreq>
-        <priority>0.6</priority>
+        <priority>0.7</priority>
     </url>
     <url>
         <loc>https://skillschool-dbc1.vercel.app/blog/freelancing-kenya-guide.html</loc>
         <lastmod>2026-05-20</lastmod>
         <changefreq>weekly</changefreq>
-        <priority>0.6</priority>
+        <priority>0.7</priority>
     </url>
     <url>
         <loc>https://skillschool-dbc1.vercel.app/blog/best-skills-for-2026.html</loc>
+        <lastmod>2026-05-20</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://skillschool-dbc1.vercel.app/blog/why-learn-web-development.html</loc>
         <lastmod>2026-05-20</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
