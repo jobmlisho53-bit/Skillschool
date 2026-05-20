@@ -168,3 +168,93 @@ app.use((err, req, res, next) => {
 });
 
 module.exports = app;
+
+// ============ SHOP API ============
+
+// Get all shop items (public)
+app.get('/api/shop/items', async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('shop_items')
+            .select('*')
+            .eq('is_active', true)
+            .order('sort_order', { ascending: true });
+        
+        if (error) throw error;
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get single shop item
+app.get('/api/shop/items/:id', async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('shop_items')
+            .select('*')
+            .eq('id', req.params.id)
+            .single();
+        
+        if (error) throw error;
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Admin: Create shop item
+app.post('/api/admin/shop/items', async (req, res) => {
+    try {
+        const { name, description, price, image_url, affiliate_link, category, course_id, sort_order } = req.body;
+        
+        const { data, error } = await supabaseAdmin
+            .from('shop_items')
+            .insert([{
+                name, description, price, image_url, affiliate_link,
+                category, course_id, sort_order: sort_order || 0
+            }])
+            .select()
+            .single();
+        
+        if (error) throw error;
+        res.status(201).json(data);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+// Admin: Update shop item
+app.put('/api/admin/shop/items/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updates = req.body;
+        
+        const { data, error } = await supabaseAdmin
+            .from('shop_items')
+            .update(updates)
+            .eq('id', id)
+            .select()
+            .single();
+        
+        if (error) throw error;
+        res.json(data);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+// Admin: Delete shop item
+app.delete('/api/admin/shop/items/:id', async (req, res) => {
+    try {
+        const { error } = await supabaseAdmin
+            .from('shop_items')
+            .delete()
+            .eq('id', req.params.id);
+        
+        if (error) throw error;
+        res.json({ success: true });
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});

@@ -767,3 +767,154 @@
     </script>
 </body>
 </html>
+<!-- Add Shop Management Button to Navigation -->
+<button class="nav-btn" onclick="showSection('shop')">🛒 Manage Shop</button>
+
+<!-- Shop Management Section -->
+<div id="shop-section" class="section hidden">
+    <h2>🛒 Shop Items</h2>
+    
+    <!-- Add Item Form -->
+    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+        <h3>Add New Item</h3>
+        <form id="addShopItemForm">
+            <div class="form-group">
+                <label>Item Name *</label>
+                <input type="text" id="itemName" required>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea id="itemDescription" rows="2"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Price (e.g., $19.99 or "Free")</label>
+                <input type="text" id="itemPrice" placeholder="$19.99">
+            </div>
+            <div class="form-group">
+                <label>Image URL</label>
+                <input type="url" id="itemImageUrl" placeholder="https://...">
+            </div>
+            <div class="form-group">
+                <label>Affiliate/Product Link *</label>
+                <input type="url" id="itemLink" required placeholder="https://amzn.to/...">
+            </div>
+            <div class="form-group">
+                <label>Category</label>
+                <select id="itemCategory">
+                    <option value="">Select Category</option>
+                    <option value="Web Development">Web Development</option>
+                    <option value="Crypto Trading">Crypto Trading</option>
+                    <option value="Copywriting">Copywriting</option>
+                    <option value="AI">AI</option>
+                    <option value="Business">Business</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Sort Order (lower = appears first)</label>
+                <input type="number" id="itemSortOrder" value="0">
+            </div>
+            <button type="submit">➕ Add Item</button>
+        </form>
+    </div>
+    
+    <!-- Items List -->
+    <h3>Current Items</h3>
+    <div id="shopItemsList"></div>
+</div>
+
+<script>
+// Load shop items for admin
+async function loadShopItems() {
+    try {
+        const response = await fetch('/api/shop/items');
+        const items = await response.json();
+        const container = document.getElementById('shopItemsList');
+        
+        if (items.length === 0) {
+            container.innerHTML = '<p>No items yet. Add your first item above.</p>';
+            return;
+        }
+        
+        container.innerHTML = items.map(item => `
+            <div class="shop-item-card" style="border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin-bottom: 15px; display: flex; gap: 15px; align-items: center;">
+                ${item.image_url ? `<img src="${item.image_url}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;" onerror="this.src='https://placehold.co/60x60'">` : '<div style="width: 60px; height: 60px; background: #e0e0e0; border-radius: 8px; display: flex; align-items: center; justify-content: center;">📚</div>'}
+                <div style="flex: 1;">
+                    <strong>${escapeHtml(item.name)}</strong><br>
+                    <small>${escapeHtml(item.price || 'No price')} | ${escapeHtml(item.category || 'Uncategorized')}</small>
+                    <br>
+                    <small><a href="${item.affiliate_link}" target="_blank">${item.affiliate_link.substring(0, 50)}...</a></small>
+                </div>
+                <div>
+                    <button onclick="deleteShopItem(${item.id})" style="background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Delete</button>
+                </div>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Error loading shop items:', error);
+    }
+}
+
+// Add shop item
+document.getElementById('addShopItemForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const itemData = {
+        name: document.getElementById('itemName').value,
+        description: document.getElementById('itemDescription').value,
+        price: document.getElementById('itemPrice').value,
+        image_url: document.getElementById('itemImageUrl').value,
+        affiliate_link: document.getElementById('itemLink').value,
+        category: document.getElementById('itemCategory').value,
+        sort_order: parseInt(document.getElementById('itemSortOrder').value) || 0
+    };
+    
+    try {
+        const response = await fetch('/api/admin/shop/items', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(itemData)
+        });
+        
+        if (response.ok) {
+            alert('Item added successfully!');
+            document.getElementById('addShopItemForm').reset();
+            loadShopItems();
+            // Also refresh the public shop page cache
+        } else {
+            const error = await response.json();
+            alert('Error: ' + error.error);
+        }
+    } catch (error) {
+        alert('Network error: ' + error.message);
+    }
+});
+
+// Delete shop item
+async function deleteShopItem(id) {
+    if (!confirm('Delete this item? This cannot be undone.')) return;
+    
+    try {
+        const response = await fetch(`/api/admin/shop/items/${id}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            alert('Item deleted');
+            loadShopItems();
+        } else {
+            alert('Delete failed');
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
+    }
+}
+
+// Update showSection to load shop items when shop tab is clicked
+const originalShowSection = showSection;
+showSection = function(sectionName) {
+    originalShowSection(sectionName);
+    if (sectionName === 'shop') {
+        loadShopItems();
+    }
+};
+</script>
