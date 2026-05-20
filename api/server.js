@@ -1930,3 +1930,8 @@ app.get('/blog/:slug', (req, res) => {
 app.get('/courses/:courseId', (req, res) => {
     res.sendFile(path.join(__dirname, '../public/courses/index.html'));
 });
+
+app.get("/shop", (req, res) => {
+    res.sendFile(path.join(__dirname, "../public/shop.html"));
+});
+

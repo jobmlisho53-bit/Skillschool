@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Shop - Income School</title>
+    <meta name="description" content="Buy recommended books for web development, crypto trading, copywriting, and digital business. Support free courses.">
+    <meta name="keywords" content="programming books, trading books, copywriting books, learn web development, buy books online Kenya">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://skillschool-dbc1.vercel.app/shop">
+    
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8038320098546953" crossorigin="anonymous"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #f8f9fa; color: #1a1a1a; line-height: 1.6; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+        
+        /* Header */
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 60px 0; text-align: center; }
+        .header h1 { font-size: 2.5rem; margin-bottom: 16px; }
+        .header p { font-size: 1.1rem; opacity: 0.9; }
+        
+        /* Book Grid */
+        .books-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; margin-top: 40px; }
+        .book-card { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05); transition: transform 0.3s; border: 1px solid #e8e8e8; }
+        .book-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .book-cover { background: #f0f4ff; height: 200px; display: flex; align-items: center; justify-content: center; font-size: 4rem; }
+        .book-info { padding: 20px; }
+        .book-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; color: #1a1a1a; }
+        .book-author { font-size: 0.8rem; color: #667eea; margin-bottom: 12px; }
+        .book-description { font-size: 0.85rem; color: #666; margin-bottom: 16px; line-height: 1.5; }
+        .book-price { font-size: 1.3rem; font-weight: 700; color: #667eea; margin-bottom: 16px; }
+        .buy-btn { display: inline-block; background: #667eea; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.85rem; transition: background 0.3s; }
+        .buy-btn:hover { background: #5a67d8; }
+        .affiliate-note { font-size: 0.7rem; color: #999; margin-top: 12px; text-align: center; }
+        
+        /* Footer */
+        .footer { background: #1a1a2e; color: white; text-align: center; padding: 40px 0; margin-top: 60px; }
+        .footer a { color: #aaa; text-decoration: none; margin: 0 12px; font-size: 0.85rem; }
+        .back-link { display: inline-block; margin-top: 20px; color: #667eea; text-decoration: none; }
+        
+        @media (max-width: 768px) {
+            .header h1 { font-size: 1.8rem; }
+            .books-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1>📚 Recommended Books</h1>
+            <p>Support free courses • Get deeper knowledge • Earn affiliate commissions</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="books-grid">
+            
+            <!-- Web Development Books -->
+            <div class="book-card">
+                <div class="book-cover">📖</div>
+                <div class="book-info">
+                    <div class="book-title">JavaScript: The Good Parts</div>
+                    <div class="book-author">by Douglas Crockford</div>
+                    <div class="book-description">Master JavaScript fundamentals. Perfect companion to our Web Development course.</div>
+                    <div class="book-price">$19.99</div>
+                    <a href="https://amzn.to/3RZx1Kc" target="_blank" class="buy-btn" rel="sponsored">Buy on Amazon →</a>
+                </div>
+            </div>
+
+            <div class="book-card">
+                <div class="book-cover">🌐</div>
+                <div class="book-info">
+                    <div class="book-title">HTML & CSS: Design and Build Websites</div>
+                    <div class="book-author">by Jon Duckett</div>
+                    <div class="book-description">Beautifully designed introduction to web development. Beginner-friendly.</div>
+                    <div class="book-price">$24.99</div>
+                    <a href="https://amzn.to/4bRZ2yD" target="_blank" class="buy-btn" rel="sponsored">Buy on Amazon →</a>
+                </div>
+            </div>
+
+            <!-- Crypto Trading Books -->
+            <div class="book-card">
+                <div class="book-cover">📊</div>
+                <div class="book-info">
+                    <div class="book-title">Technical Analysis of Financial Markets</div>
+                    <div class="book-author">by John J. Murphy</div>
+                    <div class="book-description">Complete guide to trading strategies. Essential for our Crypto Trading course.</div>
+                    <div class="book-price">$39.99</div>
+                    <a href="https://amzn.to/3FpL2xV" target="_blank" class="buy-btn" rel="sponsored">Buy on Amazon →</a>
+                </div>
+            </div>
+
+            <!-- Copywriting Books -->
+            <div class="book-card">
+                <div class="book-cover">✍️</div>
+                <div class="book-info">
+                    <div class="book-title">The Copywriter's Handbook</div>
+                    <div class="book-author">by Robert Bly</div>
+                    <div class="book-description">Practical guide to writing copy that sells. Complements our Copywriting course.</div>
+                    <div class="book-price">$15.99</div>
+                    <a href="https://amzn.to/3GpM2xW" target="_blank" class="buy-btn" rel="sponsored">Buy on Amazon →</a>
+                </div>
+            </div>
+
+            <!-- AI Books -->
+            <div class="book-card">
+                <div class="book-cover">🤖</div>
+                <div class="book-info">
+                    <div class="book-title">Artificial Intelligence: A Modern Approach</div>
+                    <div class="book-author">by Stuart Russell</div>
+                    <div class="book-description">Comprehensive AI textbook. Perfect for our AI Integration course.</div>
+                    <div class="book-price">$49.99</div>
+                    <a href="https://amzn.to/4bS1cLf" target="_blank" class="buy-btn" rel="sponsored">Buy on Amazon →</a>
+                </div>
+            </div>
+
+            <!-- Business Books -->
+            <div class="book-card">
+                <div class="book-cover">🏢</div>
+                <div class="book-info">
+                    <div class="book-title">The $100 Startup</div>
+                    <div class="book-author">by Chris Guillebeau</div>
+                    <div class="book-description">Turn your skills into income. Great for our Digital Business course.</div>
+                    <div class="book-price">$12.99</div>
+                    <a href="https://amzn.to/3FqM3xV" target="_blank" class="buy-btn" rel="sponsored">Buy on Amazon →</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="affiliate-note">
+            📌 As an Amazon Associate, I earn from qualifying purchases. This helps keep our courses free.
+        </div>
+        
+        <div style="text-align: center; margin-top: 40px;">
+            <a href="/" class="back-link">← Back to Home</a>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="container">
+            <a href="/privacy">Privacy</a> | <a href="/terms">Terms</a> | <a href="/contact">Contact</a> | <a href="/shop">Shop</a>
+            <div class="copyright" style="margin-top: 20px;">© 2026 Income School - Free digital skills training</div>
+        </div>
+    </div>
+</body>
+</html>
