@@ -4,66 +4,388 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Income School</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: #faf9f7; color: #1a1a1a; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
-        .header { background: #ffffff; border-bottom: 1px solid rgba(212, 175, 55, 0.15); padding: 24px 0; }
-        .nav { background: white; border-bottom: 1px solid rgba(212, 175, 55, 0.15); padding: 12px 0; }
-        .nav button { background: none; border: 1px solid rgba(212, 175, 55, 0.3); padding: 8px 20px; margin: 0 8px; border-radius: 4px; cursor: pointer; color: #1a1a1a; }
-        .nav button:hover { border-color: #c9a03d; color: #c9a03d; }
-        .section { background: white; border-radius: 8px; padding: 24px; margin: 24px 0; border: 1px solid rgba(212, 175, 55, 0.15); }
-        .hidden { display: none; }
-        input, textarea, select { width: 100%; padding: 10px; margin: 8px 0 16px; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 4px; font-family: inherit; }
-        button[type="submit"] { background: #c9a03d; color: white; border: none; padding: 10px 24px; border-radius: 4px; cursor: pointer; }
-        .module-card { border: 1px solid rgba(212, 175, 55, 0.15); padding: 16px; margin: 16px 0; border-radius: 6px; }
-        .lesson-item { border-left: 2px solid #c9a03d; padding: 8px 12px; margin: 8px 0; background: #fefcf8; }
+        body { font-family: 'Inter', sans-serif; background: #f5f5f5; color: #1a1a1a; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px 0; text-align: center; }
+        .nav { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .nav button { background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: 500; }
+        .nav button:hover { background: #5a67d8; }
+        .section { background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: none; }
+        .section.active { display: block; }
+        h2 { margin-bottom: 20px; color: #667eea; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 500; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; }
+        button[type="submit"] { background: #48bb78; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: 500; }
+        .module-card { border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; margin-bottom: 15px; background: #fafafa; }
+        .module-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; }
+        .module-title { font-size: 18px; font-weight: 600; color: #667eea; }
+        .module-actions { display: flex; gap: 10px; }
+        .edit-btn, .delete-btn, .save-btn { padding: 5px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .edit-btn { background: #ffc107; color: #333; }
+        .delete-btn { background: #dc3545; color: white; }
+        .save-btn { background: #48bb78; color: white; }
+        .lesson-list { margin-left: 20px; margin-top: 10px; }
+        .lesson-item { border-left: 3px solid #48bb78; padding: 10px; margin: 10px 0; background: white; border-radius: 4px; }
+        .lesson-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .lesson-title { font-weight: 500; }
+        .lesson-meta { font-size: 12px; color: #666; margin-top: 5px; }
+        .lesson-actions { display: flex; gap: 8px; }
+        .inline-form { margin-top: 10px; display: none; }
+        .inline-form.active { display: block; }
+        .inline-form input, .inline-form select { width: auto; margin-right: 10px; }
+        .message { padding: 10px; border-radius: 5px; margin: 10px 0; display: none; }
+        .message.success { background: #c6f6d5; color: #22543d; display: block; }
+        .message.error { background: #fed7d7; color: #742a2a; display: block; }
+        .loading { text-align: center; padding: 40px; color: #667eea; }
+        .search-box { margin-bottom: 20px; }
+        .search-box input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; }
     </style>
 </head>
 <body>
-    <div class="header"><div class="container"><h1>Admin Dashboard</h1></div></div>
-    <div class="nav"><div class="container"><button onclick="showSection('create')">Create Module</button><button onclick="showSection('upload')">Add Content</button><button onclick="showSection('modules')">View Modules</button></div></div>
-    <div class="container">
-        <div id="createSection" class="section"><h2>Create Module</h2><form id="moduleForm"><input type="text" name="moduleId" placeholder="Module ID" required><input type="text" name="title" placeholder="Title" required><textarea name="description" placeholder="Description"></textarea><input type="text" name="estimatedTime" placeholder="Duration"><button type="submit">Create</button></form><div id="createMsg"></div></div>
-        <div id="uploadSection" class="section hidden"><h2>Add Lesson</h2><form id="uploadForm"><select id="moduleSelect" required><option>Loading...</option></select><input type="text" id="lessonTitle" placeholder="Lesson Title" required><input type="url" id="youtubeUrl" placeholder="YouTube URL" required><input type="text" id="duration" placeholder="Duration"><input type="number" id="order" placeholder="Order" value="1"><button type="submit">Add</button></form><div id="uploadMsg"></div></div>
-        <div id="modulesSection" class="section hidden"><h2>All Modules</h2><div id="modulesList"></div></div>
+    <div class="header">
+        <div class="container">
+            <h1>🔧 Admin Dashboard</h1>
+            <p>Manage Courses, Lessons & Content</p>
+        </div>
     </div>
+
+    <div class="container">
+        <div class="nav">
+            <button onclick="showSection('create')">➕ Create Module</button>
+            <button onclick="showSection('upload')">📤 Add Lesson</button>
+            <button onclick="showSection('manage')">✏️ Edit/Delete</button>
+        </div>
+
+        <!-- Create Module Section -->
+        <div id="createSection" class="section">
+            <h2>Create New Module</h2>
+            <form id="moduleForm">
+                <div class="form-group">
+                    <label>Module ID (unique):</label>
+                    <input type="text" name="moduleId" required placeholder="e.g., my-course-101">
+                </div>
+                <div class="form-group">
+                    <label>Module Title:</label>
+                    <input type="text" name="title" required placeholder="Course Title">
+                </div>
+                <div class="form-group">
+                    <label>Description:</label>
+                    <textarea name="description" rows="3" placeholder="Course description"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Estimated Time:</label>
+                    <input type="text" name="estimatedTime" placeholder="e.g., 4 weeks">
+                </div>
+                <div class="form-group">
+                    <label>Category:</label>
+                    <select name="category">
+                        <option value="Development">Development</option>
+                        <option value="Finance">Finance</option>
+                        <option value="Business">Business</option>
+                        <option value="Marketing">Marketing</option>
+                        <option value="Content Creation">Content Creation</option>
+                    </select>
+                </div>
+                <button type="submit">Create Module</button>
+            </form>
+            <div id="createMsg" class="message"></div>
+        </div>
+
+        <!-- Add Lesson Section -->
+        <div id="uploadSection" class="section">
+            <h2>Add Lesson to Module</h2>
+            <form id="uploadForm">
+                <div class="form-group">
+                    <label>Select Module:</label>
+                    <select id="moduleSelect" required>
+                        <option value="">Loading modules...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Lesson Title:</label>
+                    <input type="text" id="lessonTitle" required placeholder="Lesson title">
+                </div>
+                <div class="form-group">
+                    <label>YouTube URL:</label>
+                    <input type="url" id="youtubeUrl" placeholder="https://youtu.be/... or https://www.youtube.com/watch?v=...">
+                </div>
+                <div class="form-group">
+                    <label>Duration (e.g., 10 minutes):</label>
+                    <input type="text" id="duration" placeholder="10 minutes">
+                </div>
+                <div class="form-group">
+                    <label>Order:</label>
+                    <input type="number" id="order" value="1">
+                </div>
+                <button type="submit">Add Lesson</button>
+            </form>
+            <div id="uploadMsg" class="message"></div>
+        </div>
+
+        <!-- Edit/Delete Section -->
+        <div id="manageSection" class="section">
+            <h2>Manage Courses & Lessons</h2>
+            <div class="search-box">
+                <input type="text" id="searchModules" placeholder="🔍 Search courses..." onkeyup="filterModules()">
+            </div>
+            <div id="modulesList"></div>
+        </div>
+    </div>
+
     <script>
-        async function showSection(s) {
-            document.querySelectorAll('.section').forEach(el => el.classList.add('hidden'));
-            document.getElementById(s + 'Section').classList.remove('hidden');
-            if (s === 'upload') await loadModules();
-            if (s === 'modules') await loadModulesList();
+        let allModulesData = [];
+        
+        function showSection(section) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(section + 'Section').classList.add('active');
+            if (section === 'upload') loadModulesDropdown();
+            if (section === 'manage') loadAllModules();
         }
-        async function loadModules() {
-            const res = await fetch('/api/modules');
-            const modules = await res.json();
-            const sel = document.getElementById('moduleSelect');
-            sel.innerHTML = '<option value="">Select</option>';
-            modules.forEach(m => { const opt = document.createElement('option'); opt.value = m.module_id; opt.textContent = m.title; sel.appendChild(opt); });
+        
+        async function loadModulesDropdown() {
+            try {
+                const res = await fetch('/api/modules');
+                const modules = await res.json();
+                const select = document.getElementById('moduleSelect');
+                select.innerHTML = '<option value="">Select module...</option>';
+                modules.forEach(m => {
+                    const opt = document.createElement('option');
+                    opt.value = m.module_id;
+                    opt.textContent = m.title;
+                    select.appendChild(opt);
+                });
+            } catch(e) { console.error(e); }
         }
-        async function loadModulesList() {
-            const res = await fetch('/api/modules');
-            const modules = await res.json();
+        
+        async function loadAllModules() {
             const container = document.getElementById('modulesList');
-            container.innerHTML = '';
-            for (const m of modules) {
-                const lessons = await (await fetch(`/api/modules/${m.module_id}/lessons`)).json();
-                container.innerHTML += `<div class="module-card"><h3>${m.title}</h3><p>${m.description || ''}</p><div>${lessons.map(l => `<div class="lesson-item">${l.order || 1}. ${l.title}<br><small>${l.duration || 'N/A'}</small></div>`).join('') || 'No lessons'}</div></div>`;
+            container.innerHTML = '<div class="loading">Loading courses...</div>';
+            try {
+                const res = await fetch('/api/modules');
+                const modules = await res.json();
+                allModulesData = modules;
+                displayModules(modules);
+            } catch(e) {
+                container.innerHTML = '<div class="message error">Error loading modules</div>';
             }
         }
+        
+        function filterModules() {
+            const search = document.getElementById('searchModules').value.toLowerCase();
+            const filtered = allModulesData.filter(m => 
+                m.title.toLowerCase().includes(search) || 
+                m.module_id.toLowerCase().includes(search)
+            );
+            displayModules(filtered);
+        }
+        
+        async function displayModules(modules) {
+            const container = document.getElementById('modulesList');
+            container.innerHTML = '';
+            
+            for (const module of modules) {
+                const lessonsRes = await fetch(`/api/modules/${module.module_id}/lessons`);
+                const lessons = await lessonsRes.json();
+                
+                const card = document.createElement('div');
+                card.className = 'module-card';
+                card.innerHTML = `
+                    <div class="module-header">
+                        <div>
+                            <div class="module-title">${escapeHtml(module.title)}</div>
+                            <div style="font-size: 12px; color: #666;">ID: ${module.module_id} | ${lessons.length} lessons</div>
+                        </div>
+                        <div class="module-actions">
+                            <button class="edit-btn" onclick="editModule('${module.module_id}', '${escapeHtml(module.title)}', '${escapeHtml(module.description || '')}', '${module.estimated_time || ''}', '${module.category || ''}')">✏️ Edit</button>
+                            <button class="delete-btn" onclick="deleteModule('${module.module_id}', '${escapeHtml(module.title)}')">🗑️ Delete Module</button>
+                        </div>
+                    </div>
+                    <div class="lesson-list" id="lessons-${module.module_id}">
+                        ${lessons.length === 0 ? '<div style="color: #999; padding: 10px;">No lessons yet. Add lessons using the "Add Lesson" tab.</div>' : ''}
+                    </div>
+                `;
+                container.appendChild(card);
+                
+                // Add lessons to the module
+                const lessonsContainer = document.getElementById(`lessons-${module.module_id}`);
+                if (lessons.length > 0) {
+                    lessons.sort((a,b) => (a.lesson_order || 0) - (b.lesson_order || 0));
+                    lessons.forEach(lesson => {
+                        const lessonDiv = document.createElement('div');
+                        lessonDiv.className = 'lesson-item';
+                        lessonDiv.innerHTML = `
+                            <div class="lesson-header">
+                                <div>
+                                    <span class="lesson-title">${lesson.lesson_order || lesson.order || 1}. ${escapeHtml(lesson.title)}</span>
+                                    <div class="lesson-meta">📹 ${lesson.youtube_id || 'No ID'} | ⏱️ ${lesson.duration || 'N/A'}</div>
+                                </div>
+                                <div class="lesson-actions">
+                                    <button class="edit-btn" onclick="editLesson(${lesson.id}, '${escapeHtml(lesson.title)}', '${lesson.youtube_url || ''}', '${lesson.duration || ''}', ${lesson.lesson_order || lesson.order || 1})">✏️ Edit</button>
+                                    <button class="delete-btn" onclick="deleteLesson(${lesson.id}, '${escapeHtml(lesson.title)}')">🗑️ Delete</button>
+                                </div>
+                            </div>
+                            <div id="edit-lesson-${lesson.id}" class="inline-form">
+                                <input type="text" id="edit-title-${lesson.id}" value="${escapeHtml(lesson.title)}" placeholder="Title" style="width: 25%;">
+                                <input type="url" id="edit-url-${lesson.id}" value="${lesson.youtube_url || ''}" placeholder="YouTube URL" style="width: 35%;">
+                                <input type="text" id="edit-duration-${lesson.id}" value="${lesson.duration || ''}" placeholder="Duration" style="width: 15%;">
+                                <input type="number" id="edit-order-${lesson.id}" value="${lesson.lesson_order || lesson.order || 1}" placeholder="Order" style="width: 10%;">
+                                <button class="save-btn" onclick="saveLesson(${lesson.id}, ${module.module_id ? `'${module.module_id}'` : 'null'})">💾 Save</button>
+                            </div>
+                        `;
+                        lessonsContainer.appendChild(lessonDiv);
+                    });
+                }
+            }
+        }
+        
+        function editModule(moduleId, title, description, estimatedTime, category) {
+            const newTitle = prompt('Edit Module Title:', title);
+            if (!newTitle) return;
+            const newDescription = prompt('Edit Description:', description);
+            const newEstimatedTime = prompt('Edit Estimated Time:', estimatedTime);
+            const newCategory = prompt('Edit Category (Development, Finance, Business, Marketing, Content Creation):', category);
+            
+            fetch(`/api/admin/modules/${moduleId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title: newTitle,
+                    description: newDescription,
+                    estimated_time: newEstimatedTime,
+                    category: newCategory
+                })
+            }).then(res => {
+                if (res.ok) {
+                    alert('Module updated!');
+                    loadAllModules();
+                } else alert('Update failed');
+            }).catch(e => alert('Error: ' + e.message));
+        }
+        
+        function editLesson(lessonId, title, url, duration, order) {
+            const form = document.getElementById(`edit-lesson-${lessonId}`);
+            form.classList.toggle('active');
+        }
+        
+        async function saveLesson(lessonId, moduleId) {
+            const newTitle = document.getElementById(`edit-title-${lessonId}`).value;
+            const newUrl = document.getElementById(`edit-url-${lessonId}`).value;
+            const newDuration = document.getElementById(`edit-duration-${lessonId}`).value;
+            const newOrder = document.getElementById(`edit-order-${lessonId}`).value;
+            
+            // Extract YouTube ID from URL
+            let videoId = null;
+            if (newUrl) {
+                const match = newUrl.match(/(?:youtu\.be\/|watch\?v=)([^&?]+)/);
+                if (match) videoId = match[1];
+            }
+            
+            const response = await fetch(`/api/admin/lessons/${lessonId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title: newTitle,
+                    youtube_url: newUrl,
+                    youtube_id: videoId,
+                    duration: newDuration,
+                    lesson_order: parseInt(newOrder)
+                })
+            });
+            
+            if (response.ok) {
+                alert('Lesson updated!');
+                loadAllModules();
+            } else {
+                const error = await response.json();
+                alert('Update failed: ' + (error.error || 'Unknown error'));
+            }
+        }
+        
+        async function deleteModule(moduleId, title) {
+            if (confirm(`Delete entire course "${title}"? This will delete ALL lessons inside. This cannot be undone.`)) {
+                const response = await fetch(`/api/admin/modules/${moduleId}`, { method: 'DELETE' });
+                if (response.ok) {
+                    alert('Module deleted');
+                    loadAllModules();
+                } else alert('Delete failed');
+            }
+        }
+        
+        async function deleteLesson(lessonId, title) {
+            if (confirm(`Delete lesson "${title}"? This cannot be undone.`)) {
+                const response = await fetch(`/api/admin/lessons/${lessonId}`, { method: 'DELETE' });
+                if (response.ok) {
+                    alert('Lesson deleted');
+                    loadAllModules();
+                } else alert('Delete failed');
+            }
+        }
+        
+        // Create Module
         document.getElementById('moduleForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const data = Object.fromEntries(new FormData(e.target));
-            const res = await fetch('/api/admin/modules', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-            if (res.ok) { alert('Created'); e.target.reset(); loadModulesList(); } else alert('Error');
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            const res = await fetch('/api/admin/modules', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const msg = document.getElementById('createMsg');
+            if (res.ok) {
+                msg.className = 'message success';
+                msg.textContent = '✅ Module created successfully!';
+                e.target.reset();
+                setTimeout(() => msg.className = 'message', 3000);
+            } else {
+                const err = await res.json();
+                msg.className = 'message error';
+                msg.textContent = '❌ Error: ' + err.error;
+                setTimeout(() => msg.className = 'message', 3000);
+            }
         });
+        
+        // Add Lesson
         document.getElementById('uploadForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const data = { moduleId: document.getElementById('moduleSelect').value, lessonTitle: document.getElementById('lessonTitle').value, youtubeUrl: document.getElementById('youtubeUrl').value, duration: document.getElementById('duration').value, order: document.getElementById('order').value };
-            const res = await fetch('/api/admin/youtube-lesson', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-            if (res.ok) { alert('Added'); e.target.reset(); loadModulesList(); } else alert('Error');
+            const data = {
+                moduleId: document.getElementById('moduleSelect').value,
+                lessonTitle: document.getElementById('lessonTitle').value,
+                youtubeUrl: document.getElementById('youtubeUrl').value,
+                duration: document.getElementById('duration').value,
+                order: document.getElementById('order').value
+            };
+            const res = await fetch('/api/admin/youtube-lesson', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const msg = document.getElementById('uploadMsg');
+            if (res.ok) {
+                msg.className = 'message success';
+                msg.textContent = '✅ Lesson added successfully!';
+                e.target.reset();
+                setTimeout(() => msg.className = 'message', 3000);
+                loadModulesDropdown();
+            } else {
+                const err = await res.json();
+                msg.className = 'message error';
+                msg.textContent = '❌ Error: ' + err.error;
+                setTimeout(() => msg.className = 'message', 3000);
+            }
         });
+        
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
         showSection('create');
     </script>
 </body>

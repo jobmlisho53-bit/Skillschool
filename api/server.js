@@ -202,3 +202,70 @@ app.get('/sitemap.xml', (req, res) => { res.type('application/xml'); res.send(`<
 app.use((req, res) => { res.status(404).send('Page not found'); });
 
 module.exports = app;
+
+// ============ EDIT/DELETE ENDPOINTS ============
+
+// Update module
+app.put('/api/admin/modules/:moduleId', async (req, res) => {
+    try {
+        const { moduleId } = req.params;
+        const { title, description, estimated_time, category } = req.body;
+        
+        const { data, error } = await supabase
+            .from('modules')
+            .update({ title, description, estimated_time, category, updated_at: new Date() })
+            .eq('module_id', moduleId)
+            .select();
+        
+        if (error) throw error;
+        res.json(data[0]);
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+// Update lesson
+app.put('/api/admin/lessons/:lessonId', async (req, res) => {
+    try {
+        const { lessonId } = req.params;
+        const { title, youtube_url, youtube_id, duration, lesson_order } = req.body;
+        
+        const { data, error } = await supabase
+            .from('lessons')
+            .update({ title, youtube_url, youtube_id, duration, lesson_order, updated_at: new Date() })
+            .eq('id', lessonId)
+            .select();
+        
+        if (error) throw error;
+        res.json(data[0]);
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+// Delete module (and all its lessons)
+app.delete('/api/admin/modules/:moduleId', async (req, res) => {
+    try {
+        const { moduleId } = req.params;
+        
+        // First delete all lessons in this module
+        await supabase.from('lessons').delete().eq('module_id', moduleId);
+        // Then delete the module
+        await supabase.from('modules').delete().eq('module_id', moduleId);
+        
+        res.json({ success: true });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+// Delete single lesson
+app.delete('/api/admin/lessons/:lessonId', async (req, res) => {
+    try {
+        const { lessonId } = req.params;
+        await supabase.from('lessons').delete().eq('id', lessonId);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
