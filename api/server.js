@@ -269,3 +269,92 @@ app.delete('/api/admin/lessons/:lessonId', async (req, res) => {
         res.status(400).json({ error: err.message });
     }
 });
+
+// ============ CERTIFICATE TIERS API ============
+
+// Get available certificate tiers
+app.get('/api/certificate/tiers', async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('certificate_tiers')
+            .select('*')
+            .eq('is_active', true)
+            .order('price', { ascending: true });
+        
+        if (error) throw error;
+        res.json(data);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Generate certificate with specific tier
+app.post('/api/certificate/generate', async (req, res) => {
+    try {
+        const { userId, moduleId, name, tier } = req.body;
+        
+        // Check if user completed the course
+        const isComplete = await checkModuleCompletion(userId, moduleId);
+        if (!isComplete) {
+            return res.status(400).json({ error: 'Complete all lessons first' });
+        }
+        
+        // Get tier details
+        const { data: tierData } = await supabase
+            .from('certificate_tiers')
+            .select('*')
+            .eq('tier_name', tier || 'free')
+            .single();
+        
+        // Generate certificate ID
+        const completedAt = new Date().toISOString();
+        const certificateId = generateCertificateId(userId, moduleId, completedAt);
+        
+        // Get module details
+        const { data: module } = await supabase
+            .from('modules')
+            .select('title')
+            .eq('module_id', moduleId)
+            .single();
+        
+        // Store certificate
+        const { data: certificate, error } = await supabase
+            .from('certificates')
+            .insert([{
+                user_id: userId,
+                module_id: moduleId,
+                module_title: module.title,
+                certificate_id: certificateId,
+                user_name: name,
+                tier: tier || 'free',
+                issued_at: completedAt,
+                completed_at: completedAt
+            }])
+            .select()
+            .single();
+        
+        if (error) throw error;
+        
+        // If paid tier, process payment (Paystack integration here)
+        if (tier !== 'free') {
+            // Return payment URL instead of certificate directly
+            return res.json({
+                requiresPayment: true,
+                tier: tier,
+                price: tierData.price / 100,
+                certificateId: certificateId,
+                paymentUrl: `/payment/certificate/${certificateId}`
+            });
+        }
+        
+        res.json({
+            success: true,
+            certificateId: certificateId,
+            tier: tier,
+            downloadUrl: `/api/certificate/download/${certificateId}`,
+            verifyUrl: `/verify/${certificateId}`
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
