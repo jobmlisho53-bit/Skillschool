@@ -414,3 +414,133 @@
         showCourse(currentCourse);
     });
 </script>
+<!-- Add this after the header, before courses grid -->
+<div class="search-section" style="margin: 30px 0 20px;">
+    <div style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: space-between; align-items: center;">
+        <div style="flex: 1; min-width: 200px;">
+            <input type="text" id="searchInput" placeholder="🔍 Search courses..." style="width: 100%; padding: 12px 16px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--card-bg); color: var(--text-primary); font-family: inherit;">
+        </div>
+        <div>
+            <select id="categoryFilter" style="padding: 12px 16px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--card-bg); color: var(--text-primary); font-family: inherit; cursor: pointer;">
+                <option value="all">All Categories</option>
+                <option value="Development">💻 Development</option>
+                <option value="Finance">💰 Finance</option>
+                <option value="Business">🏢 Business</option>
+                <option value="Marketing">📢 Marketing</option>
+                <option value="Content Creation">🎬 Content Creation</option>
+            </select>
+        </div>
+        <div>
+            <span id="filterResultsCount" style="font-size: 0.8rem; color: var(--text-secondary);"></span>
+        </div>
+    </div>
+</div>
+
+<style>
+    .search-section input:focus, .search-section select:focus {
+        outline: none;
+        border-color: var(--gold);
+    }
+</style>
+<script>
+    // ============ SEARCH & FILTER ============
+    let allCourses = [];
+    let filteredCourses = [];
+    
+    async function loadCourses() {
+        try {
+            const res = await fetch('/api/modules');
+            allCourses = await res.json();
+            filteredCourses = [...allCourses];
+            displayCourses();
+            updateFilterCount();
+        } catch(e) { console.error(e); }
+    }
+    
+    function displayCourses() {
+        const container = document.getElementById('courses-container');
+        if (filteredCourses.length === 0) {
+            container.innerHTML = '<div class="loading">No matching courses found</div>';
+            return;
+        }
+        
+        container.innerHTML = '';
+        
+        filteredCourses.forEach(async (course) => {
+            const progress = await (await fetch(`/api/progress/${userId}/${course.module_id}`)).json();
+            const card = document.createElement('div');
+            card.className = 'course-card';
+            card.onclick = () => showCourse(course);
+            
+            // Get category icon
+            let categoryIcon = '📚';
+            if (course.category === 'Development') categoryIcon = '💻';
+            else if (course.category === 'Finance') categoryIcon = '💰';
+            else if (course.category === 'Business') categoryIcon = '🏢';
+            else if (course.category === 'Marketing') categoryIcon = '📢';
+            else if (course.category === 'Content Creation') categoryIcon = '🎬';
+            
+            card.innerHTML = `
+                <div class="course-category">${categoryIcon} ${course.category || 'Course'}</div>
+                <h3>${escapeHtml(course.title)}</h3>
+                <p>${escapeHtml(course.description || '')}</p>
+                <div class="progress-bar"><div class="progress-fill" style="width: ${progress.percentage}%"></div></div>
+                <div class="progress-text">${progress.completed}/${progress.total} lessons</div>
+                <div class="course-meta">
+                    <span class="course-duration">⏱️ ${course.estimated_time || 'Self-paced'}</span>
+                    <span class="start-link">Continue →</span>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+    
+    function filterCourses() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const category = document.getElementById('categoryFilter').value;
+        
+        filteredCourses = allCourses.filter(course => {
+            // Search filter
+            const matchesSearch = searchTerm === '' || 
+                course.title.toLowerCase().includes(searchTerm) || 
+                (course.description && course.description.toLowerCase().includes(searchTerm));
+            
+            // Category filter
+            const matchesCategory = category === 'all' || course.category === category;
+            
+            return matchesSearch && matchesCategory;
+        });
+        
+        displayCourses();
+        updateFilterCount();
+    }
+    
+    function updateFilterCount() {
+        const countSpan = document.getElementById('filterResultsCount');
+        if (countSpan) {
+            countSpan.textContent = `${filteredCourses.length} of ${allCourses.length} courses`;
+        }
+    }
+    
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    // Add event listeners for search and filter
+    document.getElementById('searchInput')?.addEventListener('input', filterCourses);
+    document.getElementById('categoryFilter')?.addEventListener('change', filterCourses);
+    
+    // Also add clear button functionality
+    function clearSearch() {
+        document.getElementById('searchInput').value = '';
+        filterCourses();
+    }
+</script>
+<script>
+    // Preserve all original functions
+    // showCourse, playLesson, etc. remain exactly the same
+    // The only change is loadCourses now uses filtered display
+</script>
