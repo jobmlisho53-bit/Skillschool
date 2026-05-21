@@ -6,46 +6,87 @@
     <title>Skill to Income - Professional Skills Mastery</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: #ffffff; color: #1a1a1a; line-height: 1.5; }
+        /* CSS Variables for Light/Dark Mode */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #fefcf8;
+            --text-primary: #1a1a1a;
+            --text-secondary: #6b6b6b;
+            --border-color: rgba(212, 175, 55, 0.15);
+            --card-bg: #ffffff;
+            --gold: #c9a03d;
+            --gold-light: #f5e6b8;
+        }
+        
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0b0;
+            --border-color: rgba(212, 175, 55, 0.25);
+            --card-bg: #0f3460;
+            --gold: #d4af37;
+            --gold-light: #f5e6b8;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; transition: background-color 0.3s ease, color 0.3s ease; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.5; }
         .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
         
-        .header { background: #ffffff; border-bottom: 1px solid rgba(212, 175, 55, 0.15); padding: 20px 0; }
+        .header { background: var(--bg-primary); border-bottom: 1px solid var(--border-color); padding: 20px 0; }
         .header-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
-        .logo h1 { font-size: 1.5rem; font-weight: 600; color: #1a1a1a; }
-        .logo p { font-size: 0.7rem; color: #c9a03d; letter-spacing: 1px; }
+        .logo h1 { font-size: 1.5rem; font-weight: 600; color: var(--text-primary); }
+        .logo p { font-size: 0.7rem; color: var(--gold); letter-spacing: 1px; }
         
-        .hero { text-align: center; padding: 80px 0; background: #ffffff; }
-        .hero h1 { font-size: 3rem; font-weight: 700; margin-bottom: 16px; color: #1a1a1a; }
-        .hero p { font-size: 1.1rem; color: #6b6b6b; max-width: 600px; margin: 0 auto; }
-        .hero-badge { display: inline-block; background: #fefcf8; padding: 6px 16px; border-radius: 100px; font-size: 0.7rem; color: #c9a03d; margin-bottom: 24px; border: 1px solid rgba(212, 175, 55, 0.2); }
+        /* Theme Toggle Button */
+        .theme-toggle {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 40px;
+            padding: 6px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            transition: all 0.2s;
+        }
+        .theme-toggle:hover { border-color: var(--gold); transform: scale(1.02); }
         
-        .btn { display: inline-block; background: #c9a03d; color: white; padding: 12px 28px; border-radius: 4px; text-decoration: none; font-weight: 500; margin-top: 24px; transition: all 0.2s; }
+        .hero { text-align: center; padding: 80px 0; background: var(--bg-primary); }
+        .hero h1 { font-size: 3rem; font-weight: 700; margin-bottom: 16px; color: var(--text-primary); }
+        .hero p { font-size: 1.1rem; color: var(--text-secondary); max-width: 600px; margin: 0 auto; }
+        .hero-badge { display: inline-block; background: var(--bg-secondary); padding: 6px 16px; border-radius: 100px; font-size: 0.7rem; color: var(--gold); margin-bottom: 24px; border: 1px solid var(--border-color); }
+        
+        .btn { display: inline-block; background: var(--gold); color: white; padding: 12px 28px; border-radius: 4px; text-decoration: none; font-weight: 500; margin-top: 24px; transition: all 0.2s; }
         .btn:hover { background: #b8922e; transform: translateY(-2px); }
         
         .section { padding: 60px 0; }
-        .section-light { background: #fefcf8; }
-        .section-title { font-size: 1.8rem; font-weight: 600; text-align: center; margin-bottom: 16px; }
-        .section-subtitle { text-align: center; color: #6b6b6b; margin-bottom: 48px; }
+        .section-light { background: var(--bg-secondary); }
+        .section-title { font-size: 1.8rem; font-weight: 600; text-align: center; margin-bottom: 16px; color: var(--text-primary); }
+        .section-subtitle { text-align: center; color: var(--text-secondary); margin-bottom: 48px; }
         
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; }
-        .card { background: white; border-radius: 8px; padding: 24px; border: 1px solid rgba(212, 175, 55, 0.15); transition: all 0.2s; }
-        .card:hover { transform: translateY(-2px); border-color: rgba(212, 175, 55, 0.4); }
-        .card h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; }
-        .card p { font-size: 0.85rem; color: #6b6b6b; }
+        .card { background: var(--card-bg); border-radius: 8px; padding: 24px; border: 1px solid var(--border-color); transition: all 0.2s; }
+        .card:hover { transform: translateY(-2px); border-color: var(--gold); }
+        .card h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; color: var(--text-primary); }
+        .card p { font-size: 0.85rem; color: var(--text-secondary); }
         
         .stats { display: flex; justify-content: center; gap: 60px; flex-wrap: wrap; margin: 40px 0; }
-        .stat-number { font-size: 2rem; font-weight: 700; color: #c9a03d; }
-        .stat-label { font-size: 0.8rem; color: #6b6b6b; }
+        .stat-number { font-size: 2rem; font-weight: 700; color: var(--gold); }
+        .stat-label { font-size: 0.8rem; color: var(--text-secondary); }
         
-        .footer { background: #ffffff; border-top: 1px solid rgba(212, 175, 55, 0.15); padding: 40px 0; text-align: center; margin-top: 60px; }
-        .footer a { color: #6b6b6b; text-decoration: none; margin: 0 12px; font-size: 0.8rem; }
-        .footer a:hover { color: #c9a03d; }
+        .footer { background: var(--bg-primary); border-top: 1px solid var(--border-color); padding: 32px 0; text-align: center; margin-top: 60px; }
+        .footer a { color: var(--text-secondary); text-decoration: none; margin: 0 12px; font-size: 0.8rem; }
+        .footer a:hover { color: var(--gold); }
         
         @media (max-width: 768px) {
             .hero h1 { font-size: 2rem; }
             .grid { grid-template-columns: 1fr; }
             .stats { gap: 30px; }
+            .header-content { flex-direction: column; text-align: center; }
         }
     </style>
 </head>
@@ -57,6 +98,10 @@
                     <h1>Income School</h1>
                     <p>Professional Skills Mastery</p>
                 </div>
+                <button class="theme-toggle" id="themeToggle">
+                    <span id="themeIcon">🌙</span>
+                    <span id="themeText">Dark Mode</span>
+                </button>
             </div>
         </div>
     </div>
@@ -90,7 +135,7 @@
                 <div><div class="stat-number">No Signup</div><div class="stat-label">Start Instantly</div></div>
             </div>
             <div style="text-align: center;">
-                <a href="/courses" class="btn" style="background: #c9a03d;">Browse All Courses →</a>
+                <a href="/courses" class="btn">Browse All Courses →</a>
             </div>
         </div>
     </div>
@@ -101,5 +146,41 @@
             <div style="margin-top: 16px;">© 2026 Income School. All rights reserved.</div>
         </div>
     </div>
+
+    <script>
+        // Theme Management - Isolated feature
+        (function() {
+            const themeToggle = document.getElementById('themeToggle');
+            const themeIcon = document.getElementById('themeIcon');
+            const themeText = document.getElementById('themeText');
+            
+            // Get saved theme or default to light
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                if (themeIcon) themeIcon.textContent = '☀️';
+                if (themeText) themeText.textContent = 'Light Mode';
+            }
+            
+            function toggleTheme() {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                if (currentTheme === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                    localStorage.setItem('theme', 'light');
+                    if (themeIcon) themeIcon.textContent = '🌙';
+                    if (themeText) themeText.textContent = 'Dark Mode';
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                    if (themeIcon) themeIcon.textContent = '☀️';
+                    if (themeText) themeText.textContent = 'Light Mode';
+                }
+            }
+            
+            if (themeToggle) {
+                themeToggle.addEventListener('click', toggleTheme);
+            }
+        })();
+    </script>
 </body>
 </html>
