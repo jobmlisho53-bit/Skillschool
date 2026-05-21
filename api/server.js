@@ -5,13 +5,11 @@ require('dotenv').config();
 
 const app = express();
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
-// Admin authentication
 const ADMIN_USER = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_PASS = process.env.ADMIN_PASSWORD || 'changeme123';
 
@@ -34,25 +32,33 @@ function protectAdmin(req, res, next) {
 
 app.use(protectAdmin);
 
-// Supabase client
 const supabase = require('../lib/supabase');
 
-// Helper: Extract YouTube ID
+// Improved YouTube ID extraction
 function extractYouTubeId(url) {
     if (!url) return null;
-    const patterns = [
-        /(?:youtube\.com\/watch\?v=)([^&?]+)/,
-        /(?:youtu\.be\/)([^&?]+)/,
-        /(?:youtube\.com\/embed\/)([^&?]+)/
-    ];
-    for (const pattern of patterns) {
-        const match = url.match(pattern);
-        if (match && match[1]) return match[1];
+    
+    // Handle youtu.be format
+    if (url.includes('youtu.be/')) {
+        const match = url.match(/youtu\.be\/([^?&]+)/);
+        if (match) return match[1];
     }
+    
+    // Handle youtube.com/watch?v= format
+    if (url.includes('youtube.com/watch')) {
+        const match = url.match(/[?&]v=([^&?]+)/);
+        if (match) return match[1];
+    }
+    
+    // Handle youtube.com/embed/ format
+    if (url.includes('youtube.com/embed/')) {
+        const match = url.match(/embed\/([^?&]+)/);
+        if (match) return match[1];
+    }
+    
     return null;
 }
 
-// Helper: Generate unique lesson_id
 function generateLessonId() {
     return 'lesson_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
 }
@@ -147,11 +153,12 @@ app.post('/api/admin/youtube-lesson', async (req, res) => {
         }
         
         const videoId = extractYouTubeId(youtubeUrl);
+        console.log('Extracted video ID:', videoId, 'from URL:', youtubeUrl);
+        
         if (!videoId) {
-            return res.status(400).json({ error: 'Invalid YouTube URL' });
+            return res.status(400).json({ error: 'Invalid YouTube URL. Could not extract video ID.' });
         }
         
-        // Generate unique lesson_id
         const lessonId = generateLessonId();
         
         const { data, error } = await supabase.from('lessons').insert([{
@@ -165,11 +172,16 @@ app.post('/api/admin/youtube-lesson', async (req, res) => {
             lesson_order: order || 1
         }]).select();
         
-        if (error) throw error;
+        if (error) {
+            console.error('Supabase error:', error);
+            return res.status(400).json({ error: error.message });
+        }
+        
+        console.log('Lesson saved with youtube_id:', videoId);
         res.status(201).json(data[0]);
     } catch (err) {
-        console.error('Error:', err);
-        res.status(400).json({ error: err.message });
+        console.error('Server error:', err);
+        res.status(500).json({ error: err.message });
     }
 });
 
