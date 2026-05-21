@@ -158,8 +158,6 @@ app.get('/contact', (req, res) => { res.sendFile(path.join(__dirname, '../public
 app.get('/about', (req, res) => { res.sendFile(path.join(__dirname, '../public/about.html')); });
 app.get('/dmca', (req, res) => { res.sendFile(path.join(__dirname, '../public/dmca.html')); });
 app.get('/faq', (req, res) => { res.sendFile(path.join(__dirname, '../public/faq.html')); });
-app.get('/shop', (req, res) => { res.sendFile(path.join(__dirname, '../public/shop.html')); });
-app.get('/certificate/unlock', (req, res) => { res.sendFile(path.join(__dirname, '../public/certificate/unlock.html')); });
 
 // ============ GLOBAL ERROR HANDLER ============
 app.use((err, req, res, next) => {
@@ -171,11 +169,8 @@ module.exports = app;
 
 // ============ SHOP API ============
 
-// Get all shop items (public)
-app.get('/api/shop/items', async (req, res) => {
     try {
         const { data, error } = await supabase
-            .from('shop_items')
             .select('*')
             .eq('is_active', true)
             .order('sort_order', { ascending: true });
@@ -187,11 +182,8 @@ app.get('/api/shop/items', async (req, res) => {
     }
 });
 
-// Get single shop item
-app.get('/api/shop/items/:id', async (req, res) => {
     try {
         const { data, error } = await supabase
-            .from('shop_items')
             .select('*')
             .eq('id', req.params.id)
             .single();
@@ -203,13 +195,10 @@ app.get('/api/shop/items/:id', async (req, res) => {
     }
 });
 
-// Admin: Create shop item
-app.post('/api/admin/shop/items', async (req, res) => {
     try {
         const { name, description, price, image_url, affiliate_link, category, course_id, sort_order } = req.body;
         
         const { data, error } = await supabaseAdmin
-            .from('shop_items')
             .insert([{
                 name, description, price, image_url, affiliate_link,
                 category, course_id, sort_order: sort_order || 0
@@ -224,14 +213,11 @@ app.post('/api/admin/shop/items', async (req, res) => {
     }
 });
 
-// Admin: Update shop item
-app.put('/api/admin/shop/items/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const updates = req.body;
         
         const { data, error } = await supabaseAdmin
-            .from('shop_items')
             .update(updates)
             .eq('id', id)
             .select()
@@ -244,11 +230,8 @@ app.put('/api/admin/shop/items/:id', async (req, res) => {
     }
 });
 
-// Admin: Delete shop item
-app.delete('/api/admin/shop/items/:id', async (req, res) => {
     try {
         const { error } = await supabaseAdmin
-            .from('shop_items')
             .delete()
             .eq('id', req.params.id);
         
