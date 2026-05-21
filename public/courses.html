@@ -266,3 +266,151 @@
     <script src="https://www.youtube.com/iframe_api"></script>
 </body>
 </html>
+<script>
+    // ============ CONTINUE WATCHING ============
+    let lastSavedPosition = 0;
+    
+    // Save watch position periodically
+    function startPositionSaving() {
+        if (window.positionSaveInterval) clearInterval(window.positionSaveInterval);
+        
+        window.positionSaveInterval = setInterval(async () => {
+            if (youtubePlayer && typeof youtubePlayer.getCurrentTime === 'function' && currentLesson) {
+                const currentPos = youtubePlayer.getCurrentTime();
+                const currentPercent = (currentPos / totalDuration) * 100;
+                
+                // Save every 10 seconds or when position changes significantly
+                if (Math.abs(currentPos - lastSavedPosition) > 10 && currentPos > 5) {
+                    lastSavedPosition = currentPos;
+                    try {
+                        await fetch('/api/watch/save', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                userId: userId,
+                                lessonId: currentLesson.id,
+                                position: currentPos,
+                                percentage: currentPercent
+                            })
+                        });
+                    } catch(e) { console.log('Save position failed:', e); }
+                }
+            }
+        }, 10000);
+    }
+    
+    // Check for saved position before playing
+    async function checkSavedPosition(lesson) {
+        try {
+            const response = await fetch(`/api/watch/position/${userId}/${lesson.id}`);
+            const saved = await response.json();
+            
+            if (saved.hasProgress && saved.percentage < 90 && saved.percentage > 5) {
+                // Ask user if they want to resume
+                const shouldResume = confirm(`You were ${Math.floor(saved.percentage)}% through this lesson. Resume from where you left off?`);
+                
+                if (shouldResume) {
+                    return saved.position;
+                } else {
+                    // Clear saved position if user chooses to restart
+                    await fetch('/api/watch/save', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            userId: userId,
+                            lessonId: lesson.id,
+                            position: 0,
+                            percentage: 0
+                        })
+                    });
+                    return 0;
+                }
+            }
+            return 0;
+        } catch(e) {
+            console.log('Check saved position failed:', e);
+            return 0;
+        }
+    }
+    
+    // Modified playLesson with resume support
+    const originalPlayLesson = playLesson;
+    window.playLesson = async function(lesson) {
+        currentLesson = lesson;
+        document.getElementById('lesson-title').textContent = lesson.title;
+        document.getElementById('lesson-player').innerHTML = `<div id="youtube-player" style="width:100%;aspect-ratio:16/9;"></div>`;
+        
+        // Check for saved position
+        const savedPosition = await checkSavedPosition(lesson);
+        
+        if (typeof YT === 'undefined') {
+            const tag = document.createElement('script');
+            tag.src = 'https://www.youtube.com/iframe_api';
+            document.head.appendChild(tag);
+            window.onYouTubeIframeAPIReady = () => createPlayerWithResume(lesson, savedPosition);
+        } else {
+            createPlayerWithResume(lesson, savedPosition);
+        }
+        
+        document.getElementById('courses-section').classList.add('hidden');
+        document.getElementById('lessons-section').classList.add('hidden');
+        document.getElementById('player-section').classList.remove('hidden');
+    };
+    
+    function createPlayerWithResume(lesson, resumePosition) {
+        youtubePlayer = new YT.Player('youtube-player', {
+            height: '100%', width: '100%', videoId: lesson.youtube_id,
+            events: {
+                'onReady': (e) => {
+                    totalDuration = e.target.getDuration();
+                    if (resumePosition > 5 && resumePosition < totalDuration - 10) {
+                        e.target.seekTo(resumePosition);
+                        console.log(`Resumed at ${resumePosition} seconds`);
+                    }
+                    startPositionSaving();
+                },
+                'onStateChange': (e) => {
+                    if (e.data === YT.PlayerState.PLAYING) {
+                        if (watchInterval) clearInterval(watchInterval);
+                        watchInterval = setInterval(() => {
+                            const ct = youtubePlayer.getCurrentTime();
+                            watchPercentage = (ct / totalDuration) * 100;
+                            if (watchPercentage >= 90) {
+                                document.getElementById('mark-complete-btn').disabled = false;
+                            }
+                        }, 2000);
+                    } else if (e.data === YT.PlayerState.PAUSED) {
+                        clearInterval(watchInterval);
+                    }
+                }
+            }
+        });
+    }
+    
+    // Also save position when marking complete
+    const originalMarkComplete = document.getElementById('mark-complete-btn')?.click;
+    document.getElementById('mark-complete-btn')?.addEventListener('click', async () => {
+        if (!currentLesson) return;
+        
+        // Save final position before completing
+        if (youtubePlayer && typeof youtubePlayer.getCurrentTime === 'function') {
+            await fetch('/api/watch/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: userId,
+                    lessonId: currentLesson.id,
+                    position: 0,
+                    percentage: 100
+                })
+            });
+        }
+        
+        await fetch('/api/progress/mark-complete', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, lessonId: currentLesson.id, moduleId: currentCourse.module_id })
+        });
+        alert('Lesson completed!');
+        showCourse(currentCourse);
+    });
+</script>

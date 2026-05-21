@@ -173,3 +173,58 @@ app.use((req, res) => {
 });
 
 module.exports = app;
+
+// ============ CONTINUE WATCHING API ============
+
+// Save watch position
+app.post('/api/watch/save', async (req, res) => {
+    try {
+        const { userId, lessonId, position, percentage } = req.body;
+        
+        if (!userId || !lessonId) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+        
+        const { error } = await supabase
+            .from('watch_history')
+            .upsert({
+                user_id: userId,
+                lesson_id: lessonId,
+                last_position: Math.floor(position),
+                last_percentage: Math.floor(percentage),
+                updated_at: new Date().toISOString()
+            }, { onConflict: 'user_id, lesson_id' });
+        
+        if (error) throw error;
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Save watch error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get watch position for a lesson
+app.get('/api/watch/position/:userId/:lessonId', async (req, res) => {
+    try {
+        const { userId, lessonId } = req.params;
+        
+        const { data, error } = await supabase
+            .from('watch_history')
+            .select('last_position, last_percentage, updated_at')
+            .eq('user_id', userId)
+            .eq('lesson_id', lessonId)
+            .single();
+        
+        if (error && error.code !== 'PGRST116') throw error;
+        
+        res.json({
+            hasProgress: !!data,
+            position: data?.last_position || 0,
+            percentage: data?.last_percentage || 0,
+            updatedAt: data?.updated_at || null
+        });
+    } catch (error) {
+        console.error('Get watch error:', error);
+        res.json({ hasProgress: false, position: 0, percentage: 0 });
+    }
+});
