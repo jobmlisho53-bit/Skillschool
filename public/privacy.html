@@ -4,46 +4,81 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Privacy Policy - Income School</title>
-    <meta name="description" content="Income School privacy policy. We do not collect personal data. Learn how we protect your privacy.">
-    <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://skillschool-dbc1.vercel.app/privacy">
-    
-    <!-- Google AdSense -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8038320098546953" crossorigin="anonymous"></script>
-    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 20px; }
-        h1 { color: #667eea; }
-        .back-link { display: inline-block; margin-top: 30px; color: #667eea; text-decoration: none; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #ffffff; color: #1a1a1a; line-height: 1.6; }
+        .container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+        
+        .header { background: #ffffff; border-bottom: 1px solid rgba(212, 175, 55, 0.15); padding: 20px 0; }
+        .header-content { max-width: 1200px; margin: 0 auto; padding: 0 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
+        .logo h1 { font-size: 1.5rem; font-weight: 600; color: #1a1a1a; }
+        .logo p { font-size: 0.7rem; color: #c9a03d; letter-spacing: 1px; }
+        .nav-links a { color: #6b6b6b; text-decoration: none; margin-left: 24px; font-size: 0.85rem; }
+        .nav-links a:hover { color: #c9a03d; }
+        
+        .content { padding: 60px 0 80px; }
+        h1 { font-size: 2rem; font-weight: 600; margin-bottom: 16px; }
+        .last-updated { color: #c9a03d; font-size: 0.8rem; margin-bottom: 32px; padding-bottom: 16px; border-bottom: 1px solid rgba(212, 175, 55, 0.15); }
+        h2 { font-size: 1.3rem; font-weight: 600; margin: 32px 0 16px; color: #1a1a1a; }
+        p { color: #6b6b6b; margin-bottom: 16px; font-size: 0.9rem; }
+        ul { margin: 16px 0 16px 32px; color: #6b6b6b; }
+        li { margin-bottom: 8px; font-size: 0.9rem; }
+        
+        .footer { background: #ffffff; border-top: 1px solid rgba(212, 175, 55, 0.15); padding: 32px 0; text-align: center; margin-top: 60px; }
+        .footer a { color: #6b6b6b; text-decoration: none; margin: 0 12px; font-size: 0.8rem; }
+        .footer a:hover { color: #c9a03d; }
+        
+        @media (max-width: 768px) {
+            .header-content { flex-direction: column; text-align: center; }
+            .nav-links a { margin: 0 12px; }
+            h1 { font-size: 1.5rem; }
+        }
     </style>
 </head>
 <body>
-    <h1>Privacy Policy</h1>
-    <p><strong>Effective Date:</strong> May 20, 2026</p>
-    
-    <h2>1. Information We Collect</h2>
-    <p>Income School collects minimal information:</p>
-    <ul>
-        <li><strong>Anonymous Usage Data:</strong> Page views, course progress (stored locally)</li>
-        <li><strong>Email Address:</strong> Only if you voluntarily contact us</li>
-    </ul>
-    
-    <h2>2. No User Accounts</h2>
-    <p>We do not require registration. Your progress is stored locally in your browser.</p>
-    
-    <h2>3. Third-Party Services</h2>
-    <ul>
-        <li><strong>Supabase:</strong> Database for course content</li>
-        <li><strong>Vercel:</strong> Hosting and anonymous analytics</li>
-        <li><strong>YouTube:</strong> Video content (embedded players)</li>
-    </ul>
-    
-    <h2>4. Your Rights</h2>
-    <p>Since we collect no personal data, there is no data to access or delete.</p>
-    
-    <h2>5. Contact</h2>
-    <p>Email: jobmlisho63@gmail.com</p>
-    
-    <a href="/" class="back-link">← Back to Home</a>
+    <div class="header">
+        <div class="header-content">
+            <div class="logo"><h1>Income School</h1><p>Professional Skills Mastery</p></div>
+            <div class="nav-links"><a href="/">Home</a><a href="/courses">Courses</a><a href="/contact">Contact</a></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="content">
+            <h1>Privacy Policy</h1>
+            <div class="last-updated">Effective Date: May 21, 2026</div>
+            
+            <h2>1. Information We Collect</h2>
+            <p>Income School collects minimal information to provide our free educational platform:</p>
+            <ul>
+                <li><strong>Anonymous Usage Data:</strong> Page views and course progress (stored locally)</li>
+                <li><strong>Email Address:</strong> Only if you voluntarily contact us</li>
+            </ul>
+            
+            <h2>2. No User Accounts</h2>
+            <p>We do not require registration. Your progress is stored locally in your browser.</p>
+            
+            <h2>3. Third-Party Services</h2>
+            <ul>
+                <li><strong>Supabase:</strong> Database for course content</li>
+                <li><strong>Vercel:</strong> Hosting and anonymous analytics</li>
+                <li><strong>YouTube:</strong> Video content (embedded players)</li>
+            </ul>
+            
+            <h2>4. Your Rights</h2>
+            <p>Since we collect no personal data, there is no data to access or delete.</p>
+            
+            <h2>5. Contact</h2>
+            <p>Email: jobmlisho63@gmail.com</p>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="container">
+            <a href="/privacy">Privacy</a> | <a href="/terms">Terms</a> | <a href="/contact">Contact</a>
+            <div style="margin-top: 16px;">© 2026 Income School. All rights reserved.</div>
+        </div>
+    </div>
 </body>
 </html>
