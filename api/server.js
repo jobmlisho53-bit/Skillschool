@@ -9,8 +9,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Serve static files
 app.use(express.static('public'));
 
 // Admin authentication
@@ -39,28 +37,27 @@ app.use(protectAdmin);
 // Supabase client
 const supabase = require('../lib/supabase');
 
-// ============ HELPER: Extract YouTube ID ============
+// Helper: Extract YouTube ID
 function extractYouTubeId(url) {
     if (!url) return null;
-    
     const patterns = [
         /(?:youtube\.com\/watch\?v=)([^&?]+)/,
         /(?:youtu\.be\/)([^&?]+)/,
-        /(?:youtube\.com\/embed\/)([^&?]+)/,
-        /(?:youtube\.com\/v\/)([^&?]+)/
+        /(?:youtube\.com\/embed\/)([^&?]+)/
     ];
-    
     for (const pattern of patterns) {
         const match = url.match(pattern);
-        if (match && match[1]) {
-            return match[1];
-        }
+        if (match && match[1]) return match[1];
     }
     return null;
 }
 
-// ============ PUBLIC API ============
+// Helper: Generate unique lesson_id
+function generateLessonId() {
+    return 'lesson_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+}
 
+// ============ PUBLIC API ============
 app.get('/api/modules', async (req, res) => {
     try {
         const { data, error } = await supabase.from('modules').select('*');
@@ -125,35 +122,19 @@ app.post('/api/contact', async (req, res) => {
 });
 
 // ============ ADMIN API ============
-
 app.post('/api/admin/modules', async (req, res) => {
     try {
         const { moduleId, title, description, estimatedTime, category } = req.body;
-        
         if (!moduleId || !title) {
             return res.status(400).json({ error: 'Module ID and Title are required' });
         }
-        
-        const { data, error } = await supabase
-            .from('modules')
-            .insert([{
-                module_id: moduleId,
-                title: title,
-                description: description || '',
-                estimated_time: estimatedTime || 'TBD',
-                category: category || 'General'
-            }])
-            .select();
-        
-        if (error) {
-            console.error('Supabase error:', error);
-            return res.status(400).json({ error: error.message });
-        }
-        
+        const { data, error } = await supabase.from('modules').insert([{
+            module_id: moduleId, title, description: description || '', estimated_time: estimatedTime || 'TBD', category: category || 'General'
+        }]).select();
+        if (error) throw error;
         res.status(201).json(data[0]);
     } catch (err) {
-        console.error('Server error:', err);
-        res.status(500).json({ error: err.message });
+        res.status(400).json({ error: err.message });
     }
 });
 
@@ -165,36 +146,30 @@ app.post('/api/admin/youtube-lesson', async (req, res) => {
             return res.status(400).json({ error: 'Module ID, Lesson Title, and YouTube URL are required' });
         }
         
-        // Extract YouTube ID using improved function
         const videoId = extractYouTubeId(youtubeUrl);
-        console.log('Extracted video ID:', videoId, 'from URL:', youtubeUrl);
-        
         if (!videoId) {
-            return res.status(400).json({ error: 'Invalid YouTube URL. Please use youtube.com/watch?v=... or youtu.be/...' });
+            return res.status(400).json({ error: 'Invalid YouTube URL' });
         }
         
-        const { data, error } = await supabase
-            .from('lessons')
-            .insert([{
-                module_id: moduleId,
-                title: lessonTitle,
-                content_type: 'youtube',
-                youtube_url: youtubeUrl,
-                youtube_id: videoId,
-                duration: duration || 'N/A',
-                lesson_order: order || 1
-            }])
-            .select();
+        // Generate unique lesson_id
+        const lessonId = generateLessonId();
         
-        if (error) {
-            console.error('Supabase error:', error);
-            return res.status(400).json({ error: error.message });
-        }
+        const { data, error } = await supabase.from('lessons').insert([{
+            lesson_id: lessonId,
+            module_id: moduleId,
+            title: lessonTitle,
+            content_type: 'youtube',
+            youtube_url: youtubeUrl,
+            youtube_id: videoId,
+            duration: duration || 'N/A',
+            lesson_order: order || 1
+        }]).select();
         
+        if (error) throw error;
         res.status(201).json(data[0]);
     } catch (err) {
-        console.error('Server error:', err);
-        res.status(500).json({ error: err.message });
+        console.error('Error:', err);
+        res.status(400).json({ error: err.message });
     }
 });
 
@@ -209,25 +184,9 @@ app.get('/about', (req, res) => { res.sendFile(path.join(__dirname, '../public/a
 app.get('/faq', (req, res) => { res.sendFile(path.join(__dirname, '../public/faq.html')); });
 app.get('/dmca', (req, res) => { res.sendFile(path.join(__dirname, '../public/dmca.html')); });
 
-// Robots.txt
-app.get('/robots.txt', (req, res) => {
-    res.type('text/plain');
-    res.send('User-agent: *\nAllow: /\nSitemap: https://skillschool-dbc1.vercel.app/sitemap.xml');
-});
+app.get('/robots.txt', (req, res) => { res.type('text/plain'); res.send('User-agent: *\nAllow: /\nSitemap: https://skillschool-dbc1.vercel.app/sitemap.xml'); });
+app.get('/sitemap.xml', (req, res) => { res.type('application/xml'); res.send(`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://skillschool-dbc1.vercel.app/</loc></url><url><loc>https://skillschool-dbc1.vercel.app/courses</loc></url></urlset>`); });
 
-// Sitemap.xml
-app.get('/sitemap.xml', (req, res) => {
-    res.type('application/xml');
-    res.send(`<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-    <url><loc>https://skillschool-dbc1.vercel.app/</loc><priority>1.0</priority></url>
-    <url><loc>https://skillschool-dbc1.vercel.app/courses</loc><priority>0.9</priority></url>
-</urlset>`);
-});
-
-// 404 handler
-app.use((req, res) => {
-    res.status(404).send('Page not found');
-});
+app.use((req, res) => { res.status(404).send('Page not found'); });
 
 module.exports = app;
