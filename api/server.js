@@ -18,21 +18,27 @@ const ADMIN_USER = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_PASS = process.env.ADMIN_PASSWORD || 'changeme123';
 
 function protectAdmin(req, res, next) {
+    // Check if the request is for admin area
     if (req.path.startsWith('/admin') || req.path.startsWith('/api/admin')) {
         const auth = req.headers.authorization;
+        
         if (!auth) {
-            res.setHeader('WWW-Authenticate', 'Basic');
+            res.setHeader('WWW-Authenticate', 'Basic realm="Admin Access"');
             return res.status(401).send('Authentication required');
         }
+        
         const base64 = auth.split(' ')[1];
         const [user, pass] = Buffer.from(base64, 'base64').toString().split(':');
+        
         if (user !== ADMIN_USER || pass !== ADMIN_PASS) {
-            return res.status(403).send('Access denied');
+            res.setHeader('WWW-Authenticate', 'Basic realm="Admin Access"');
+            return res.status(401).send('Invalid credentials');
         }
     }
     next();
 }
 
+// Apply admin protection BEFORE serving static files for /admin
 app.use(protectAdmin);
 
 // Supabase client
@@ -40,7 +46,6 @@ const supabase = require('../lib/supabase');
 
 // ============ PUBLIC API ============
 
-// Get all modules
 app.get('/api/modules', async (req, res) => {
     try {
         const { data, error } = await supabase.from('modules').select('*');
@@ -51,7 +56,6 @@ app.get('/api/modules', async (req, res) => {
     }
 });
 
-// Get lessons for a module
 app.get('/api/modules/:moduleId/lessons', async (req, res) => {
     try {
         const { data, error } = await supabase.from('lessons').select('*').eq('module_id', req.params.moduleId);
@@ -62,7 +66,6 @@ app.get('/api/modules/:moduleId/lessons', async (req, res) => {
     }
 });
 
-// Get user progress
 app.get('/api/progress/:userId/:moduleId', async (req, res) => {
     try {
         const { userId, moduleId } = req.params;
@@ -78,7 +81,6 @@ app.get('/api/progress/:userId/:moduleId', async (req, res) => {
     }
 });
 
-// Mark lesson as complete
 app.post('/api/progress/mark-complete', async (req, res) => {
     try {
         const { userId, lessonId, moduleId } = req.body;
@@ -94,9 +96,22 @@ app.post('/api/progress/mark-complete', async (req, res) => {
     }
 });
 
-// ============ ADMIN API ============
+// Contact form endpoint
+app.post('/api/contact', async (req, res) => {
+    try {
+        const { name, email, subject, message } = req.body;
+        if (!name || !email || !subject || !message) {
+            return res.status(400).json({ error: 'All fields are required' });
+        }
+        await supabase.from('contacts').insert([{ name, email, subject, message, created_at: new Date() }]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 
-// Create module
+// ============ ADMIN API (Protected) ============
+
 app.post('/api/admin/modules', async (req, res) => {
     try {
         const { moduleId, title, description, estimatedTime, category } = req.body;
@@ -110,7 +125,6 @@ app.post('/api/admin/modules', async (req, res) => {
     }
 });
 
-// Add YouTube lesson
 app.post('/api/admin/youtube-lesson', async (req, res) => {
     try {
         const { moduleId, lessonTitle, youtubeUrl, duration, order } = req.body;
