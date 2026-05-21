@@ -39,6 +39,26 @@ app.use(protectAdmin);
 // Supabase client
 const supabase = require('../lib/supabase');
 
+// ============ HELPER: Extract YouTube ID ============
+function extractYouTubeId(url) {
+    if (!url) return null;
+    
+    const patterns = [
+        /(?:youtube\.com\/watch\?v=)([^&?]+)/,
+        /(?:youtu\.be\/)([^&?]+)/,
+        /(?:youtube\.com\/embed\/)([^&?]+)/,
+        /(?:youtube\.com\/v\/)([^&?]+)/
+    ];
+    
+    for (const pattern of patterns) {
+        const match = url.match(pattern);
+        if (match && match[1]) {
+            return match[1];
+        }
+    }
+    return null;
+}
+
 // ============ PUBLIC API ============
 
 app.get('/api/modules', async (req, res) => {
@@ -145,9 +165,12 @@ app.post('/api/admin/youtube-lesson', async (req, res) => {
             return res.status(400).json({ error: 'Module ID, Lesson Title, and YouTube URL are required' });
         }
         
-        const videoId = youtubeUrl.match(/(?:youtu\.be\/|watch\?v=)([^&?]+)/)?.[1];
+        // Extract YouTube ID using improved function
+        const videoId = extractYouTubeId(youtubeUrl);
+        console.log('Extracted video ID:', videoId, 'from URL:', youtubeUrl);
+        
         if (!videoId) {
-            return res.status(400).json({ error: 'Invalid YouTube URL' });
+            return res.status(400).json({ error: 'Invalid YouTube URL. Please use youtube.com/watch?v=... or youtu.be/...' });
         }
         
         const { data, error } = await supabase
