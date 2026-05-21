@@ -1,160 +1,105 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "EducationalOrganization",
-  "name": "Skill to Income",
-  "url": "https://skillschool-dbc1.vercel.app",
-  "description": "Free online courses for digital skills. Web development, crypto trading, copywriting, AI integration.",
-  "offers": {
-    "@type": "Offer",
-    "price": "0",
-    "priceCurrency": "USD"
-  }
-}
-</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Skill to Income - Learn Skills That Pay | Free Online Courses</title>
-    <meta name="description" content="Learn web development, crypto trading, copywriting, AI integration and more. Free skill-based courses. No signup required. Start earning online today.">
-    <meta name="keywords" content="free online courses, learn web development, crypto trading for beginners, copywriting course, AI integration, digital skills Kenya, earn online Africa">
-    <meta name="author" content="Skill to Income">
-    <meta name="robots" content="index, follow">
-    <meta name="google-site-verification" content="gEHdjO3BTaQ-ozoxvcC3qJX4_NmEFe4-g7uMnQqLlYg">
-    <link rel="canonical" href="https://skillschool-dbc1.vercel.app/">
-    <link rel="icon" href="/favicon.ico">
-    
-    <!-- Google AdSense -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8038320098546953" crossorigin="anonymous"></script>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Skill to Income - Professional Skills Mastery</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #ffffff; color: #1a1a1a; line-height: 1.5; }
         .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
         
-        /* Header */
-        .hero { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 100px 0; text-align: center; }
-        .hero h1 { font-size: 3.5rem; font-weight: 800; margin-bottom: 20px; }
-        .hero p { fontSize: 1.2rem; max-width: 600px; margin: 0 auto; }
-        .hero-badge { display: inline-block; background: rgba(255,255,255,0.15); padding: 8px 20px; border-radius: 100px; font-size: 0.8rem; margin-bottom: 30px; }
+        .header { background: #ffffff; border-bottom: 1px solid rgba(212, 175, 55, 0.15); padding: 20px 0; }
+        .header-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
+        .logo h1 { font-size: 1.5rem; font-weight: 600; color: #1a1a1a; }
+        .logo p { font-size: 0.7rem; color: #c9a03d; letter-spacing: 1px; }
         
-        /* Buttons */
-        .btn-group { margin-top: 40px; display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
-        .btn { display: inline-block; padding: 14px 36px; border-radius: 50px; text-decoration: none; font-weight: 600; transition: all 0.3s; }
-        .btn-primary { background: white; color: #667eea; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .btn-primary:hover { transform: translateY(-3px); }
-        .btn-outline { background: transparent; color: white; border: 2px solid white; }
-        .btn-outline:hover { background: white; color: #667eea; transform: translateY(-3px); }
+        .hero { text-align: center; padding: 80px 0; background: #ffffff; }
+        .hero h1 { font-size: 3rem; font-weight: 700; margin-bottom: 16px; color: #1a1a1a; }
+        .hero p { font-size: 1.1rem; color: #6b6b6b; max-width: 600px; margin: 0 auto; }
+        .hero-badge { display: inline-block; background: #fefcf8; padding: 6px 16px; border-radius: 100px; font-size: 0.7rem; color: #c9a03d; margin-bottom: 24px; border: 1px solid rgba(212, 175, 55, 0.2); }
         
-        /* Sections */
-        .section { padding: 80px 0; }
-        .section-light { background: #f8f9fa; }
-        .section-title { font-size: 2.2rem; font-weight: 700; text-align: center; margin-bottom: 15px; }
-        .section-subtitle { text-align: center; color: #666; margin-bottom: 50px; }
+        .btn { display: inline-block; background: #c9a03d; color: white; padding: 12px 28px; border-radius: 4px; text-decoration: none; font-weight: 500; margin-top: 24px; transition: all 0.2s; }
+        .btn:hover { background: #b8922e; transform: translateY(-2px); }
         
-        /* Stats */
-        .stats-grid { display: flex; justify-content: center; gap: 60px; flex-wrap: wrap; margin: 40px 0; }
-        .stat-number { font-size: 2.5rem; font-weight: 800; color: #667eea; }
-        .stat-label { font-size: 0.85rem; color: #666; margin-top: 8px; }
+        .section { padding: 60px 0; }
+        .section-light { background: #fefcf8; }
+        .section-title { font-size: 1.8rem; font-weight: 600; text-align: center; margin-bottom: 16px; }
+        .section-subtitle { text-align: center; color: #6b6b6b; margin-bottom: 48px; }
         
-        /* Courses Grid */
-        .courses-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 30px; }
-        .course-card { background: white; border-radius: 16px; padding: 28px; transition: all 0.3s; border: 1px solid #e8e8e8; }
-        .course-card:hover { transform: translateY(-5px); box-shadow: 0 20px 30px -12px rgba(0,0,0,0.1); border-color: #667eea; }
-        .course-icon { font-size: 2.5rem; margin-bottom: 20px; }
-        .course-card h3 { font-size: 1.2rem; font-weight: 700; margin-bottom: 10px; }
-        .course-card p { font-size: 0.85rem; color: #666; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; }
+        .card { background: white; border-radius: 8px; padding: 24px; border: 1px solid rgba(212, 175, 55, 0.15); transition: all 0.2s; }
+        .card:hover { transform: translateY(-2px); border-color: rgba(212, 175, 55, 0.4); }
+        .card h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; }
+        .card p { font-size: 0.85rem; color: #6b6b6b; }
         
-        /* CTA */
-        .cta-section { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-align: center; padding: 60px 0; border-radius: 24px; margin: 40px 0; }
-        .cta-section h3 { font-size: 1.8rem; font-weight: 700; margin-bottom: 16px; }
-        .btn-cta { background: white; color: #667eea; padding: 14px 36px; border-radius: 50px; text-decoration: none; font-weight: 600; display: inline-block; }
+        .stats { display: flex; justify-content: center; gap: 60px; flex-wrap: wrap; margin: 40px 0; }
+        .stat-number { font-size: 2rem; font-weight: 700; color: #c9a03d; }
+        .stat-label { font-size: 0.8rem; color: #6b6b6b; }
         
-        /* Footer */
-        .footer { background: #1a1a2e; color: white; text-align: center; padding: 50px 0 30px; margin-top: 60px; }
-        .footer a { color: #aaa; text-decoration: none; margin: 0 12px; font-size: 0.85rem; }
-        .footer a:hover { color: white; }
-        .copyright { font-size: 0.75rem; color: #666; margin-top: 20px; }
+        .footer { background: #ffffff; border-top: 1px solid rgba(212, 175, 55, 0.15); padding: 40px 0; text-align: center; margin-top: 60px; }
+        .footer a { color: #6b6b6b; text-decoration: none; margin: 0 12px; font-size: 0.8rem; }
+        .footer a:hover { color: #c9a03d; }
         
         @media (max-width: 768px) {
-            .hero h1 { font-size: 2.2rem; }
-            .courses-grid { grid-template-columns: 1fr; }
-            .stats-grid { gap: 30px; }
-            .btn-group { flex-direction: column; align-items: center; }
-            .btn { width: 80%; text-align: center; }
+            .hero h1 { font-size: 2rem; }
+            .grid { grid-template-columns: 1fr; }
+            .stats { gap: 30px; }
         }
     </style>
 </head>
 <body>
-    <!-- Hero Section -->
-    <section class="hero">
+    <div class="header">
         <div class="container">
-            <div class="hero-badge">🎓 Free. No Signup. Beginner-friendly</div>
-            <h1>Skill to Income</h1>
-            <p>Learn real skills that can make you money online. Web Development • Trading • Copywriting • AI • Business</p>
-            <div class="btn-group">
-                <a href="/courses" class="btn btn-primary">🚀 Start Learning Now</a>
-                <a href="/courses" class="btn btn-outline">📚 Browse All Courses</a>
+            <div class="header-content">
+                <div class="logo">
+                    <h1>Income School</h1>
+                    <p>Professional Skills Mastery</p>
+                </div>
             </div>
-        </div>
-    </section>
-
-    <!-- Stats Section -->
-    <section class="section">
-        <div class="container">
-            <div class="stats-grid">
-                <div class="stat-item"><div class="stat-number">16+</div><div class="stat-label">Professional Courses</div></div>
-                <div class="stat-item"><div class="stat-number">100%</div><div class="stat-label">Free Access</div></div>
-                <div class="stat-item"><div class="stat-number">No Signup</div><div class="stat-label">Start Instantly</div></div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Courses Preview -->
-    <section class="section-light">
-        <div class="container">
-            <h2 class="section-title">What You'll Learn</h2>
-            <p class="section-subtitle">16+ real-world skills organized into complete courses</p>
-            
-            <div class="courses-grid">
-                <div class="course-card"><div class="course-icon">💻</div><h3>Web Development</h3><p>Full-stack development from fundamentals</p></div>
-                <div class="course-card"><div class="course-icon">🤖</div><h3>AI Integration</h3><p>Build apps with artificial intelligence</p></div>
-                <div class="course-card"><div class="course-icon">💰</div><h3>Crypto & Trading</h3><p>Understanding markets and analysis</p></div>
-                <div class="course-card"><div class="course-icon">✍️</div><h3>Copywriting</h3><p>Professional writing that converts</p></div>
-                <div class="course-card"><div class="course-icon">🎥</div><h3>YouTube Automation</h3><p>Build and scale YouTube channels</p></div>
-                <div class="course-card"><div class="course-icon">🏢</div><h3>Digital Business</h3><p>Launch and scale online ventures</p></div>
-                <div class="course-card"><div class="course-icon">📈</div><h3>Advanced Trading</h3><p>Smart money concepts</p></div>
-                <div class="course-card"><div class="course-icon">🎬</div><h3>Video Editing</h3><p>Professional content production</p></div>
-            </div>
-        </div>
-    </section>
-
-    <!-- CTA Section -->
-    <div class="container">
-        <div class="cta-section">
-            <h3>Ready to Start Your Journey?</h3>
-            <p>Join thousands of students learning skills that pay</p>
-            <a href="/courses" class="btn-cta">Start Learning Now →</a>
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="footer">
+    <div class="hero">
         <div class="container">
-            <div class="footer-links">
-                <a href="/about">About</a>
-                <a href="/privacy">Privacy</a>
-                <a href="/terms">Terms</a>
-                <a href="/contact">Contact</a> 
-                <a href="/dmca">DMCA</a> | <a href="/blog/make-1000-dollars-per-day.html">Blog</a>
-            </div>
-            <div class="copyright">
-                © 2026 Skill to Income. All rights reserved.
+            <div class="hero-badge">Free. No Signup. Beginner-friendly</div>
+            <h1>Skill to Income</h1>
+            <p>Learn real skills that can make you money online. Start your journey today.</p>
+            <a href="/courses" class="btn">Start Learning →</a>
+        </div>
+    </div>
+
+    <div class="section-light">
+        <div class="container">
+            <h2 class="section-title">What You'll Learn</h2>
+            <div class="grid">
+                <div class="card"><h3>Web Development</h3><p>Full-stack development from scratch</p></div>
+                <div class="card"><h3>Crypto Trading</h3><p>Understand markets and strategies</p></div>
+                <div class="card"><h3>Copywriting</h3><p>Write copy that sells</p></div>
+                <div class="card"><h3>AI Integration</h3><p>Build apps with artificial intelligence</p></div>
             </div>
         </div>
-    </footer>
+    </div>
+
+    <div class="section">
+        <div class="container">
+            <div class="stats">
+                <div><div class="stat-number">16+</div><div class="stat-label">Courses</div></div>
+                <div><div class="stat-number">100%</div><div class="stat-label">Free</div></div>
+                <div><div class="stat-number">No Signup</div><div class="stat-label">Start Instantly</div></div>
+            </div>
+            <div style="text-align: center;">
+                <a href="/courses" class="btn" style="background: #c9a03d;">Browse All Courses →</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="container">
+            <a href="/privacy">Privacy</a> | <a href="/terms">Terms</a> | <a href="/contact">Contact</a>
+            <div style="margin-top: 16px;">© 2026 Income School. All rights reserved.</div>
+        </div>
+    </div>
 </body>
 </html>
