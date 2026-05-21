@@ -504,3 +504,56 @@
     <script src="https://www.youtube.com/iframe_api"></script>
 </body>
 </html>
+<script>
+// Fix: Mark complete button handler
+document.getElementById('mark-complete-btn')?.addEventListener('click', async () => {
+    if (!currentLesson) {
+        alert('No lesson selected');
+        return;
+    }
+    
+    // Check if video is watched enough (90%)
+    if (currentLesson.contentType === 'youtube' && watchPercentage < 90) {
+        alert(`Please watch at least 90% of the video. Current: ${Math.floor(watchPercentage)}%`);
+        return;
+    }
+    
+    const btn = document.getElementById('mark-complete-btn');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+    
+    try {
+        const response = await fetch('/api/progress/mark-complete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userId: userId,
+                lessonId: currentLesson.id,
+                moduleId: currentCourse?.module_id || currentCourse?.moduleId
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            alert('✅ Lesson completed!');
+            btn.textContent = 'Completed';
+            btn.style.opacity = '0.5';
+            
+            // Refresh the course view to show updated progress
+            if (currentCourse) {
+                showCourse(currentCourse);
+            }
+        } else {
+            alert('Error: ' + (result.error || 'Failed to save'));
+            btn.disabled = false;
+            btn.textContent = 'Mark as Complete';
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Network error. Please try again.');
+        btn.disabled = false;
+        btn.textContent = 'Mark as Complete';
+    }
+});
+</script>

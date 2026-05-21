@@ -358,3 +358,17 @@ app.post('/api/certificate/generate', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
+// Debug endpoint to check progress
+app.get('/api/debug/progress/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { data } = await supabase
+            .from('user_progress')
+            .select('*')
+            .eq('user_id', userId);
+        res.json({ count: data?.length || 0, records: data });
+    } catch (err) {
+        res.json({ error: err.message });
+    }
+});
