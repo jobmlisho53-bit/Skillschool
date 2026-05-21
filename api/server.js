@@ -18,18 +18,14 @@ const ADMIN_USER = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_PASS = process.env.ADMIN_PASSWORD || 'changeme123';
 
 function protectAdmin(req, res, next) {
-    // Check if the request is for admin area
     if (req.path.startsWith('/admin') || req.path.startsWith('/api/admin')) {
         const auth = req.headers.authorization;
-        
         if (!auth) {
             res.setHeader('WWW-Authenticate', 'Basic realm="Admin Access"');
             return res.status(401).send('Authentication required');
         }
-        
         const base64 = auth.split(' ')[1];
         const [user, pass] = Buffer.from(base64, 'base64').toString().split(':');
-        
         if (user !== ADMIN_USER || pass !== ADMIN_PASS) {
             res.setHeader('WWW-Authenticate', 'Basic realm="Admin Access"');
             return res.status(401).send('Invalid credentials');
@@ -38,7 +34,6 @@ function protectAdmin(req, res, next) {
     next();
 }
 
-// Apply admin protection BEFORE serving static files for /admin
 app.use(protectAdmin);
 
 // Supabase client
@@ -96,7 +91,6 @@ app.post('/api/progress/mark-complete', async (req, res) => {
     }
 });
 
-// Contact form endpoint
 app.post('/api/contact', async (req, res) => {
     try {
         const { name, email, subject, message } = req.body;
@@ -110,33 +104,74 @@ app.post('/api/contact', async (req, res) => {
     }
 });
 
-// ============ ADMIN API (Protected) ============
+// ============ ADMIN API ============
 
 app.post('/api/admin/modules', async (req, res) => {
     try {
         const { moduleId, title, description, estimatedTime, category } = req.body;
-        const { data, error } = await supabase.from('modules').insert([{
-            module_id: moduleId, title, description, estimated_time: estimatedTime, category
-        }]).select();
-        if (error) throw error;
+        
+        if (!moduleId || !title) {
+            return res.status(400).json({ error: 'Module ID and Title are required' });
+        }
+        
+        const { data, error } = await supabase
+            .from('modules')
+            .insert([{
+                module_id: moduleId,
+                title: title,
+                description: description || '',
+                estimated_time: estimatedTime || 'TBD',
+                category: category || 'General'
+            }])
+            .select();
+        
+        if (error) {
+            console.error('Supabase error:', error);
+            return res.status(400).json({ error: error.message });
+        }
+        
         res.status(201).json(data[0]);
     } catch (err) {
-        res.status(400).json({ error: err.message });
+        console.error('Server error:', err);
+        res.status(500).json({ error: err.message });
     }
 });
 
 app.post('/api/admin/youtube-lesson', async (req, res) => {
     try {
         const { moduleId, lessonTitle, youtubeUrl, duration, order } = req.body;
+        
+        if (!moduleId || !lessonTitle || !youtubeUrl) {
+            return res.status(400).json({ error: 'Module ID, Lesson Title, and YouTube URL are required' });
+        }
+        
         const videoId = youtubeUrl.match(/(?:youtu\.be\/|watch\?v=)([^&?]+)/)?.[1];
-        if (!videoId) return res.status(400).json({ error: 'Invalid YouTube URL' });
-        const { data, error } = await supabase.from('lessons').insert([{
-            module_id: moduleId, title: lessonTitle, content_type: 'youtube', youtube_url: youtubeUrl, youtube_id: videoId, duration: duration || 'N/A', lesson_order: order || 1
-        }]).select();
-        if (error) throw error;
+        if (!videoId) {
+            return res.status(400).json({ error: 'Invalid YouTube URL' });
+        }
+        
+        const { data, error } = await supabase
+            .from('lessons')
+            .insert([{
+                module_id: moduleId,
+                title: lessonTitle,
+                content_type: 'youtube',
+                youtube_url: youtubeUrl,
+                youtube_id: videoId,
+                duration: duration || 'N/A',
+                lesson_order: order || 1
+            }])
+            .select();
+        
+        if (error) {
+            console.error('Supabase error:', error);
+            return res.status(400).json({ error: error.message });
+        }
+        
         res.status(201).json(data[0]);
     } catch (err) {
-        res.status(400).json({ error: err.message });
+        console.error('Server error:', err);
+        res.status(500).json({ error: err.message });
     }
 });
 
@@ -173,58 +208,3 @@ app.use((req, res) => {
 });
 
 module.exports = app;
-
-// ============ CONTINUE WATCHING API ============
-
-// Save watch position
-app.post('/api/watch/save', async (req, res) => {
-    try {
-        const { userId, lessonId, position, percentage } = req.body;
-        
-        if (!userId || !lessonId) {
-            return res.status(400).json({ error: 'Missing required fields' });
-        }
-        
-        const { error } = await supabase
-            .from('watch_history')
-            .upsert({
-                user_id: userId,
-                lesson_id: lessonId,
-                last_position: Math.floor(position),
-                last_percentage: Math.floor(percentage),
-                updated_at: new Date().toISOString()
-            }, { onConflict: 'user_id, lesson_id' });
-        
-        if (error) throw error;
-        res.json({ success: true });
-    } catch (error) {
-        console.error('Save watch error:', error);
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// Get watch position for a lesson
-app.get('/api/watch/position/:userId/:lessonId', async (req, res) => {
-    try {
-        const { userId, lessonId } = req.params;
-        
-        const { data, error } = await supabase
-            .from('watch_history')
-            .select('last_position, last_percentage, updated_at')
-            .eq('user_id', userId)
-            .eq('lesson_id', lessonId)
-            .single();
-        
-        if (error && error.code !== 'PGRST116') throw error;
-        
-        res.json({
-            hasProgress: !!data,
-            position: data?.last_position || 0,
-            percentage: data?.last_percentage || 0,
-            updatedAt: data?.updated_at || null
-        });
-    } catch (error) {
-        console.error('Get watch error:', error);
-        res.json({ hasProgress: false, position: 0, percentage: 0 });
-    }
-});
