@@ -544,3 +544,218 @@
     // showCourse, playLesson, etc. remain exactly the same
     // The only change is loadCourses now uses filtered display
 </script>
+<!-- Add this after the header, before search section -->
+<div class="tab-bar" style="display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 1px solid var(--border-color);">
+    <button class="tab-btn active" data-tab="courses" style="background: none; border: none; padding: 12px 24px; cursor: pointer; font-weight: 500; color: var(--text-primary); border-bottom: 2px solid var(--gold);">📚 Courses</button>
+    <button class="tab-btn" data-tab="shop" style="background: none; border: none; padding: 12px 24px; cursor: pointer; font-weight: 500; color: var(--text-secondary);">🛒 E-Books</button>
+</div>
+
+<style>
+    .tab-btn:hover { color: var(--gold); }
+    .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+    .shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; padding: 30px 0; }
+    .ebook-card { background: var(--card-bg); border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); transition: all 0.2s; }
+    .ebook-card:hover { transform: translateY(-4px); border-color: var(--gold); }
+    .ebook-cover { height: 200px; display: flex; align-items: center; justify-content: center; font-size: 4rem; background: var(--bg-secondary); }
+    .ebook-info { padding: 20px; }
+    .ebook-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; color: var(--text-primary); }
+    .ebook-author { font-size: 0.75rem; color: var(--gold); margin-bottom: 12px; }
+    .ebook-description { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.4; }
+    .ebook-price { font-size: 1.2rem; font-weight: 700; color: var(--gold); margin-bottom: 16px; }
+    .buy-ebook-btn { display: inline-block; background: var(--gold); color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 500; font-size: 0.85rem; width: 100%; text-align: center; transition: all 0.2s; }
+    .buy-ebook-btn:hover { opacity: 0.9; transform: translateY(-2px); }
+</style>
+<!-- Shop Section (hidden by default) -->
+<div id="shopSection" class="hidden">
+    <div class="shop-grid" id="shopContainer">
+        <div class="loading">Loading e-books...</div>
+    </div>
+</div>
+
+<!-- Courses Section (visible by default) -->
+<div id="coursesSection">
+    <div class="search-section">
+        <div style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: space-between; align-items: center;">
+            <div style="flex: 1; min-width: 200px;">
+                <input type="text" id="searchInput" placeholder="🔍 Search courses..." style="width: 100%; padding: 12px 16px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--card-bg); color: var(--text-primary); font-family: inherit;">
+            </div>
+            <div>
+                <select id="categoryFilter" style="padding: 12px 16px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--card-bg); color: var(--text-primary); font-family: inherit; cursor: pointer;">
+                    <option value="all">All Categories</option>
+                    <option value="Development">💻 Development</option>
+                    <option value="Finance">💰 Finance</option>
+                    <option value="Business">🏢 Business</option>
+                    <option value="Marketing">📢 Marketing</option>
+                    <option value="Content Creation">🎬 Content Creation</option>
+                </select>
+            </div>
+            <div>
+                <span id="filterResultsCount" style="font-size: 0.8rem; color: var(--text-secondary);"></span>
+            </div>
+        </div>
+    </div>
+    <div id="courses-container" class="courses-grid"><div class="loading">Loading courses...</div></div>
+</div>
+<script>
+    // ============ TAB SWITCHING ============
+    function switchTab(tabName) {
+        const coursesSection = document.getElementById('coursesSection');
+        const shopSection = document.getElementById('shopSection');
+        const tabs = document.querySelectorAll('.tab-btn');
+        
+        tabs.forEach(btn => {
+            if (btn.dataset.tab === tabName) {
+                btn.classList.add('active');
+                btn.style.color = 'var(--gold)';
+                btn.style.borderBottomColor = 'var(--gold)';
+            } else {
+                btn.classList.remove('active');
+                btn.style.color = 'var(--text-secondary)';
+                btn.style.borderBottomColor = 'transparent';
+            }
+        });
+        
+        if (tabName === 'courses') {
+            coursesSection.classList.remove('hidden');
+            shopSection.classList.add('hidden');
+        } else {
+            coursesSection.classList.add('hidden');
+            shopSection.classList.remove('hidden');
+            loadEbooks();
+        }
+    }
+    
+    // Add event listeners to tabs
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+    });
+</script>
+<script>
+    // ============ EBOOK SHOP ============
+    const ebooks = [
+        {
+            id: 1,
+            title: "Web Development Mastery",
+            author: "Income School",
+            description: "Complete guide to full-stack web development. Learn HTML, CSS, JavaScript, React, Node.js.",
+            price: "$9.99",
+            category: "Development",
+            cover: "📖",
+            link: "https://paystack.com/buy/web-development-mastery"
+        },
+        {
+            id: 2,
+            title: "Crypto Trading Bible",
+            author: "Income School",
+            description: "Master technical analysis, risk management, and trading psychology. From beginner to pro.",
+            price: "$14.99",
+            category: "Finance",
+            cover: "📊",
+            link: "https://paystack.com/buy/crypto-trading-bible"
+        },
+        {
+            id: 3,
+            title: "Copywriting That Converts",
+            author: "Income School",
+            description: "Write sales pages, email sequences, and ads that actually sell. Templates included.",
+            price: "$7.99",
+            category: "Marketing",
+            cover: "✍️",
+            link: "https://paystack.com/buy/copywriting-that-converts"
+        },
+        {
+            id: 4,
+            title: "AI Integration Handbook",
+            author: "Income School",
+            description: "Build AI-powered applications. ChatGPT, Claude, API integration, and prompt engineering.",
+            price: "$12.99",
+            category: "Development",
+            cover: "🤖",
+            link: "https://paystack.com/buy/ai-integration-handbook"
+        },
+        {
+            id: 5,
+            title: "Freelancing Blueprint",
+            author: "Income School",
+            description: "Land clients, set rates, manage projects. Build a sustainable freelancing career.",
+            price: "$8.99",
+            category: "Business",
+            cover: "💼",
+            link: "https://paystack.com/buy/freelancing-blueprint"
+        },
+        {
+            id: 6,
+            title: "YouTube Growth Guide",
+            author: "Income School",
+            description: "Grow your channel from zero to monetization. SEO, thumbnails, content strategy.",
+            price: "$10.99",
+            category: "Content Creation",
+            cover: "🎥",
+            link: "https://paystack.com/buy/youtube-growth-guide"
+        }
+    ];
+    
+    async function loadEbooks() {
+        const container = document.getElementById('shopContainer');
+        if (!container) return;
+        
+        // Add category filter for ebooks
+        container.innerHTML = `
+            <div style="grid-column: 1/-1; margin-bottom: 20px;">
+                <select id="ebookCategoryFilter" style="padding: 10px 16px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--card-bg); color: var(--text-primary);">
+                    <option value="all">All Categories</option>
+                    <option value="Development">💻 Development</option>
+                    <option value="Finance">💰 Finance</option>
+                    <option value="Business">🏢 Business</option>
+                    <option value="Marketing">📢 Marketing</option>
+                    <option value="Content Creation">🎬 Content Creation</option>
+                </select>
+            </div>
+        `;
+        
+        displayEbooks(ebooks);
+        
+        document.getElementById('ebookCategoryFilter')?.addEventListener('change', () => {
+            const category = document.getElementById('ebookCategoryFilter').value;
+            const filtered = category === 'all' ? ebooks : ebooks.filter(e => e.category === category);
+            displayEbooks(filtered);
+        });
+    }
+    
+    function displayEbooks(ebooksList) {
+        const container = document.getElementById('shopContainer');
+        if (!container) return;
+        
+        // Remove old ebook cards (keep the filter)
+        const existingCards = container.querySelectorAll('.ebook-card');
+        existingCards.forEach(card => card.remove());
+        
+        if (ebooksList.length === 0) {
+            container.innerHTML += '<div class="loading">No e-books found in this category</div>';
+            return;
+        }
+        
+        ebooksList.forEach(ebook => {
+            const card = document.createElement('div');
+            card.className = 'ebook-card';
+            card.innerHTML = `
+                <div class="ebook-cover">${ebook.cover}</div>
+                <div class="ebook-info">
+                    <div class="ebook-title">${ebook.title}</div>
+                    <div class="ebook-author">by ${ebook.author}</div>
+                    <div class="ebook-description">${ebook.description}</div>
+                    <div class="ebook-price">${ebook.price}</div>
+                    <a href="${ebook.link}" target="_blank" class="buy-ebook-btn" rel="noopener noreferrer">Buy Now →</a>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+</script>
+<script>
+    // Ensure courses section is visible on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('coursesSection').classList.remove('hidden');
+        document.getElementById('shopSection').classList.add('hidden');
+    });
+</script>
