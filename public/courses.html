@@ -6,166 +6,49 @@
     <title>Courses - Income School</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* CSS Variables for Light/Dark Mode */
-        :root {
-            --bg-primary: #ffffff;
-            --bg-secondary: #fefcf8;
-            --text-primary: #1a1a1a;
-            --text-secondary: #6b6b6b;
-            --border-color: rgba(212, 175, 55, 0.15);
-            --card-bg: #ffffff;
-            --gold: #c9a03d;
-            --progress-bg: #f0ede8;
-        }
-        
-        [data-theme="dark"] {
-            --bg-primary: #1a1a2e;
-            --bg-secondary: #16213e;
-            --text-primary: #ffffff;
-            --text-secondary: #b0b0b0;
-            --border-color: rgba(212, 175, 55, 0.25);
-            --card-bg: #0f3460;
-            --gold: #d4af37;
-            --progress-bg: #2a2a3e;
-        }
-        
-        * { margin: 0; padding: 0; box-sizing: border-box; transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: var(--text-primary); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #ffffff; color: #1a1a1a; }
         .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
         
-        /* Header */
-        .header { background: var(--bg-primary); border-bottom: 1px solid var(--border-color); padding: 20px 0; position: sticky; top: 0; z-index: 100; }
+        .header { background: #ffffff; border-bottom: 1px solid rgba(212, 175, 55, 0.15); padding: 20px 0; position: sticky; top: 0; z-index: 100; }
         .header-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
-        .logo h1 { font-size: 1.5rem; font-weight: 600; color: var(--text-primary); }
-        .logo p { font-size: 0.7rem; color: var(--gold); letter-spacing: 1px; }
+        .logo h1 { font-size: 1.5rem; font-weight: 600; color: #1a1a1a; }
+        .logo p { font-size: 0.7rem; color: #c9a03d; letter-spacing: 1px; }
         
-        /* Theme Toggle */
-        .theme-toggle {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 40px;
-            padding: 6px 16px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            color: var(--text-primary);
-        }
-        .theme-toggle:hover { border-color: var(--gold); transform: scale(1.02); }
+        .theme-toggle { background: none; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 40px; padding: 6px 16px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.8rem; }
         
-        /* Tab Bar - TOP SECTION */
-        .tab-bar {
-            display: flex;
-            gap: 8px;
-            margin: 30px 0 20px;
-            border-bottom: 2px solid var(--border-color);
-        }
-        .tab-btn {
-            background: none;
-            border: none;
-            padding: 12px 28px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 1rem;
-            color: var(--text-secondary);
-            transition: all 0.2s;
-            position: relative;
-        }
-        .tab-btn:hover { color: var(--gold); }
-        .tab-btn.active {
-            color: var(--gold);
-            border-bottom: 2px solid var(--gold);
-            margin-bottom: -2px;
-        }
+        .courses-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 30px; padding: 48px 0; }
+        .course-card { background: white; border-radius: 8px; padding: 24px; border: 1px solid rgba(212, 175, 55, 0.15); cursor: pointer; transition: all 0.2s; }
+        .course-card:hover { transform: translateY(-2px); border-color: rgba(212, 175, 55, 0.4); }
+        .course-category { font-size: 0.7rem; text-transform: uppercase; color: #c9a03d; margin-bottom: 12px; letter-spacing: 1px; }
+        .course-card h3 { font-size: 1.2rem; font-weight: 600; margin-bottom: 8px; }
+        .course-card p { font-size: 0.85rem; color: #6b6b6b; margin-bottom: 16px; }
+        .progress-bar { background: #f0ede8; border-radius: 2px; height: 2px; margin: 16px 0 8px; }
+        .progress-fill { background: #c9a03d; height: 100%; border-radius: 2px; width: 0%; }
+        .progress-text { font-size: 0.7rem; color: #c9a03d; text-align: right; }
+        .course-meta { display: flex; justify-content: space-between; margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(212, 175, 55, 0.1); }
+        .course-duration { font-size: 0.7rem; color: #9a9a9a; }
+        .start-link { font-size: 0.8rem; color: #c9a03d; text-decoration: none; }
         
-        /* Search Section (Courses only) */
-        .search-section {
-            margin: 20px 0 30px;
-            display: flex;
-            gap: 16px;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .search-input {
-            flex: 1;
-            min-width: 200px;
-            padding: 12px 16px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            background: var(--card-bg);
-            color: var(--text-primary);
-            font-family: inherit;
-        }
-        .search-input:focus { outline: none; border-color: var(--gold); }
-        .category-select {
-            padding: 12px 16px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            background: var(--card-bg);
-            color: var(--text-primary);
-            font-family: inherit;
-            cursor: pointer;
-        }
-        .result-count { font-size: 0.8rem; color: var(--text-secondary); }
+        .lesson-item { background: white; padding: 16px; margin: 12px 0; border-radius: 6px; border: 1px solid rgba(212, 175, 55, 0.15); cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .lesson-item:hover { border-color: rgba(212, 175, 55, 0.4); }
+        .lesson-completed { border-left: 2px solid #c9a03d; background: #fefcf8; }
+        .complete-badge { background: #c9a03d; color: white; padding: 2px 8px; border-radius: 2px; font-size: 0.6rem; }
         
-        /* Courses Grid */
-        .courses-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 30px; padding: 20px 0 40px; }
-        .course-card { background: var(--card-bg); border-radius: 8px; padding: 24px; border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s; }
-        .course-card:hover { transform: translateY(-2px); border-color: var(--gold); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .course-category { font-size: 0.7rem; text-transform: uppercase; color: var(--gold); margin-bottom: 12px; letter-spacing: 1px; }
-        .course-card h3 { font-size: 1.2rem; font-weight: 600; margin-bottom: 8px; color: var(--text-primary); }
-        .course-card p { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px; }
-        .progress-bar { background: var(--progress-bg); border-radius: 2px; height: 2px; margin: 16px 0 8px; }
-        .progress-fill { background: var(--gold); height: 100%; border-radius: 2px; width: 0%; }
-        .progress-text { font-size: 0.7rem; color: var(--gold); text-align: right; }
-        .course-meta { display: flex; justify-content: space-between; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border-color); }
-        .course-duration { font-size: 0.7rem; color: var(--text-secondary); }
-        .start-link { font-size: 0.8rem; color: var(--gold); text-decoration: none; }
-        
-        /* Shop Grid */
-        .shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 30px; padding: 20px 0 40px; }
-        .ebook-card { background: var(--card-bg); border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); transition: all 0.2s; }
-        .ebook-card:hover { transform: translateY(-4px); border-color: var(--gold); }
-        .ebook-cover { height: 180px; display: flex; align-items: center; justify-content: center; font-size: 4rem; background: var(--bg-secondary); }
-        .ebook-info { padding: 20px; }
-        .ebook-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 6px; color: var(--text-primary); }
-        .ebook-author { font-size: 0.7rem; color: var(--gold); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
-        .ebook-description { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.4; }
-        .ebook-price { font-size: 1.3rem; font-weight: 700; color: var(--gold); margin-bottom: 16px; }
-        .buy-ebook-btn { display: inline-block; background: var(--gold); color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 500; font-size: 0.85rem; width: 100%; text-align: center; transition: all 0.2s; }
-        .buy-ebook-btn:hover { opacity: 0.9; transform: translateY(-2px); }
-        
-        /* Shop Filter */
-        .shop-filter { margin-bottom: 20px; text-align: right; }
-        .shop-category-select { padding: 10px 16px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--card-bg); color: var(--text-primary); font-family: inherit; cursor: pointer; }
-        
-        /* Lesson Items */
-        .lesson-item { background: var(--card-bg); padding: 16px; margin: 12px 0; border-radius: 6px; border: 1px solid var(--border-color); cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-        .lesson-item:hover { border-color: var(--gold); }
-        .lesson-completed { border-left: 2px solid var(--gold); background: var(--bg-secondary); }
-        .complete-badge { background: var(--gold); color: white; padding: 2px 8px; border-radius: 2px; font-size: 0.6rem; }
-        
-        .back-button { background: none; border: none; color: var(--gold); cursor: pointer; padding: 12px 0; font-size: 0.8rem; display: flex; align-items: center; gap: 6px; }
-        .mark-complete-btn { background: var(--gold); color: white; border: none; padding: 12px 28px; border-radius: 4px; cursor: pointer; margin-top: 24px; font-weight: 500; }
+        .back-button { background: none; border: none; color: #c9a03d; cursor: pointer; padding: 12px 0; font-size: 0.8rem; display: flex; align-items: center; gap: 6px; }
+        .mark-complete-btn { background: #c9a03d; color: white; border: none; padding: 12px 28px; border-radius: 4px; cursor: pointer; margin-top: 24px; font-weight: 500; }
         .video-container { position: relative; padding-bottom: 56.25%; height: 0; margin: 24px 0; }
         .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 6px; }
         
-        .footer { background: var(--bg-primary); border-top: 1px solid var(--border-color); padding: 32px 0; text-align: center; margin-top: 60px; }
-        .footer a { color: var(--text-secondary); text-decoration: none; margin: 0 12px; font-size: 0.8rem; }
-        .footer a:hover { color: var(--gold); }
+        .footer { background: #ffffff; border-top: 1px solid rgba(212, 175, 55, 0.15); padding: 32px 0; text-align: center; margin-top: 60px; }
+        .footer a { color: #6b6b6b; text-decoration: none; margin: 0 12px; font-size: 0.8rem; }
+        .footer a:hover { color: #c9a03d; }
         .hidden { display: none; }
-        .loading { text-align: center; padding: 60px; color: var(--gold); }
+        .loading { text-align: center; padding: 60px; color: #c9a03d; }
         
         @media (max-width: 768px) {
-            .courses-grid, .shop-grid { grid-template-columns: 1fr; }
+            .courses-grid { grid-template-columns: 1fr; }
             .lesson-item { flex-direction: column; text-align: center; gap: 8px; }
-            .header-content { flex-direction: column; text-align: center; }
-            .tab-bar { justify-content: center; }
-            .search-section { flex-direction: column; }
-            .search-input, .category-select { width: 100%; }
         }
     </style>
 </head>
@@ -174,51 +57,16 @@
         <div class="container">
             <div class="header-content">
                 <div class="logo"><h1>Income School</h1><p>Professional Skills Mastery</p></div>
-                <button class="theme-toggle" id="themeToggle"><span id="themeIcon">🌙</span><span id="themeText">Dark Mode</span></button>
+                <button class="theme-toggle" id="themeToggle">🌙 Dark Mode</button>
             </div>
         </div>
     </div>
 
-    <div class="container">
-        <!-- Tab Bar - TOP SECTION -->
-        <div class="tab-bar">
-            <button class="tab-btn active" data-tab="courses">📚 Courses</button>
-            <button class="tab-btn" data-tab="shop">🛒 E-Books</button>
-        </div>
-
-        <!-- Courses Section -->
-        <div id="coursesSection">
-            <div class="search-section">
-                <input type="text" id="searchInput" class="search-input" placeholder="🔍 Search courses by title or description...">
-                <select id="categoryFilter" class="category-select">
-                    <option value="all">All Categories</option>
-                    <option value="Development">💻 Development</option>
-                    <option value="Finance">💰 Finance</option>
-                    <option value="Business">🏢 Business</option>
-                    <option value="Marketing">📢 Marketing</option>
-                    <option value="Content Creation">🎬 Content Creation</option>
-                </select>
-                <span id="filterResultsCount" class="result-count"></span>
-            </div>
+    <main class="container">
+        <section id="courses-section">
             <div id="courses-container" class="courses-grid"><div class="loading">Loading courses...</div></div>
-        </div>
-
-        <!-- Shop Section (hidden by default) -->
-        <div id="shopSection" class="hidden">
-            <div class="shop-filter">
-                <select id="ebookCategoryFilter" class="shop-category-select">
-                    <option value="all">All Categories</option>
-                    <option value="Development">💻 Development</option>
-                    <option value="Finance">💰 Finance</option>
-                    <option value="Business">🏢 Business</option>
-                    <option value="Marketing">📢 Marketing</option>
-                    <option value="Content Creation">🎬 Content Creation</option>
-                </select>
-            </div>
-            <div id="shopContainer" class="shop-grid"><div class="loading">Loading e-books...</div></div>
-        </div>
-
-        <!-- Lesson & Player Sections (hidden by default) -->
+        </section>
+        
         <section id="lessons-section" class="hidden">
             <button id="back-to-courses" class="back-button">← Back to Courses</button>
             <h2 id="course-title"></h2>
@@ -229,14 +77,14 @@
             </div>
             <div id="lessons-list"></div>
         </section>
-
+        
         <section id="player-section" class="hidden">
             <button id="back-to-lessons" class="back-button">← Back to Lessons</button>
             <h2 id="lesson-title"></h2>
             <div id="lesson-player"></div>
             <button id="mark-complete-btn" class="mark-complete-btn">Mark as Complete</button>
         </section>
-    </div>
+    </main>
 
     <footer class="footer">
         <div class="container">
@@ -246,110 +94,29 @@
     </footer>
 
     <script>
-        // ============ THEME MANAGEMENT ============
+        // Theme Management
         (function() {
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme === 'dark') {
                 document.documentElement.setAttribute('data-theme', 'dark');
-                const icon = document.getElementById('themeIcon');
-                const text = document.getElementById('themeText');
-                if (icon) icon.textContent = '☀️';
-                if (text) text.textContent = 'Light Mode';
+                document.getElementById('themeToggle').textContent = '☀️ Light Mode';
             }
-            const btn = document.getElementById('themeToggle');
-            if (btn) {
-                btn.addEventListener('click', () => {
-                    const current = document.documentElement.getAttribute('data-theme');
-                    if (current === 'dark') {
-                        document.documentElement.setAttribute('data-theme', 'light');
-                        localStorage.setItem('theme', 'light');
-                        document.getElementById('themeIcon').textContent = '🌙';
-                        document.getElementById('themeText').textContent = 'Dark Mode';
-                    } else {
-                        document.documentElement.setAttribute('data-theme', 'dark');
-                        localStorage.setItem('theme', 'dark');
-                        document.getElementById('themeIcon').textContent = '☀️';
-                        document.getElementById('themeText').textContent = 'Light Mode';
-                    }
-                });
-            }
-        })();
-        
-        // ============ TAB SWITCHING ============
-        function switchTab(tabName) {
-            const coursesSection = document.getElementById('coursesSection');
-            const shopSection = document.getElementById('shopSection');
-            const tabs = document.querySelectorAll('.tab-btn');
-            
-            tabs.forEach(btn => {
-                if (btn.dataset.tab === tabName) {
-                    btn.classList.add('active');
+            document.getElementById('themeToggle').addEventListener('click', () => {
+                const current = document.documentElement.getAttribute('data-theme');
+                if (current === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                    localStorage.setItem('theme', 'light');
+                    document.getElementById('themeToggle').textContent = '🌙 Dark Mode';
                 } else {
-                    btn.classList.remove('active');
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                    document.getElementById('themeToggle').textContent = '☀️ Light Mode';
                 }
             });
-            
-            if (tabName === 'courses') {
-                coursesSection.classList.remove('hidden');
-                shopSection.classList.add('hidden');
-            } else {
-                coursesSection.classList.add('hidden');
-                shopSection.classList.remove('hidden');
-                loadEbooks();
-            }
-        }
+        })();
         
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', () => switchTab(btn.dataset.tab));
-        });
-        
-        // ============ EBOOK SHOP ============
-        const ebooks = [
-            { id: 1, title: "Web Development Mastery", author: "Income School", description: "Complete guide to full-stack web development. Learn HTML, CSS, JavaScript, React, Node.js.", price: "$9.99", category: "Development", cover: "📖", link: "#" },
-            { id: 2, title: "Crypto Trading Bible", author: "Income School", description: "Master technical analysis, risk management, and trading psychology.", price: "$14.99", category: "Finance", cover: "📊", link: "#" },
-            { id: 3, title: "Copywriting That Converts", author: "Income School", description: "Write sales pages, email sequences, and ads that actually sell.", price: "$7.99", category: "Marketing", cover: "✍️", link: "#" },
-            { id: 4, title: "AI Integration Handbook", author: "Income School", description: "Build AI-powered applications. ChatGPT, Claude, API integration.", price: "$12.99", category: "Development", cover: "🤖", link: "#" },
-            { id: 5, title: "Freelancing Blueprint", author: "Income School", description: "Land clients, set rates, manage projects. Build a sustainable freelancing career.", price: "$8.99", category: "Business", cover: "💼", link: "#" },
-            { id: 6, title: "YouTube Growth Guide", author: "Income School", description: "Grow your channel from zero to monetization.", price: "$10.99", category: "Content Creation", cover: "🎥", link: "#" }
-        ];
-        
-        function loadEbooks() {
-            displayEbooks(ebooks);
-        }
-        
-        function displayEbooks(ebooksList) {
-            const container = document.getElementById('shopContainer');
-            if (!container) return;
-            
-            const category = document.getElementById('ebookCategoryFilter')?.value || 'all';
-            const filtered = category === 'all' ? ebooksList : ebooksList.filter(e => e.category === category);
-            
-            if (filtered.length === 0) {
-                container.innerHTML = '<div class="loading">No e-books found in this category</div>';
-                return;
-            }
-            
-            container.innerHTML = filtered.map(ebook => `
-                <div class="ebook-card">
-                    <div class="ebook-cover">${ebook.cover}</div>
-                    <div class="ebook-info">
-                        <div class="ebook-title">${escapeHtml(ebook.title)}</div>
-                        <div class="ebook-author">by ${ebook.author}</div>
-                        <div class="ebook-description">${escapeHtml(ebook.description)}</div>
-                        <div class="ebook-price">${ebook.price}</div>
-                        <a href="${ebook.link}" target="_blank" class="buy-ebook-btn" rel="noopener noreferrer">Buy Now →</a>
-                    </div>
-                </div>
-            `).join('');
-        }
-        
-        document.getElementById('ebookCategoryFilter')?.addEventListener('change', () => loadEbooks());
-        
-        // ============ COURSES ============
-        let allCourses = [];
-        let filteredCourses = [];
         let currentCourse = null, currentLesson = null, userId = null;
-        let youtubePlayer = null, watchInterval = null, totalDuration = 0;
+        let youtubePlayer = null, watchInterval = null, watchedSeconds = 0, totalDuration = 0, watchPercentage = 0;
         
         function getUserId() {
             let id = localStorage.getItem('user_id');
@@ -361,71 +128,21 @@
         async function loadCourses() {
             try {
                 const res = await fetch('/api/modules');
-                allCourses = await res.json();
-                filteredCourses = [...allCourses];
-                displayCourses();
-                updateFilterCount();
+                const courses = await res.json();
+                const container = document.getElementById('courses-container');
+                if (courses.length === 0) { container.innerHTML = '<div class="loading">No courses yet</div>'; return; }
+                container.innerHTML = '';
+                for (const course of courses) {
+                    const progress = await (await fetch(`/api/progress/${userId}/${course.module_id}`)).json();
+                    const card = document.createElement('div');
+                    card.className = 'course-card';
+                    card.onclick = () => showCourse(course);
+                    card.innerHTML = `<div class="course-category">${course.category || 'Course'}</div><h3>${course.title}</h3><p>${course.description || ''}</p><div class="progress-bar"><div class="progress-fill" style="width: ${progress.percentage}%"></div></div><div class="progress-text">${progress.completed}/${progress.total} lessons</div><div class="course-meta"><span class="course-duration">${course.estimated_time || 'Self-paced'}</span><span class="start-link">Continue →</span></div>`;
+                    container.appendChild(card);
+                }
             } catch(e) { console.error(e); }
         }
         
-        function displayCourses() {
-            const container = document.getElementById('courses-container');
-            if (filteredCourses.length === 0) {
-                container.innerHTML = '<div class="loading">No matching courses found</div>';
-                return;
-            }
-            container.innerHTML = '';
-            filteredCourses.forEach(async (course) => {
-                const progress = await (await fetch(`/api/progress/${userId}/${course.module_id}`)).json();
-                const card = document.createElement('div');
-                card.className = 'course-card';
-                card.onclick = () => showCourse(course);
-                let categoryIcon = '📚';
-                if (course.category === 'Development') categoryIcon = '💻';
-                else if (course.category === 'Finance') categoryIcon = '💰';
-                else if (course.category === 'Business') categoryIcon = '🏢';
-                else if (course.category === 'Marketing') categoryIcon = '📢';
-                else if (course.category === 'Content Creation') categoryIcon = '🎬';
-                card.innerHTML = `
-                    <div class="course-category">${categoryIcon} ${course.category || 'Course'}</div>
-                    <h3>${escapeHtml(course.title)}</h3>
-                    <p>${escapeHtml(course.description || '')}</p>
-                    <div class="progress-bar"><div class="progress-fill" style="width: ${progress.percentage}%"></div></div>
-                    <div class="progress-text">${progress.completed}/${progress.total} lessons</div>
-                    <div class="course-meta"><span class="course-duration">⏱️ ${course.estimated_time || 'Self-paced'}</span><span class="start-link">Continue →</span></div>
-                `;
-                container.appendChild(card);
-            });
-        }
-        
-        function filterCourses() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const category = document.getElementById('categoryFilter').value;
-            filteredCourses = allCourses.filter(course => {
-                const matchesSearch = searchTerm === '' || course.title.toLowerCase().includes(searchTerm) || (course.description && course.description.toLowerCase().includes(searchTerm));
-                const matchesCategory = category === 'all' || course.category === category;
-                return matchesSearch && matchesCategory;
-            });
-            displayCourses();
-            updateFilterCount();
-        }
-        
-        function updateFilterCount() {
-            const span = document.getElementById('filterResultsCount');
-            if (span) span.textContent = `${filteredCourses.length} of ${allCourses.length} courses`;
-        }
-        
-        document.getElementById('searchInput')?.addEventListener('input', filterCourses);
-        document.getElementById('categoryFilter')?.addEventListener('change', filterCourses);
-        
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
-        // ============ LESSON FUNCTIONS ============
         async function showCourse(course) {
             currentCourse = course;
             document.getElementById('course-title').textContent = course.title;
@@ -445,7 +162,7 @@
                 div.onclick = () => playLesson(lesson);
                 list.appendChild(div);
             });
-            document.getElementById('coursesSection').classList.add('hidden');
+            document.getElementById('courses-section').classList.add('hidden');
             document.getElementById('lessons-section').classList.remove('hidden');
             document.getElementById('player-section').classList.add('hidden');
         }
@@ -460,7 +177,7 @@
                 document.head.appendChild(tag);
                 window.onYouTubeIframeAPIReady = () => createPlayer(lesson);
             } else { createPlayer(lesson); }
-            document.getElementById('coursesSection').classList.add('hidden');
+            document.getElementById('courses-section').classList.add('hidden');
             document.getElementById('lessons-section').classList.add('hidden');
             document.getElementById('player-section').classList.remove('hidden');
         }
@@ -472,11 +189,10 @@
                     'onReady': (e) => { totalDuration = e.target.getDuration(); },
                     'onStateChange': (e) => {
                         if (e.data === YT.PlayerState.PLAYING) {
-                            if (watchInterval) clearInterval(watchInterval);
                             watchInterval = setInterval(() => {
                                 const ct = youtubePlayer.getCurrentTime();
-                                const percent = (ct / totalDuration) * 100;
-                                if (percent >= 90) document.getElementById('mark-complete-btn').disabled = false;
+                                watchPercentage = (ct / totalDuration) * 100;
+                                if (watchPercentage >= 90) document.getElementById('mark-complete-btn').disabled = false;
                             }, 2000);
                         } else if (e.data === YT.PlayerState.PAUSED) { clearInterval(watchInterval); }
                     }
@@ -486,13 +202,16 @@
         
         document.getElementById('mark-complete-btn')?.addEventListener('click', async () => {
             if (!currentLesson) return;
-            await fetch('/api/progress/mark-complete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId, lessonId: currentLesson.id, moduleId: currentCourse.module_id }) });
+            await fetch('/api/progress/mark-complete', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, lessonId: currentLesson.id, moduleId: currentCourse.module_id })
+            });
             alert('Lesson completed!');
             showCourse(currentCourse);
         });
         
         document.getElementById('back-to-courses')?.addEventListener('click', () => {
-            document.getElementById('coursesSection').classList.remove('hidden');
+            document.getElementById('courses-section').classList.remove('hidden');
             document.getElementById('lessons-section').classList.add('hidden');
             document.getElementById('player-section').classList.add('hidden');
             loadCourses();
@@ -504,56 +223,3 @@
     <script src="https://www.youtube.com/iframe_api"></script>
 </body>
 </html>
-<script>
-// Fix: Mark complete button handler
-document.getElementById('mark-complete-btn')?.addEventListener('click', async () => {
-    if (!currentLesson) {
-        alert('No lesson selected');
-        return;
-    }
-    
-    // Check if video is watched enough (90%)
-    if (currentLesson.contentType === 'youtube' && watchPercentage < 90) {
-        alert(`Please watch at least 90% of the video. Current: ${Math.floor(watchPercentage)}%`);
-        return;
-    }
-    
-    const btn = document.getElementById('mark-complete-btn');
-    btn.disabled = true;
-    btn.textContent = 'Saving...';
-    
-    try {
-        const response = await fetch('/api/progress/mark-complete', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                userId: userId,
-                lessonId: currentLesson.id,
-                moduleId: currentCourse?.module_id || currentCourse?.moduleId
-            })
-        });
-        
-        const result = await response.json();
-        
-        if (response.ok) {
-            alert('✅ Lesson completed!');
-            btn.textContent = 'Completed';
-            btn.style.opacity = '0.5';
-            
-            // Refresh the course view to show updated progress
-            if (currentCourse) {
-                showCourse(currentCourse);
-            }
-        } else {
-            alert('Error: ' + (result.error || 'Failed to save'));
-            btn.disabled = false;
-            btn.textContent = 'Mark as Complete';
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Network error. Please try again.');
-        btn.disabled = false;
-        btn.textContent = 'Mark as Complete';
-    }
-});
-</script>

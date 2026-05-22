@@ -5,11 +5,13 @@ require('dotenv').config();
 
 const app = express();
 
+// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
+// Admin authentication
 const ADMIN_USER = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_PASS = process.env.ADMIN_PASSWORD || 'changeme123';
 
@@ -23,7 +25,6 @@ function protectAdmin(req, res, next) {
         const base64 = auth.split(' ')[1];
         const [user, pass] = Buffer.from(base64, 'base64').toString().split(':');
         if (user !== ADMIN_USER || pass !== ADMIN_PASS) {
-            res.setHeader('WWW-Authenticate', 'Basic realm="Admin Access"');
             return res.status(401).send('Invalid credentials');
         }
     }
@@ -32,38 +33,11 @@ function protectAdmin(req, res, next) {
 
 app.use(protectAdmin);
 
+// Supabase client
 const supabase = require('../lib/supabase');
 
-// Improved YouTube ID extraction
-function extractYouTubeId(url) {
-    if (!url) return null;
-    
-    // Handle youtu.be format
-    if (url.includes('youtu.be/')) {
-        const match = url.match(/youtu\.be\/([^?&]+)/);
-        if (match) return match[1];
-    }
-    
-    // Handle youtube.com/watch?v= format
-    if (url.includes('youtube.com/watch')) {
-        const match = url.match(/[?&]v=([^&?]+)/);
-        if (match) return match[1];
-    }
-    
-    // Handle youtube.com/embed/ format
-    if (url.includes('youtube.com/embed/')) {
-        const match = url.match(/embed\/([^?&]+)/);
-        if (match) return match[1];
-    }
-    
-    return null;
-}
-
-function generateLessonId() {
-    return 'lesson_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
-}
-
 // ============ PUBLIC API ============
+
 app.get('/api/modules', async (req, res) => {
     try {
         const { data, error } = await supabase.from('modules').select('*');
@@ -117,9 +91,6 @@ app.post('/api/progress/mark-complete', async (req, res) => {
 app.post('/api/contact', async (req, res) => {
     try {
         const { name, email, subject, message } = req.body;
-        if (!name || !email || !subject || !message) {
-            return res.status(400).json({ error: 'All fields are required' });
-        }
         await supabase.from('contacts').insert([{ name, email, subject, message, created_at: new Date() }]);
         res.json({ success: true });
     } catch (err) {
@@ -128,12 +99,10 @@ app.post('/api/contact', async (req, res) => {
 });
 
 // ============ ADMIN API ============
+
 app.post('/api/admin/modules', async (req, res) => {
     try {
         const { moduleId, title, description, estimatedTime, category } = req.body;
-        if (!moduleId || !title) {
-            return res.status(400).json({ error: 'Module ID and Title are required' });
-        }
         const { data, error } = await supabase.from('modules').insert([{
             module_id: moduleId, title, description: description || '', estimated_time: estimatedTime || 'TBD', category: category || 'General'
         }]).select();
@@ -147,41 +116,15 @@ app.post('/api/admin/modules', async (req, res) => {
 app.post('/api/admin/youtube-lesson', async (req, res) => {
     try {
         const { moduleId, lessonTitle, youtubeUrl, duration, order } = req.body;
-        
-        if (!moduleId || !lessonTitle || !youtubeUrl) {
-            return res.status(400).json({ error: 'Module ID, Lesson Title, and YouTube URL are required' });
-        }
-        
-        const videoId = extractYouTubeId(youtubeUrl);
-        console.log('Extracted video ID:', videoId, 'from URL:', youtubeUrl);
-        
-        if (!videoId) {
-            return res.status(400).json({ error: 'Invalid YouTube URL. Could not extract video ID.' });
-        }
-        
-        const lessonId = generateLessonId();
-        
+        const videoId = youtubeUrl.match(/(?:youtu\.be\/|watch\?v=)([^&?]+)/)?.[1];
+        if (!videoId) return res.status(400).json({ error: 'Invalid YouTube URL' });
         const { data, error } = await supabase.from('lessons').insert([{
-            lesson_id: lessonId,
-            module_id: moduleId,
-            title: lessonTitle,
-            content_type: 'youtube',
-            youtube_url: youtubeUrl,
-            youtube_id: videoId,
-            duration: duration || 'N/A',
-            lesson_order: order || 1
+            module_id: moduleId, title: lessonTitle, content_type: 'youtube', youtube_url: youtubeUrl, youtube_id: videoId, duration: duration || 'N/A', lesson_order: order || 1
         }]).select();
-        
-        if (error) {
-            console.error('Supabase error:', error);
-            return res.status(400).json({ error: error.message });
-        }
-        
-        console.log('Lesson saved with youtube_id:', videoId);
+        if (error) throw error;
         res.status(201).json(data[0]);
     } catch (err) {
-        console.error('Server error:', err);
-        res.status(500).json({ error: err.message });
+        res.status(400).json({ error: err.message });
     }
 });
 
@@ -193,8 +136,6 @@ app.get('/privacy', (req, res) => { res.sendFile(path.join(__dirname, '../public
 app.get('/terms', (req, res) => { res.sendFile(path.join(__dirname, '../public/terms.html')); });
 app.get('/contact', (req, res) => { res.sendFile(path.join(__dirname, '../public/contact.html')); });
 app.get('/about', (req, res) => { res.sendFile(path.join(__dirname, '../public/about.html')); });
-app.get('/faq', (req, res) => { res.sendFile(path.join(__dirname, '../public/faq.html')); });
-app.get('/dmca', (req, res) => { res.sendFile(path.join(__dirname, '../public/dmca.html')); });
 
 app.get('/robots.txt', (req, res) => { res.type('text/plain'); res.send('User-agent: *\nAllow: /\nSitemap: https://skillschool-dbc1.vercel.app/sitemap.xml'); });
 app.get('/sitemap.xml', (req, res) => { res.type('application/xml'); res.send(`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://skillschool-dbc1.vercel.app/</loc></url><url><loc>https://skillschool-dbc1.vercel.app/courses</loc></url></urlset>`); });
@@ -202,173 +143,3 @@ app.get('/sitemap.xml', (req, res) => { res.type('application/xml'); res.send(`<
 app.use((req, res) => { res.status(404).send('Page not found'); });
 
 module.exports = app;
-
-// ============ EDIT/DELETE ENDPOINTS ============
-
-// Update module
-app.put('/api/admin/modules/:moduleId', async (req, res) => {
-    try {
-        const { moduleId } = req.params;
-        const { title, description, estimated_time, category } = req.body;
-        
-        const { data, error } = await supabase
-            .from('modules')
-            .update({ title, description, estimated_time, category, updated_at: new Date() })
-            .eq('module_id', moduleId)
-            .select();
-        
-        if (error) throw error;
-        res.json(data[0]);
-    } catch (err) {
-        res.status(400).json({ error: err.message });
-    }
-});
-
-// Update lesson
-app.put('/api/admin/lessons/:lessonId', async (req, res) => {
-    try {
-        const { lessonId } = req.params;
-        const { title, youtube_url, youtube_id, duration, lesson_order } = req.body;
-        
-        const { data, error } = await supabase
-            .from('lessons')
-            .update({ title, youtube_url, youtube_id, duration, lesson_order, updated_at: new Date() })
-            .eq('id', lessonId)
-            .select();
-        
-        if (error) throw error;
-        res.json(data[0]);
-    } catch (err) {
-        res.status(400).json({ error: err.message });
-    }
-});
-
-// Delete module (and all its lessons)
-app.delete('/api/admin/modules/:moduleId', async (req, res) => {
-    try {
-        const { moduleId } = req.params;
-        
-        // First delete all lessons in this module
-        await supabase.from('lessons').delete().eq('module_id', moduleId);
-        // Then delete the module
-        await supabase.from('modules').delete().eq('module_id', moduleId);
-        
-        res.json({ success: true });
-    } catch (err) {
-        res.status(400).json({ error: err.message });
-    }
-});
-
-// Delete single lesson
-app.delete('/api/admin/lessons/:lessonId', async (req, res) => {
-    try {
-        const { lessonId } = req.params;
-        await supabase.from('lessons').delete().eq('id', lessonId);
-        res.json({ success: true });
-    } catch (err) {
-        res.status(400).json({ error: err.message });
-    }
-});
-
-// ============ CERTIFICATE TIERS API ============
-
-// Get available certificate tiers
-app.get('/api/certificate/tiers', async (req, res) => {
-    try {
-        const { data, error } = await supabase
-            .from('certificate_tiers')
-            .select('*')
-            .eq('is_active', true)
-            .order('price', { ascending: true });
-        
-        if (error) throw error;
-        res.json(data);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// Generate certificate with specific tier
-app.post('/api/certificate/generate', async (req, res) => {
-    try {
-        const { userId, moduleId, name, tier } = req.body;
-        
-        // Check if user completed the course
-        const isComplete = await checkModuleCompletion(userId, moduleId);
-        if (!isComplete) {
-            return res.status(400).json({ error: 'Complete all lessons first' });
-        }
-        
-        // Get tier details
-        const { data: tierData } = await supabase
-            .from('certificate_tiers')
-            .select('*')
-            .eq('tier_name', tier || 'free')
-            .single();
-        
-        // Generate certificate ID
-        const completedAt = new Date().toISOString();
-        const certificateId = generateCertificateId(userId, moduleId, completedAt);
-        
-        // Get module details
-        const { data: module } = await supabase
-            .from('modules')
-            .select('title')
-            .eq('module_id', moduleId)
-            .single();
-        
-        // Store certificate
-        const { data: certificate, error } = await supabase
-            .from('certificates')
-            .insert([{
-                user_id: userId,
-                module_id: moduleId,
-                module_title: module.title,
-                certificate_id: certificateId,
-                user_name: name,
-                tier: tier || 'free',
-                issued_at: completedAt,
-                completed_at: completedAt
-            }])
-            .select()
-            .single();
-        
-        if (error) throw error;
-        
-        // If paid tier, process payment (Paystack integration here)
-        if (tier !== 'free') {
-            // Return payment URL instead of certificate directly
-            return res.json({
-                requiresPayment: true,
-                tier: tier,
-                price: tierData.price / 100,
-                certificateId: certificateId,
-                paymentUrl: `/payment/certificate/${certificateId}`
-            });
-        }
-        
-        res.json({
-            success: true,
-            certificateId: certificateId,
-            tier: tier,
-            downloadUrl: `/api/certificate/download/${certificateId}`,
-            verifyUrl: `/verify/${certificateId}`
-        });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// Debug endpoint to check progress
-app.get('/api/debug/progress/:userId', async (req, res) => {
-    try {
-        const { userId } = req.params;
-        const { data } = await supabase
-            .from('user_progress')
-            .select('*')
-            .eq('user_id', userId);
-        res.json({ count: data?.length || 0, records: data });
-    } catch (err) {
-        res.json({ error: err.message });
-    }
-});
