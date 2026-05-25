@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Courses - Income School</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #ffffff; color: #1a1a1a; }
@@ -14,6 +15,12 @@
         .header-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
         .logo h1 { font-size: 1.5rem; font-weight: 600; color: #1a1a1a; }
         .logo p { font-size: 0.7rem; color: #c9a03d; letter-spacing: 1px; }
+        
+        #auth-container { display: flex; align-items: center; gap: 16px; }
+        #user-info { display: flex; align-items: center; gap: 12px; }
+        #user-avatar { width: 32px; height: 32px; border-radius: 50%; }
+        #login-btn { background: #c9a03d; color: white; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; }
+        #logout-btn { background: none; border: 1px solid #c9a03d; color: #c9a03d; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
         
         .theme-toggle { background: none; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 40px; padding: 6px 16px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.8rem; }
         
@@ -49,6 +56,7 @@
         @media (max-width: 768px) {
             .courses-grid { grid-template-columns: 1fr; }
             .lesson-item { flex-direction: column; text-align: center; gap: 8px; }
+            .header-content { flex-direction: column; text-align: center; }
         }
     </style>
 </head>
@@ -57,6 +65,14 @@
         <div class="container">
             <div class="header-content">
                 <div class="logo"><h1>Income School</h1><p>Professional Skills Mastery</p></div>
+                <div id="auth-container">
+                    <div id="user-info" style="display: none;">
+                        <img id="user-avatar" style="width: 32px; height: 32px; border-radius: 50%;">
+                        <span id="user-name"></span>
+                        <button id="logout-btn">Logout</button>
+                    </div>
+                    <button id="login-btn">Sign in with Google</button>
+                </div>
                 <button class="theme-toggle" id="themeToggle">🌙 Dark Mode</button>
             </div>
         </div>
@@ -221,5 +237,6 @@
         loadCourses();
     </script>
     <script src="https://www.youtube.com/iframe_api"></script>
+    <script src="/js/supabase-auth.js"></script>
 </body>
 </html>

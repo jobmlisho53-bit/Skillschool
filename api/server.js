@@ -143,3 +143,61 @@ app.get('/sitemap.xml', (req, res) => { res.type('application/xml'); res.send(`<
 app.use((req, res) => { res.status(404).send('Page not found'); });
 
 module.exports = app;
+
+// ============ PROGRESS MIGRATION ============
+app.post('/api/progress/migrate', async (req, res) => {
+    try {
+        const { anonymousId, userId } = req.body;
+        
+        if (!anonymousId || !userId) {
+            return res.status(400).json({ error: 'Missing IDs' });
+        }
+        
+        // Get all anonymous progress
+        const { data: anonymousProgress, error: fetchError } = await supabase
+            .from('user_progress')
+            .select('*')
+            .eq('user_id', anonymousId);
+        
+        if (fetchError) throw fetchError;
+        
+        let migrated = 0;
+        
+        if (anonymousProgress && anonymousProgress.length > 0) {
+            for (const progress of anonymousProgress) {
+                const { data: existing } = await supabase
+                    .from('user_progress')
+                    .select('id')
+                    .eq('user_id', userId)
+                    .eq('lesson_id', progress.lesson_id)
+                    .single();
+                
+                if (!existing) {
+                    await supabase
+                        .from('user_progress')
+                        .insert({
+                            user_id: userId,
+                            lesson_id: progress.lesson_id,
+                            module_id: progress.module_id,
+                            completed: progress.completed,
+                            completed_at: progress.completed_at
+                        });
+                    migrated++;
+                }
+            }
+        }
+        
+        res.json({ success: true, migrated });
+    } catch (err) {
+        console.error('Migration error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Proxy for Supabase auth (hides anon key)
+app.get('/api/auth/config', (req, res) => {
+    res.json({
+        url: process.env.SUPABASE_URL,
+        anonKey: process.env.SUPABASE_ANON_KEY
+    });
+});
