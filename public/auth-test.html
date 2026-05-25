@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Auth Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+    <h1>Auth Test</h1>
+    <button id="login">Login with Google</button>
+    <div id="status"></div>
+    
+    <script>
+        const SUPABASE_URL = 'https://xaqcsemwghouqmdotqnb.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhcWNzZW13Z2hvdXFtZG90cW5iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyMjY3NjUsImV4cCI6MjA5MDgwMjc2NX0.7tBsxE2uy7uOPlxMUmF6YNMBOhbJloenH7_T7WptVpc';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        document.getElementById('login').onclick = async () => {
+            document.getElementById('status').innerHTML = 'Redirecting...';
+            const { data, error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: { redirectTo: window.location.origin + '/courses' }
+            });
+            if (error) {
+                document.getElementById('status').innerHTML = 'Error: ' + error.message;
+            }
+        };
+        
+        // Check if already logged in
+        supabase.auth.getSession().then(({ data }) => {
+            if (data.session) {
+                document.getElementById('status').innerHTML = 'Logged in as: ' + data.session.user.email;
+            }
+        });
+    </script>
+</body>
+</html>
